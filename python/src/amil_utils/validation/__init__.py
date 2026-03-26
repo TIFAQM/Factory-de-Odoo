@@ -23,6 +23,10 @@ from amil_utils.validation.report import (  # noqa: F401
     format_report_json,
     format_report_markdown,
 )
+from amil_utils.validation.odoo_ls_config import (  # noqa: F401
+    find_python_path,
+    generate_odools_toml,
+)
 from amil_utils.validation.semantic import (  # noqa: F401
     SemanticValidationResult,
     ValidationIssue,
@@ -38,6 +42,8 @@ from amil_utils.validation.types import (  # noqa: F401
 )
 
 __all__ = [
+    "find_python_path",
+    "generate_odools_toml",
     "SemanticValidationResult",
     "ValidationIssue",
     "InstallResult",
