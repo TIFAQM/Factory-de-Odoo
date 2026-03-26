@@ -8,6 +8,7 @@ import pytest
 
 from amil_utils.orchestrator.module_status import (
     VALID_TRANSITIONS,
+    get_generation_queue,
     module_status_get,
     module_status_init,
     module_status_read,
@@ -127,3 +128,74 @@ class TestTierStatus:
         module_status_transition(tmp_path, "mod_a", "shipped")
         result = tier_status(tmp_path)
         assert result["tiers"]["core"]["status"] == "complete"
+
+
+class TestGetGenerationQueue:
+    """Tests for get_generation_queue() batch functionality."""
+
+    def _setup_status(self, tmp_path: Path, modules: dict[str, dict]) -> None:
+        """Create module_status.json with given module data."""
+        status_dir = tmp_path / ".planning"
+        status_dir.mkdir(parents=True, exist_ok=True)
+        (status_dir / "module_status.json").write_text(json.dumps({
+            "_meta": {"version": 1, "last_updated": None},
+            "modules": modules,
+            "tiers": {},
+        }))
+
+    def test_returns_spec_approved_modules_only(self, tmp_path: Path) -> None:
+        self._setup_status(tmp_path, {
+            "mod_a": {"status": "shipped", "tier": "core", "depends": []},
+            "mod_b": {"status": "spec_approved", "tier": "core", "depends": []},
+            "mod_c": {"status": "planned", "tier": "hr", "depends": []},
+            "mod_d": {"status": "spec_approved", "tier": "hr", "depends": []},
+        })
+        queue = get_generation_queue(tmp_path)
+        assert "mod_b" in queue
+        assert "mod_d" in queue
+        assert "mod_a" not in queue  # Already shipped
+        assert "mod_c" not in queue  # Not yet approved
+
+    def test_returns_empty_when_all_generated(self, tmp_path: Path) -> None:
+        self._setup_status(tmp_path, {
+            "mod_a": {"status": "generated", "tier": "core", "depends": []},
+            "mod_b": {"status": "shipped", "tier": "hr", "depends": []},
+        })
+        queue = get_generation_queue(tmp_path)
+        assert queue == []
+
+    def test_returns_empty_when_no_modules(self, tmp_path: Path) -> None:
+        self._setup_status(tmp_path, {})
+        queue = get_generation_queue(tmp_path)
+        assert queue == []
+
+    def test_returns_empty_when_status_file_missing(self, tmp_path: Path) -> None:
+        queue = get_generation_queue(tmp_path)
+        assert queue == []
+
+    def test_excludes_checked_modules(self, tmp_path: Path) -> None:
+        self._setup_status(tmp_path, {
+            "mod_a": {"status": "checked", "tier": "core", "depends": []},
+            "mod_b": {"status": "spec_approved", "tier": "core", "depends": []},
+        })
+        queue = get_generation_queue(tmp_path)
+        assert queue == ["mod_b"]
+
+    def test_preserves_insertion_order(self, tmp_path: Path) -> None:
+        self._setup_status(tmp_path, {
+            "mod_z": {"status": "spec_approved", "tier": "core", "depends": []},
+            "mod_a": {"status": "spec_approved", "tier": "core", "depends": []},
+            "mod_m": {"status": "spec_approved", "tier": "core", "depends": []},
+        })
+        queue = get_generation_queue(tmp_path)
+        assert queue == ["mod_z", "mod_a", "mod_m"]
+
+    def test_works_with_real_init_and_transition(self, tmp_path: Path) -> None:
+        """Integration: use actual init + transition to set up spec_approved."""
+        (tmp_path / ".planning").mkdir()
+        module_status_init(tmp_path, "hr_payroll", "core")
+        module_status_transition(tmp_path, "hr_payroll", "spec_approved")
+        module_status_init(tmp_path, "hr_leave", "hr")
+        # hr_leave stays at "planned"
+        queue = get_generation_queue(tmp_path)
+        assert queue == ["hr_payroll"]

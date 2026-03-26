@@ -158,6 +158,30 @@ def module_status_transition(
     return _write_status_file(cwd, new_data)
 
 
+def get_generation_queue(cwd: str | Path) -> list[str]:
+    """Return module names that are spec_approved but not yet generated.
+
+    Modules in this queue are eligible for generation. Returns names in the
+    order they appear in module_status.json. For dependency-ordered generation,
+    the caller should cross-reference with ``dep_graph_order()`` or
+    ``topo_sort()``.
+
+    Args:
+        cwd: Project root directory containing ``.planning/module_status.json``.
+
+    Returns:
+        List of module names with status ``"spec_approved"``, or an empty list
+        if the status file is missing or contains no eligible modules.
+    """
+    data = read_status_file(cwd)
+    modules = data.get("modules", {})
+    return [
+        name
+        for name, info in modules.items()
+        if info.get("status") == "spec_approved"
+    ]
+
+
 def tier_status(cwd: str | Path) -> dict:
     """Compute tier summary: group modules by tier, detect completion."""
     data = read_status_file(cwd)
