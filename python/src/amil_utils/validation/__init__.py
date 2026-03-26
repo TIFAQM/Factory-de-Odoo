@@ -32,6 +32,8 @@ from amil_utils.validation.semantic import (  # noqa: F401
     ValidationIssue,
     print_validation_report,
     semantic_validate,
+    semantic_validate_full,
+    semantic_validate_patterns,
 )
 from amil_utils.validation.types import (  # noqa: F401
     InstallResult,
@@ -66,4 +68,6 @@ __all__ = [
     "print_validation_report",
     "run_pylint_odoo",
     "semantic_validate",
+    "semantic_validate_full",
+    "semantic_validate_patterns",
 ]

@@ -1685,9 +1685,15 @@ def render_module(
     # PIPE-04: Run semantic validation so programmatic callers get it by default
     if not skip_semantic_validation and created_files:
         try:
-            from amil_utils.validation.semantic import semantic_validate
+            from amil_utils.validation.semantic import (
+                semantic_validate_full,
+                semantic_validate_patterns,
+            )
             from amil_utils.verifier import VerificationWarning as _VW
-            sem_result = semantic_validate(module_dir)
+            if ols_client is not None:
+                sem_result = semantic_validate_patterns(module_dir)
+            else:
+                sem_result = semantic_validate_full(module_dir)
             if sem_result.has_errors:
                 for err in sem_result.errors:
                     all_warnings.append(

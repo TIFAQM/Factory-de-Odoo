@@ -1896,16 +1896,116 @@ def _check_e23(
 
 
 # ---------------------------------------------------------------------------
-# Main entry point
+# Main entry points
 # ---------------------------------------------------------------------------
 
 
-def semantic_validate(
+def semantic_validate_patterns(output_dir: Path) -> SemanticValidationResult:
+    """Run **only** AST-pattern checks that odoo-ls cannot perform.
+
+    This is the lightweight alternative to :func:`semantic_validate_full`,
+    designed for the odoo-ls pipeline where structural validation (field
+    refs, model existence, XML IDs, manifest deps) is already handled by
+    the language server.
+
+    Checks included (11 pattern checks):
+        E1  -- Python syntax (ast.parse)
+        E2  -- XML well-formedness
+        E7  -- Missing self iteration in @api.depends
+        E8  -- Compute doesn't set target field
+        E9  -- Constraint doesn't raise ValidationError
+        E10 -- Bare field access in for-loop
+        E11 -- Wrong mapped/filtered syntax
+        E12 -- write/create/unlink in compute
+        E13 -- Override missing super()
+        E15 -- Cron method missing @api.model
+        E16 -- Exclusion zone violation
+        W5  -- Action method modifies state without checking
+
+    Parameters
+    ----------
+    output_dir:
+        Path to the module root (contains ``__manifest__.py``).
+
+    Returns
+    -------
+    SemanticValidationResult
+        Structured result with errors, warnings, and duration.
+    """
+    start = time.perf_counter()
+    module_name = output_dir.name
+    result = SemanticValidationResult(module=module_name)
+
+    # --- Phase 1: Syntax checks (E1, E2) ---
+    e1_issues, failed_py = _check_e1(output_dir)
+    result.errors.extend(e1_issues)
+
+    e2_issues, _failed_xml = _check_e2(output_dir)
+    result.errors.extend(e2_issues)
+
+    # --- Phase 2: Parse valid Python files for model info ---
+    ast_cache: AstCache = {}
+    module_models: dict[str, _ParsedModel] = {}
+
+    for py_file in output_dir.rglob("*.py"):
+        rel = str(py_file.relative_to(output_dir))
+        if rel in failed_py:
+            continue
+        models, _err = _parse_python_file(py_file, output_dir, ast_cache)
+        for m in models:
+            module_models[m.model_name] = m
+
+    # --- Phase 3: AST-pattern checks only ---
+    # E7: Missing self iteration
+    result.errors.extend(_check_e7(output_dir, module_models, ast_cache=ast_cache))
+
+    # E8: Compute doesn't set target field (also emits W8 when targets unknown)
+    e8_issues = _check_e8(output_dir, module_models, ast_cache=ast_cache)
+    for issue in e8_issues:
+        if issue.severity == "warning":
+            result.warnings.append(issue)
+        else:
+            result.errors.append(issue)
+
+    # E9: Constraint doesn't raise ValidationError
+    result.errors.extend(_check_e9(output_dir, module_models, ast_cache=ast_cache))
+
+    # E10: Bare field access in for-loop body
+    result.errors.extend(_check_e10(output_dir, module_models, ast_cache=ast_cache))
+
+    # E11: Wrong mapped/filtered syntax
+    result.errors.extend(_check_e11(output_dir, module_models, ast_cache=ast_cache))
+
+    # E12: write/create/unlink in compute
+    result.errors.extend(_check_e12(output_dir, module_models, ast_cache=ast_cache))
+
+    # E13: Override method missing super() call
+    result.errors.extend(_check_e13(output_dir, module_models, ast_cache=ast_cache))
+
+    # E15: Cron method missing @api.model
+    result.errors.extend(_check_e15(output_dir, module_models, ast_cache=ast_cache))
+
+    # E16: Exclusion zone violation (skeleton diff)
+    result.errors.extend(_check_e16(output_dir, module_models, ast_cache=ast_cache))
+
+    # W5: Action method modifies state without checking
+    result.warnings.extend(_check_w5(output_dir, module_models, ast_cache=ast_cache))
+
+    elapsed = time.perf_counter() - start
+    result.duration_ms = int(elapsed * 1000)
+    return result
+
+
+def semantic_validate_full(
     output_dir: Path,
     registry: ModelRegistry | None = None,
     spec: dict[str, Any] | None = None,
 ) -> SemanticValidationResult:
-    """Run all semantic checks on a generated module directory.
+    """Run **all** semantic checks on a generated module directory.
+
+    This is the full validation suite (26 checks) including structural
+    checks that overlap with odoo-ls.  Use :func:`semantic_validate_patterns`
+    when odoo-ls handles the structural layer.
 
     Parameters
     ----------
@@ -2046,6 +2146,10 @@ def semantic_validate(
     elapsed = time.perf_counter() - start
     result.duration_ms = int(elapsed * 1000)
     return result
+
+
+# Backward-compat alias -- existing callers import ``semantic_validate``.
+semantic_validate = semantic_validate_full
 
 
 # ---------------------------------------------------------------------------

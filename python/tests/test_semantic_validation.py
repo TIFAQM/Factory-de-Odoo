@@ -13,6 +13,8 @@ from amil_utils.validation.semantic import (
     ValidationIssue,
     print_validation_report,
     semantic_validate,
+    semantic_validate_full,
+    semantic_validate_patterns,
 )
 
 
@@ -1721,3 +1723,154 @@ class TestE17ExtensionXpathValidation:
             assert "form" in views, f"Missing form view for {model_name}"
             assert "tree" in views, f"Missing tree view for {model_name}"
             assert "search" in views, f"Missing search view for {model_name}"
+
+
+# ===========================================================================
+# semantic_validate_patterns vs semantic_validate_full
+# ===========================================================================
+
+
+class TestSemanticValidatePatterns:
+    """Verify ``semantic_validate_patterns`` runs only AST-pattern checks."""
+
+    def test_alias_is_full(self) -> None:
+        """``semantic_validate`` is an alias for ``semantic_validate_full``."""
+        assert semantic_validate is semantic_validate_full
+
+    def test_patterns_returns_result(self, tmp_path: Path) -> None:
+        """patterns-only mode returns a SemanticValidationResult."""
+        mod = _make_valid_module(tmp_path)
+        result = semantic_validate_patterns(mod)
+        assert isinstance(result, SemanticValidationResult)
+        assert result.module == mod.name
+
+    def test_patterns_skips_structural_checks(self, tmp_path: Path) -> None:
+        """patterns-only mode does NOT run structural checks (E3-E6, W1-W4, W9, E17).
+
+        We create a module with a deliberate E3 error (bad view field ref)
+        that full mode would catch, but patterns-only mode should skip.
+        """
+        mod = tmp_path / "test_mod"
+        _write(mod / "__manifest__.py", """\
+            {
+                'name': 'Test',
+                'version': '17.0.1.0.0',
+                'depends': ['base'],
+                'data': ['views/v.xml'],
+            }
+        """)
+        _write(mod / "__init__.py", "from . import models\n")
+        _write(mod / "models" / "__init__.py", "from . import m\n")
+        _write(mod / "models" / "m.py", """\
+            from odoo import fields, models
+
+            class TestModel(models.Model):
+                _name = 'test.model'
+                _description = 'Test'
+                name = fields.Char()
+        """)
+        # View references a non-existent field -- triggers E3 in full mode
+        _write(mod / "views" / "v.xml", """\
+            <?xml version="1.0" encoding="utf-8"?>
+            <odoo>
+                <record id="view_test_form" model="ir.ui.view">
+                    <field name="name">test.form</field>
+                    <field name="model">test.model</field>
+                    <field name="arch" type="xml">
+                        <form>
+                            <field name="nonexistent_field"/>
+                        </form>
+                    </field>
+                </record>
+            </odoo>
+        """)
+        # No security CSV -- triggers E4 in full mode
+        patterns_result = semantic_validate_patterns(mod)
+        full_result = semantic_validate_full(mod)
+
+        # Patterns mode should NOT detect E3 or E4
+        patterns_codes = {i.code for i in patterns_result.errors}
+        assert "E3" not in patterns_codes
+        assert "E4" not in patterns_codes
+
+        # Full mode SHOULD detect E3 and/or E4
+        full_codes = {i.code for i in full_result.errors}
+        assert full_codes & {"E3", "E4"}  # at least one structural error
+
+    def test_patterns_catches_ast_errors(self, tmp_path: Path) -> None:
+        """patterns-only mode catches Python syntax errors (E1)."""
+        mod = tmp_path / "broken_mod"
+        _write(mod / "__manifest__.py", """\
+            {
+                'name': 'Broken',
+                'version': '17.0.1.0.0',
+                'depends': ['base'],
+                'data': [],
+            }
+        """)
+        _write(mod / "__init__.py", "from . import models\n")
+        _write(mod / "models" / "__init__.py", "from . import bad\n")
+        _write(mod / "models" / "bad.py", "def broken(\n")  # Syntax error
+
+        result = semantic_validate_patterns(mod)
+        codes = {i.code for i in result.errors}
+        assert "E1" in codes
+
+    def test_patterns_catches_xml_errors(self, tmp_path: Path) -> None:
+        """patterns-only mode catches malformed XML (E2)."""
+        mod = tmp_path / "xml_mod"
+        _write(mod / "__manifest__.py", """\
+            {
+                'name': 'XML',
+                'version': '17.0.1.0.0',
+                'depends': ['base'],
+                'data': ['views/bad.xml'],
+            }
+        """)
+        _write(mod / "__init__.py", "")
+        _write(mod / "views" / "bad.xml", "<odoo><unclosed>")
+
+        result = semantic_validate_patterns(mod)
+        codes = {i.code for i in result.errors}
+        assert "E2" in codes
+
+    def test_patterns_fewer_check_codes_than_full(self, tmp_path: Path) -> None:
+        """patterns-only mode runs strictly fewer check categories.
+
+        On a valid module, both modes should pass -- but on a module with
+        issues in every category, patterns mode produces a subset of codes.
+        """
+        mod = _make_valid_module(tmp_path)
+
+        patterns_result = semantic_validate_patterns(mod)
+        full_result = semantic_validate_full(mod)
+
+        # Both should succeed on a valid module
+        all_patterns_codes = (
+            {i.code for i in patterns_result.errors}
+            | {i.code for i in patterns_result.warnings}
+        )
+        all_full_codes = (
+            {i.code for i in full_result.errors}
+            | {i.code for i in full_result.warnings}
+        )
+        # Patterns result codes should be a subset of full result codes
+        assert all_patterns_codes <= all_full_codes
+
+    def test_patterns_only_takes_output_dir(self) -> None:
+        """``semantic_validate_patterns`` signature takes only output_dir."""
+        import inspect
+
+        sig = inspect.signature(semantic_validate_patterns)
+        params = list(sig.parameters.keys())
+        assert params == ["output_dir"]
+
+    def test_full_accepts_registry_and_spec(self) -> None:
+        """``semantic_validate_full`` signature matches old ``semantic_validate``."""
+        import inspect
+
+        sig = inspect.signature(semantic_validate_full)
+        params = list(sig.parameters.keys())
+        assert "output_dir" in params
+        assert "registry" in params
+        assert "spec" in params
