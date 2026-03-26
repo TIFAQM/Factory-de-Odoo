@@ -13,6 +13,13 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+# ── Deprecation ──────────────────────────────────────────────────────────────
+__deprecated__ = True
+_DEPRECATION_NOTICE = (
+    f"{__name__} is superseded by odoo-ls validation. "
+    "Use --skip-odoo-ls flag to fall back to these checks."
+)
+
 PROV_REGISTRY_FILE = "provisional_registry.json"
 
 STANDARD_MODELS = frozenset([

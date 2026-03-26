@@ -13,6 +13,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+# ── Deprecation ──────────────────────────────────────────────────────────────
+__deprecated__ = True
+_DEPRECATION_NOTICE = (
+    f"{__name__} is superseded by odoo-ls validation. "
+    "Use --skip-odoo-ls flag to fall back to these checks."
+)
+
 
 def analyze_circular_pair(circular_risk: dict, prov_registry: object) -> dict:
     """Analyze a circular dependency pair and determine build order.
