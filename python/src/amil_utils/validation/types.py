@@ -23,6 +23,28 @@ class Violation:
 
 
 @dataclass(frozen=True)
+class OLSDiagnostic:
+    """A single diagnostic from the odoo-ls language server."""
+
+    file: str
+    line: int
+    column: int
+    code: str
+    message: str
+    severity: int  # 1=Error, 2=Warning, 3=Info, 4=Hint
+
+    @property
+    def is_error(self) -> bool:
+        """Return True when severity indicates an error (1)."""
+        return self.severity == 1
+
+    @property
+    def is_warning(self) -> bool:
+        """Return True when severity indicates a warning (2)."""
+        return self.severity == 2
+
+
+@dataclass(frozen=True)
 class InstallResult:
     """Result of an Odoo module installation attempt."""
 
@@ -50,6 +72,7 @@ class ValidationReport:
     install_result: InstallResult | None = None
     test_results: tuple[TestResult, ...] = ()
     diagnosis: tuple[str, ...] = ()
+    ols_diagnostics: tuple[OLSDiagnostic, ...] = ()
     docker_available: bool = True
 
 
