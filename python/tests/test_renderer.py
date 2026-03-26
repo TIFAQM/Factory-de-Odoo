@@ -5750,3 +5750,71 @@ class TestWebhookTemplateRendering:
         assert "_webhook_post_create" in output
         assert "_webhook_post_write" in output
         assert "_skip_webhooks" in output
+
+
+# ---------------------------------------------------------------------------
+# Cron template numbercall version guard tests
+# ---------------------------------------------------------------------------
+
+
+class TestCronNumbercallVersionGuard:
+    """numbercall field was removed in Odoo 18.0 -- template must omit it for 18.0+."""
+
+    @staticmethod
+    def _make_cron_spec(odoo_version: str) -> dict:
+        return {
+            "module_name": "test_cron_guard",
+            "depends": ["base"],
+            "odoo_version": odoo_version,
+            "models": [
+                {
+                    "name": "test.cron.model",
+                    "fields": [{"name": "name", "type": "Char"}],
+                }
+            ],
+            "cron_jobs": [
+                {
+                    "name": "Test Cron Job",
+                    "model_name": "test.cron.model",
+                    "method": "_cron_do_stuff",
+                    "interval_number": 1,
+                    "interval_type": "days",
+                }
+            ],
+        }
+
+    def test_cron_template_omits_numbercall_for_18(self):
+        """Odoo 18.0+ removed ir.cron.numbercall -- must not render."""
+        spec = self._make_cron_spec("18.0")
+        with tempfile.TemporaryDirectory() as d:
+            files, _ = render_module(spec, get_template_dir(), Path(d))
+            cron_file = next(
+                (f for f in files if str(f).endswith("cron_data.xml")), None
+            )
+            assert cron_file is not None, "cron_data.xml not generated"
+            content = Path(cron_file).read_text(encoding="utf-8")
+            assert "numbercall" not in content
+
+    def test_cron_template_includes_numbercall_for_17(self):
+        """Odoo 17.0 still uses numbercall."""
+        spec = self._make_cron_spec("17.0")
+        with tempfile.TemporaryDirectory() as d:
+            files, _ = render_module(spec, get_template_dir(), Path(d))
+            cron_file = next(
+                (f for f in files if str(f).endswith("cron_data.xml")), None
+            )
+            assert cron_file is not None, "cron_data.xml not generated"
+            content = Path(cron_file).read_text(encoding="utf-8")
+            assert "numbercall" in content
+
+    def test_cron_template_omits_numbercall_for_19(self):
+        """Odoo 19.0 also should not render numbercall (18.0+ removal)."""
+        spec = self._make_cron_spec("19.0")
+        with tempfile.TemporaryDirectory() as d:
+            files, _ = render_module(spec, get_template_dir(), Path(d))
+            cron_file = next(
+                (f for f in files if str(f).endswith("cron_data.xml")), None
+            )
+            assert cron_file is not None, "cron_data.xml not generated"
+            content = Path(cron_file).read_text(encoding="utf-8")
+            assert "numbercall" not in content

@@ -9,7 +9,9 @@
         <field name="user_id" ref="base.user_root"/>
         <field name="interval_number">{{ cron.interval_number | default(1) }}</field>
         <field name="interval_type">{{ cron.interval_type | default('days') }}</field>
+{% if odoo_version is defined and odoo_version < "18.0" %}
         <field name="numbercall">{{ cron.numbercall | default(-1) }}</field>
+{% endif %}
         <field name="doall" eval="{{ cron.doall | default(False) }}"/>
         <field name="priority">{{ cron.priority | default(5) }}</field>
 {% if cron.nextcall is defined %}
