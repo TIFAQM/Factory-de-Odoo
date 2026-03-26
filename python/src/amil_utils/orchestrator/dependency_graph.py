@@ -30,8 +30,15 @@ def _visit(
     visiting: set[str],
     result: list[str],
     ancestors: list[str],
+    *,
+    strict: bool = True,
 ) -> None:
-    """DFS visit for topological sort with cycle detection."""
+    """DFS visit for topological sort with cycle detection.
+
+    Args:
+        strict: If True (default), raise ValueError on unknown dependencies.
+                If False, log a warning and skip the phantom.
+    """
     if name in visited:
         return
 
@@ -40,12 +47,32 @@ def _visit(
         cycle_path = ancestors[cycle_start:] + [name]
         raise ValueError(f"Circular dependency detected: {' -> '.join(cycle_path)}")
 
+    if name not in modules:
+        referrer = ancestors[-1] if ancestors else "<root>"
+        if strict:
+            raise ValueError(
+                f"Unknown dependency '{name}' referenced by {referrer}"
+            )
+        else:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Unknown dependency '%s' referenced by %s — skipping",
+                name,
+                referrer,
+            )
+            visited.add(name)
+            return
+
     visiting.add(name)
 
-    mod = modules.get(name)
-    if mod and mod.get("depends"):
+    mod = modules[name]
+    if mod.get("depends"):
         for dep in mod["depends"]:
-            _visit(dep, modules, visited, visiting, result, [*ancestors, name])
+            _visit(
+                dep, modules, visited, visiting, result, [*ancestors, name],
+                strict=strict,
+            )
 
     visiting.discard(name)
     visited.add(name)
@@ -55,24 +82,28 @@ def _visit(
 # ── Public API ───────────────────────────────────────────────────────────────
 
 
-def topo_sort(modules: dict[str, dict]) -> list[str]:
+def topo_sort(modules: dict[str, dict], *, strict: bool = True) -> list[str]:
     """DFS-based topological sort with cycle detection.
 
     Args:
         modules: Mapping of {name: {"depends": [dep1, dep2]}}.
+        strict: If True (default), raise ValueError when a dependency references
+                a name not present in *modules*. If False, log a warning and
+                skip the phantom dependency.
 
     Returns:
         Module names in dependency order (deps before dependents).
 
     Raises:
-        ValueError: If a circular dependency is detected.
+        ValueError: If a circular dependency is detected, or if strict=True
+                    and an unknown dependency is encountered.
     """
     visited: set[str] = set()
     visiting: set[str] = set()
     result: list[str] = []
 
     for name in modules:
-        _visit(name, modules, visited, visiting, result, [])
+        _visit(name, modules, visited, visiting, result, [], strict=strict)
 
     return result
 

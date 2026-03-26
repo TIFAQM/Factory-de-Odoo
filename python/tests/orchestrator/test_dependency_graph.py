@@ -127,6 +127,43 @@ class TestDepGraphTiers:
         assert "depths" in result
 
 
+class TestTopoSortPhantomDependency:
+    def test_topo_sort_rejects_phantom_dependency(self) -> None:
+        """A module depending on a name not in the dict should raise ValueError."""
+        modules = {
+            "mod_a": {"depends": ["mod_b"]},
+            # mod_b is NOT in the dict -- phantom
+        }
+        with pytest.raises(ValueError, match="Unknown dependency 'mod_b'"):
+            topo_sort(modules)
+
+    def test_topo_sort_lenient_mode_warns_on_phantom(self) -> None:
+        """strict=False should warn instead of raising."""
+        modules = {
+            "mod_a": {"depends": ["mod_b"]},
+        }
+        result = topo_sort(modules, strict=False)
+        # Should complete without error; phantom NOT in result
+        assert "mod_b" not in result
+        assert "mod_a" in result
+
+    def test_topo_sort_phantom_error_includes_referrer(self) -> None:
+        """The error message should include the referencing module name."""
+        modules = {
+            "mod_x": {"depends": ["ghost"]},
+        }
+        with pytest.raises(ValueError, match="referenced by mod_x"):
+            topo_sort(modules)
+
+    def test_topo_sort_strict_default_is_true(self) -> None:
+        """Default strict=True should raise on phantom deps."""
+        modules = {
+            "mod_a": {"depends": ["missing"]},
+        }
+        with pytest.raises(ValueError, match="Unknown dependency 'missing'"):
+            topo_sort(modules)
+
+
 class TestDepGraphCanGenerate:
     def test_can_generate_when_deps_ready(self, tmp_path: Path) -> None:
         planning = tmp_path / ".planning"
