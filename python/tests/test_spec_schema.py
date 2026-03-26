@@ -647,3 +647,34 @@ class TestExpectedExamples:
         )
         assert len(spec.models[0].expected_examples) == 1
         assert spec.models[0].expected_examples[0]["create"]["name"] == "Order1"
+
+
+# ---------------------------------------------------------------------------
+# Multi-company support
+# ---------------------------------------------------------------------------
+
+
+class TestMultiCompany:
+    """Tests for the multi_company field on ModuleSpec."""
+
+    def test_module_spec_accepts_multi_company(self):
+        """multi_company=True is accepted by ModuleSpec."""
+        spec = ModuleSpec(module_name="test", multi_company=True)
+        assert spec.multi_company is True
+
+    def test_module_spec_multi_company_defaults_false(self):
+        """multi_company defaults to False when not specified."""
+        spec = ModuleSpec(module_name="test")
+        assert spec.multi_company is False
+
+    def test_multi_company_round_trips_through_validate_spec(self):
+        """validate_spec preserves multi_company=True."""
+        raw = {"module_name": "test_mc", "multi_company": True}
+        result = validate_spec(raw)
+        assert result.multi_company is True
+
+    def test_multi_company_false_round_trips(self):
+        """validate_spec preserves multi_company=False."""
+        raw = {"module_name": "test_mc", "multi_company": False}
+        result = validate_spec(raw)
+        assert result.multi_company is False

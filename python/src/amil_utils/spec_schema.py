@@ -641,6 +641,7 @@ class ModuleSpec(BaseModel):
     security: SecurityBlockSpec | None = None
     settings: list[SettingSpec] = []
     migrations: list[MigrationSpec] = []
+    multi_company: bool = False
 
     @model_validator(mode="after")
     def check_no_duplicate_extends(self) -> ModuleSpec:

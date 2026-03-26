@@ -5954,3 +5954,110 @@ class TestExpectedExamplesRendering:
         assert "record.sum_ab" in content
         assert "record.diff_ab" in content
         assert "assertEqual" in content
+
+
+# ---------------------------------------------------------------------------
+# Multi-company integration tests
+# ---------------------------------------------------------------------------
+
+
+class TestMultiCompanyRendering:
+    """Integration tests: multi_company=True generates company_id field and record rules."""
+
+    def test_multi_company_injects_company_id_field(self, tmp_path):
+        """multi_company=True should auto-inject company_id to each model."""
+        spec = {
+            "module_name": "test_mc",
+            "multi_company": True,
+            "depends": ["base"],
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [{"name": "name", "type": "Char"}],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_mc" / "models" / "test_order.py").read_text()
+        assert "company_id" in model_py
+
+    def test_multi_company_false_no_company_field(self, tmp_path):
+        """multi_company=False (default) should not auto-inject company_id."""
+        spec = {
+            "module_name": "test_nomc",
+            "multi_company": False,
+            "depends": ["base"],
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [{"name": "name", "type": "Char"}],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_nomc" / "models" / "test_order.py").read_text()
+        assert "company_id" not in model_py
+
+    def test_multi_company_generates_record_rules(self, tmp_path):
+        """multi_company=True should produce record_rules.xml with company domain."""
+        spec = {
+            "module_name": "test_mc_rules",
+            "multi_company": True,
+            "depends": ["base"],
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [{"name": "name", "type": "Char"}],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        names = [Path(f).name for f in files]
+        assert "record_rules.xml" in names
+        record_rules_file = next(f for f in files if Path(f).name == "record_rules.xml")
+        content = Path(record_rules_file).read_text()
+        assert "company_ids" in content
+
+    def test_multi_company_manifest_includes_record_rules(self, tmp_path):
+        """multi_company=True should include record_rules.xml in manifest."""
+        spec = {
+            "module_name": "test_mc_manifest",
+            "multi_company": True,
+            "depends": ["base"],
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [{"name": "name", "type": "Char"}],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        manifest_file = next(f for f in files if Path(f).name == "__manifest__.py")
+        content = Path(manifest_file).read_text()
+        assert "security/record_rules.xml" in content
+
+    def test_multi_company_does_not_duplicate_existing_company_id(self, tmp_path):
+        """If user already declared company_id, multi_company=True should not duplicate it."""
+        spec = {
+            "module_name": "test_mc_dup",
+            "multi_company": True,
+            "depends": ["base"],
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [
+                        {"name": "name", "type": "Char"},
+                        {"name": "company_id", "type": "Many2one", "comodel_name": "res.company"},
+                    ],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_mc_dup" / "models" / "test_order.py").read_text()
+        # company_id should appear exactly once in field definitions
+        assert model_py.count("company_id = fields.Many2one") == 1
