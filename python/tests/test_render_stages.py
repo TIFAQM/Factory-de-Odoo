@@ -464,7 +464,8 @@ class TestFunctionSizeLimits:
         # Phase 60: limit raised from 200 to 300 due to iterative mode (spec stash,
         # conflict detection, stub merge, stage filtering, manifest merging)
         # PIPE-04: raised to 350 after adding semantic validation block
-        assert line_count < 350, f"render_module is {line_count} lines, should be < 350"
+        # Phase 5: raised to 400 after adding odoo-ls structural validation block
+        assert line_count < 400, f"render_module is {line_count} lines, should be < 400"
 
 
 # ---------------------------------------------------------------------------

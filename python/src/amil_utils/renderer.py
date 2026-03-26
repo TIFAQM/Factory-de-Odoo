@@ -1398,6 +1398,7 @@ def render_module(
     force: bool = False,
     dry_run: bool = False,
     skip_semantic_validation: bool = False,
+    ols_client: "OdooLSClient | None" = None,
 ) -> "tuple[list[Path], list[VerificationWarning]]":
     """Orchestrate rendering of a complete Odoo module via 11 named stage functions.
 
@@ -1412,6 +1413,8 @@ def render_module(
         force: Force full regeneration, ignore spec stash.
         dry_run: Show what would change without writing files.
         skip_semantic_validation: Skip post-render semantic validation (default False).
+        ols_client: Optional OdooLSClient for structural validation via odoo-ls.
+            When None (the default), OLS validation is skipped entirely.
 
     Returns:
         Tuple of (created_files, verification_warnings).
@@ -1701,6 +1704,55 @@ def render_module(
                 )
         except Exception as exc:
             _logger.warning("Semantic validation failed: %s", exc)
+
+    # --- Phase 5: Structural validation via odoo-ls ---
+    if ols_client is not None and not skip_semantic_validation and created_files:
+        try:
+            from amil_utils.validation.odoo_ls_validator import (
+                classify_ols_diagnostics,
+            )
+            from amil_utils.validation.odoo_ls_fixer import run_ols_fix_loop
+            from amil_utils.verifier import VerificationWarning as _OlsVW
+
+            _logger.info("Running odoo-ls structural validation on %s", module_dir)
+            ols_diags = ols_client.validate_module(module_dir)
+            classified = classify_ols_diagnostics(ols_diags)
+
+            if classified.fixable_count > 0:
+                fixed = run_ols_fix_loop(
+                    lambda path: ols_client.validate_module(path),
+                    module_dir,
+                    max_iterations=3,
+                )
+                _logger.info("OLS auto-fix applied %d fixes", fixed)
+                ols_diags = ols_client.validate_module(module_dir)
+                classified = classify_ols_diagnostics(ols_diags)
+
+            for d in classified.errors:
+                all_warnings.append(
+                    _OlsVW(
+                        check_type=f"odoo-ls:{d.code}",
+                        subject=d.file or module_name,
+                        message=f"[odoo-ls] {d.message} (line {d.line})",
+                    )
+                )
+            for d in classified.warnings:
+                all_warnings.append(
+                    _OlsVW(
+                        check_type=f"odoo-ls:{d.code}",
+                        subject=d.file or module_name,
+                        message=f"[odoo-ls] {d.message} (line {d.line})",
+                        suggestion="warning",
+                    )
+                )
+            if classified.errors:
+                _logger.warning(
+                    "odoo-ls found %d errors in %s",
+                    len(classified.errors),
+                    module_dir.name,
+                )
+        except Exception as exc:
+            _logger.warning("odoo-ls validation failed: %s", exc)
 
     # Phase 60: Save spec stash after successful generation
     from amil_utils.iterative import save_spec_stash

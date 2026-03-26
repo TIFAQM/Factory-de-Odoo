@@ -101,10 +101,41 @@ def registry() -> None:
 @click.option("--resume", is_flag=True, default=False)
 @click.option("--force", is_flag=True, default=False)
 @click.option("--dry-run", "dry_run", is_flag=True, default=False)
-def render_module_cmd(spec_file: str, output_dir: str, no_context7: bool, fresh_context7: bool, skip_validation: bool, resume: bool, force: bool, dry_run: bool) -> None:
+@click.option("--skip-odoo-ls", is_flag=True, default=False,
+              help="Skip odoo-ls structural validation")
+@click.option("--odoo-source-path", type=click.Path(exists=True),
+              envvar="ODOO_SOURCE_PATH",
+              help="Path to Odoo 19.0 source for odoo-ls validation")
+@click.option("--odoo-ls-binary", type=click.Path(),
+              envvar="ODOO_LS_BINARY", default="odoo_ls_server",
+              help="Path to odoo_ls_server binary")
+def render_module_cmd(spec_file: str, output_dir: str, no_context7: bool, fresh_context7: bool, skip_validation: bool, resume: bool, force: bool, dry_run: bool, skip_odoo_ls: bool, odoo_source_path: str | None, odoo_ls_binary: str) -> None:
     """Render a complete Odoo module from a JSON specification file."""
+    from pathlib import Path as _P
     from amil_utils.commands.render import execute_render_module
-    r = execute_render_module(spec_file, output_dir, no_context7=no_context7, fresh_context7=fresh_context7, skip_validation=skip_validation, resume=resume, force=force, dry_run=dry_run)
+
+    ols_client = None
+    if not skip_odoo_ls and odoo_source_path:
+        from amil_utils.validation.odoo_ls_config import generate_odools_toml
+        from amil_utils.validation.odoo_ls_client import OdooLSClient
+
+        config_path = generate_odools_toml(
+            output_path=_P(output_dir) / ".odools.toml",
+            odoo_source_path=_P(odoo_source_path),
+            addons_output_dir=_P(output_dir),
+        )
+        ols_client = OdooLSClient(
+            binary_path=_P(odoo_ls_binary),
+            config_path=config_path,
+            workspace_root=_P(output_dir),
+        )
+        ols_client.start()
+
+    try:
+        r = execute_render_module(spec_file, output_dir, no_context7=no_context7, fresh_context7=fresh_context7, skip_validation=skip_validation, resume=resume, force=force, dry_run=dry_run, ols_client=ols_client)
+    finally:
+        if ols_client is not None:
+            ols_client.shutdown()
     for f in r["files"]: click.echo(f)
     for w in r["warnings"]:
         click.echo(f"WARN [{w['check_type']}] {w['subject']}: {w['message']}", err=True)

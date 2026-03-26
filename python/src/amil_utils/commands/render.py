@@ -29,6 +29,7 @@ def execute_render_module(
     resume: bool = False,
     force: bool = False,
     dry_run: bool = False,
+    ols_client: Any = None,
 ) -> dict[str, Any]:
     """Render a complete Odoo module from a JSON specification file.
 
@@ -41,6 +42,10 @@ def execute_render_module(
         - mermaid_paths: list[str] -- generated diagram paths
         - validation: dict | None -- semantic validation result
         - error: str | None -- error message if failed
+
+    Args:
+        ols_client: Optional OdooLSClient for odoo-ls structural validation.
+            When None (the default), OLS validation is skipped.
 
     Raises:
         SystemExit with code 1 is NOT raised here -- callers decide on
@@ -114,6 +119,7 @@ def execute_render_module(
             resume_from=resume_manifest,
             force=force,
             dry_run=dry_run,
+            ols_client=ols_client,
         )
         result["files"] = [str(f) for f in files]
         result["warnings"] = [
