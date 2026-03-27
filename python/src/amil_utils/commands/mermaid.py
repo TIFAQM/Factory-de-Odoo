@@ -9,10 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-
-def _find_registry_path() -> Path:
-    """Return the path to the model registry JSON file (relative to cwd)."""
-    return Path(".planning/model_registry.json")
+from amil_utils.commands.registry_helpers import find_registry_path as _find_registry_path
 
 
 def execute_mermaid(

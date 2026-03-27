@@ -13,10 +13,7 @@ from typing import Any
 
 _logger = logging.getLogger(__name__)
 
-
-def _find_registry_path() -> Path:
-    """Return the path to the model registry JSON file (relative to cwd)."""
-    return Path(".planning/model_registry.json")
+from amil_utils.commands.registry_helpers import find_registry_path as _find_registry_path
 
 
 def execute_render_module(
@@ -153,7 +150,7 @@ def execute_render_module(
                 stub_reg = _StubRegistry(stub_reg_path)
                 stub_reg.load()
                 stub_reg.load_known_models()
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError):
                 stub_reg = None
 
             stub_report = generate_stub_report(
@@ -167,7 +164,7 @@ def execute_render_module(
                 "quality_count": stub_report.quality_count,
                 "report_path": str(stub_report.report_path),
             }
-        except Exception as exc:
+        except (OSError, ValueError, TypeError) as exc:
             result["stub_report"] = {"error": str(exc)}
 
         # Post-render semantic validation
