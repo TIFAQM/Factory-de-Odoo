@@ -100,6 +100,14 @@ def _process_constraints(spec: dict[str, Any]) -> dict[str, Any]:
                 validate_identifier(f, "temporal constraint field")
             guards = " and ".join(f"rec.{f}" for f in fields)
             condition = c["condition"]
+            # Defense-in-depth: reject conditions with dangerous constructs
+            _DANGEROUS = ("__import__", "__class__", "__mro__",
+                          "exec(", "eval(", "os.system", "subprocess")
+            if any(p in condition for p in _DANGEROUS):
+                logger.warning(
+                    "Temporal constraint condition contains dangerous pattern — "
+                    "skipping constraint '%s'", c.get("name", "?"))
+                return enriched  # Return unenriched (no check_expr)
             # Prefix field references with rec.
             check_condition = condition
             for field in fields:
