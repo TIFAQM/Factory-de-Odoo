@@ -351,8 +351,8 @@ def _cache_read(cache_dir: Path, key: str) -> str | None:
         data = json.loads(cache_file.read_text(encoding="utf-8"))
         if time.time() - data["ts"] < CACHE_TTL_SECONDS:
             return data["response"]
-    except (OSError, json.JSONDecodeError, KeyError, TypeError):
-        pass
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        logger.debug("Cache miss for key %s: %s", key, exc)
     return None
 
 

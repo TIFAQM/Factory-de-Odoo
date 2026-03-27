@@ -74,7 +74,8 @@ def _tmpl_desc(p: Path) -> str:
             for s in (" -- ", " - "):
                 parts = c.split(s, maxsplit=1)
                 if len(parts) == 2: return parts[1].strip()
-    except OSError: pass
+    except OSError as exc:
+        _logger.debug("Failed to read help comment from %s: %s", p, exc)
     return ""
 
 # -- Registry group (sub-commands in commands/registry_cmds.py) --------------

@@ -5,8 +5,11 @@ Provides roadmap_get_phase, roadmap_analyze, and roadmap_update_plan_progress.
 """
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import find_phase, normalize_phase_name
 
@@ -146,8 +149,8 @@ def roadmap_analyze(cwd: str | Path) -> dict:
                     disk_status = "discussed"
                 else:
                     disk_status = "empty"
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to read phase directory for %s: %s", phase_num, exc)
 
         # Checkbox status
         checkbox_pat = re.compile(

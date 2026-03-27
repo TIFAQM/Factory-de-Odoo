@@ -43,15 +43,15 @@ def _cleanup_pending(module_dir: Path) -> None:
         if dirpath.is_dir():
             try:
                 dirpath.rmdir()  # Only succeeds if empty
-            except OSError:
-                pass
+            except OSError as exc:
+                logger.debug("Could not remove subdirectory %s: %s", dirpath, exc)
 
     # Remove the root pending directory if empty
     try:
         pending_dir.rmdir()
         logger.info("Cleaned up empty %s", PENDING_DIR_NAME)
-    except OSError:
-        pass  # Not empty, leave it
+    except OSError as exc:
+        logger.debug("Pending directory not empty, keeping: %s", exc)
 
 
 def resolve_status(module_dir: Path) -> list[str]:

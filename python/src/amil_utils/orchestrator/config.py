@@ -6,7 +6,10 @@ Provides config_ensure_section, config_set, config_get, and Odoo-key validation.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # ── Odoo Config Validation ───────────────────────────────────────────────────
 
@@ -69,12 +72,12 @@ def _parse_value(value: str) -> object:
     if isinstance(value, str) and (value.startswith("[") or value.startswith("{")):
         try:
             return json.loads(value)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            logger.debug("Failed to parse config value as JSON: %s", exc)
     try:
         return int(value) if "." not in str(value) else float(value)
-    except (ValueError, TypeError):
-        pass
+    except (ValueError, TypeError) as exc:
+        logger.debug("Failed to parse config value as number: %s", exc)
     return value
 
 

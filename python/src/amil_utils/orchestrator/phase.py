@@ -8,11 +8,14 @@ live in phase_query.py. Re-exported here for backward compatibility.
 """
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 from datetime import date
 from functools import cmp_to_key
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import (
     compare_phase_num,
@@ -118,8 +121,8 @@ def phase_insert(cwd: str | Path, after_phase: str, description: str) -> dict:
                 dm = dec_pattern.match(e.name)
                 if dm:
                     existing_decimals.append(int(dm.group(1)))
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to scan for existing decimal phases: %s", exc)
 
     next_dec = 1 if not existing_decimals else max(existing_decimals) + 1
     decimal_phase = f"{normalized_after}.{next_dec}"
@@ -194,8 +197,8 @@ def phase_remove(cwd: str | Path, target_phase: str, *, force: bool = False) -> 
             (d for d in entries if d.startswith(normalized + "-") or d == normalized),
             None,
         )
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to find target phase directory for removal: %s", exc)
 
     # Block if phase has executed work
     if target_dir and not force:
@@ -296,8 +299,8 @@ def _renumber_decimal_phases(
                     new_name = f.name.replace(old_phase_id, new_phase_id)
                     f.rename(f.parent / new_name)
                     renamed_files.append({"from": f.name, "to": new_name})
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to renumber decimal phases: %s", exc)
 
 
 def _renumber_integer_phases(
@@ -350,8 +353,8 @@ def _renumber_integer_phases(
                     new_name = new_prefix + f.name[len(old_prefix):]
                     f.rename(f.parent / new_name)
                     renamed_files.append({"from": f.name, "to": new_name})
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to renumber integer phases: %s", exc)
 
 
 def _update_roadmap_after_remove(
@@ -589,8 +592,8 @@ def _find_next_phase(
                 next_phase_name = dm.group(2) or None
                 is_last_phase = False
                 break
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases directory for next phase lookup: %s", exc)
 
     # Fallback: check ROADMAP.md for phases not yet scaffolded
     if is_last_phase and roadmap_path.exists():
@@ -607,8 +610,8 @@ def _find_next_phase(
                     next_phase_name = re.sub(r"\s+", "-", raw.lower())
                     is_last_phase = False
                     break
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to read ROADMAP.md for next phase fallback: %s", exc)
 
     return next_phase_num, next_phase_name, is_last_phase
 

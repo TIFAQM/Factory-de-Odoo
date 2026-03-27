@@ -6,10 +6,13 @@ into a single dict that a workflow can consume.
 """
 from __future__ import annotations
 
+import logging
 import os
 import re
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import (
     find_phase,
@@ -295,8 +298,8 @@ def init_quick(cwd: str | Path, description: str | None = None) -> dict:
         ]
         if existing:
             next_num = max(existing) + 1
-    except (OSError, ValueError):
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Failed to enumerate quick task numbers: %s", exc)
 
     return {
         # Models
@@ -330,8 +333,8 @@ def init_resume(cwd: str | Path) -> dict:
     try:
         agent_file = Path(cwd) / ".planning" / "current-agent-id.txt"
         interrupted_agent_id = agent_file.read_text(encoding="utf-8").strip()
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read interrupted agent ID: %s", exc)
 
     return {
         # File existence
@@ -485,8 +488,8 @@ def init_milestone_op(cwd: str | Path) -> dict:
                     completed_phases += 1
             except OSError:
                 continue
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases directory for milestone: %s", exc)
 
     # Check archive
     archive_dir = Path(cwd) / ".planning" / "archive"
@@ -495,8 +498,8 @@ def init_milestone_op(cwd: str | Path) -> dict:
         archived_milestones = [
             e.name for e in archive_dir.iterdir() if e.is_dir()
         ]
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read archive directory: %s", exc)
 
     return {
         # Config
@@ -531,8 +534,8 @@ def init_map_codebase(cwd: str | Path) -> dict:
         existing_maps = [
             f.name for f in codebase_dir.iterdir() if f.name.endswith(".md")
         ]
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read codebase maps directory: %s", exc)
 
     return {
         # Models
@@ -609,8 +612,8 @@ def init_progress(cwd: str | Path) -> dict:
                 current_phase = info
             if not next_phase and status == "pending":
                 next_phase = info
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases for autonomous context: %s", exc)
 
     # Check for paused work
     paused_at = None
@@ -619,8 +622,8 @@ def init_progress(cwd: str | Path) -> dict:
         pause_match = re.search(r"\*\*Paused At:\*\*\s*(.+)", state)
         if pause_match:
             paused_at = pause_match.group(1).strip()
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read STATE.md for paused-at check: %s", exc)
 
     return {
         # Models

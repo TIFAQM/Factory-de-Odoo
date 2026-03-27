@@ -4,9 +4,12 @@ Extracted from phase.py to keep both files under 800 lines.
 """
 from __future__ import annotations
 
+import logging
 import re
 from functools import cmp_to_key
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import (
     compare_phase_num,
@@ -163,8 +166,8 @@ def phase_plan_index(cwd: str | Path, phase: str) -> dict:
         match = next((d for d in entries if d.startswith(normalized)), None)
         if match:
             phase_dir = phases_dir / match
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases directory for plan index: %s", exc)
 
     if phase_dir is None:
         return {
@@ -200,8 +203,8 @@ def phase_plan_index(cwd: str | Path, phase: str) -> dict:
         wave = 1
         try:
             wave = int(fm.get("wave", 1))
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as exc:
+            logger.debug("Failed to parse wave number from frontmatter: %s", exc)
 
         autonomous = True
         auto_val = fm.get("autonomous")

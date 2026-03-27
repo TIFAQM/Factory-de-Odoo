@@ -700,8 +700,8 @@ def compute_migration_version(diff_result: dict) -> str:
         try:
             OdooVersion.parse(new_ver_str)
             return new_ver_str
-        except ValueError:
-            pass
+        except ValueError as exc:
+            logger.debug("Cannot parse new_version %r, falling through to bump: %s", new_ver_str, exc)
 
     # Parse old_version as the base for bumping
     bump_type = _classify_bump_type(diff_result)
@@ -763,8 +763,8 @@ def generate_versioned_migration(
                 v = v.bump(bump_type)
                 max_bumps -= 1
             version = str(v)
-        except ValueError:
-            pass  # unparseable version, skip collision avoidance
+        except ValueError as exc:
+            logger.debug("Unparseable version for collision avoidance, skipping: %s", exc)
 
     migration_required = diff_result.get("migration_required", False)
 

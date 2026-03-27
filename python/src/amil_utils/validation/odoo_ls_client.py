@@ -609,8 +609,8 @@ class OdooLSClient:
         try:
             self._process.kill()
             self._process.wait(timeout=5)
-        except (OSError, subprocess.TimeoutExpired):
-            pass
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            logger.debug("Failed to kill odoo-ls subprocess: %s", exc)
 
 
 # ---------------------------------------------------------------------------

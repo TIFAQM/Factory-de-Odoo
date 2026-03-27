@@ -216,8 +216,8 @@ def state_load(cwd: str | Path) -> dict:
     state_raw = ""
     try:
         state_raw = (planning / "STATE.md").read_text(encoding="utf-8")
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read STATE.md: %s", exc)
 
     return {
         "config": config,

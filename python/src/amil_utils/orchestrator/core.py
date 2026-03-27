@@ -6,10 +6,13 @@ Excludes parseArgs (Click handles CLI args) and output (in cli_helpers.py).
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
 from pathlib import Path, PurePosixPath
+
+logger = logging.getLogger(__name__)
 
 
 # ── Path helpers ─────────────────────────────────────────────────────────────
@@ -314,8 +317,8 @@ def find_phase(cwd: str | Path, phase: str | None) -> dict | None:
             if result:
                 result["archived"] = version
                 return result
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to search archived milestones: %s", exc)
 
     return None
 
@@ -356,8 +359,8 @@ def get_archived_phase_dirs(cwd: str | Path) -> list[dict]:
                     })
             except OSError:
                 continue
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to list archived phase directories: %s", exc)
 
     return results
 
@@ -475,8 +478,8 @@ def get_milestone_phase_filter(cwd: str | Path):
         roadmap = (Path(cwd) / ".planning" / "ROADMAP.md").read_text(encoding="utf-8")
         for m in re.finditer(r"#{2,4}\s*Phase\s+(\d+[A-Z]?(?:\.\d+)*)\s*:", roadmap, re.IGNORECASE):
             milestone_phases.add(m.group(1))
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read ROADMAP.md for milestone phase filter: %s", exc)
 
     if not milestone_phases:
         def pass_all(dir_name: str) -> bool:
@@ -524,8 +527,8 @@ def has_source_files(directory: str | Path, _depth: int = 0) -> bool:
                 return True
             if entry.is_dir() and has_source_files(entry, _depth + 1):
                 return True
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to scan directory %s for source files: %s", directory, exc)
     return False
 
 

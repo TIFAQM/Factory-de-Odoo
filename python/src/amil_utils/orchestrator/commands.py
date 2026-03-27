@@ -4,9 +4,12 @@ Ported from orchestrator/amil/bin/lib/commands.cjs (548 lines, since deleted).
 """
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date, datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import (
     MODEL_PROFILES,
@@ -70,8 +73,8 @@ def verify_path_exists(cwd: str | Path, target_path: str) -> dict:
             return {"exists": True, "type": "file"}
         if full.exists():
             return {"exists": True, "type": "other"}
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to check file existence for %s: %s", file_path, exc)
     return {"exists": False, "type": None}
 
 
@@ -101,8 +104,8 @@ def history_digest(cwd: str | Path) -> dict:
                     "full_path": str(phases_dir / entry),
                     "milestone": None,
                 })
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to list current phase directories: %s", exc)
 
     if not all_phase_dirs:
         return {"phases": {}, "decisions": [], "tech_stack": []}
@@ -375,8 +378,8 @@ def progress_render(cwd: str | Path, format: str | None = None) -> dict:
                 "summaries": summaries,
                 "status": status,
             })
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases directory for progress: %s", exc)
 
     percent = (
         min(100, round((total_summaries / total_plans) * 100))

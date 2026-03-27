@@ -6,9 +6,12 @@ Validates .planning/ directory structure and optionally repairs issues.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import date
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import get_milestone_info
 from amil_utils.orchestrator.state import write_state_md
@@ -129,8 +132,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                     m = re.match(r"^(\d+(?:\.\d+)*)", entry.name)
                     if m:
                         disk_phases.add(m.group(1))
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to read phases directory for state check: %s", exc)
 
         for ref in phase_refs:
             normalized_ref = str(int(ref)).zfill(2)
@@ -191,8 +194,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                 )
                 if "addNyquistKey" not in repairs:
                     repairs.append("addNyquistKey")
-        except (json.JSONDecodeError, ValueError):
-            pass
+        except (json.JSONDecodeError, ValueError) as exc:
+            logger.debug("Failed to parse config.json for Nyquist check: %s", exc)
 
     # ── Check 6: Phase directory naming (NN-name format) ─────────────────
     try:
@@ -203,8 +206,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                     f'Phase directory "{entry.name}" doesn\'t follow NN-name format',
                     "Rename to match pattern (e.g., 01-setup)",
                 )
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to check phase directory naming: %s", exc)
 
     # ── Check 7: Orphaned plans (PLAN without SUMMARY) ───────────────────
     try:
@@ -222,8 +225,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                 plan_base = plan.replace("-PLAN.md", "").replace("PLAN.md", "")
                 if plan_base not in summary_bases:
                     issue("info", "I001", f"{entry.name}/{plan} has no SUMMARY.md", "May be in progress")
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to check orphaned plans: %s", exc)
 
     # ── Check 7b: Nyquist VALIDATION.md consistency ──────────────────────
     try:
@@ -242,8 +245,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                         f"Phase {entry.name}: has Validation Architecture in RESEARCH.md but no VALIDATION.md",
                         "Re-run /amil:plan-phase with --research to regenerate",
                     )
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to check Nyquist validation consistency: %s", exc)
 
     # ── Check 8: Roadmap/disk consistency (only when phases dir exists) ─
     if roadmap_path.exists() and phases_dir.exists():
@@ -259,8 +262,8 @@ def validate_health(cwd: str | Path, *, repair: bool = False) -> dict:
                     dm = re.match(r"^(\d+[A-Z]?(?:\.\d+)*)", entry.name, re.IGNORECASE)
                     if dm:
                         disk_phases_set.add(dm.group(1))
-        except OSError:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to read phases for roadmap/disk consistency: %s", exc)
 
         for p in roadmap_phases:
             padded = str(int(p)).zfill(2)

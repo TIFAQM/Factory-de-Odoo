@@ -4,10 +4,13 @@ Ported from orchestrator/amil/bin/lib/milestone.cjs (242 lines, since deleted).
 """
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 from datetime import date
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from amil_utils.orchestrator.core import get_milestone_phase_filter
 from amil_utils.orchestrator.frontmatter import extract_frontmatter
@@ -219,8 +222,8 @@ def _gather_milestone_stats(
                     total_tasks += len(task_matches)
                 except OSError:
                     continue
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Failed to read phases directory for milestone stats: %s", exc)
 
     return phase_count, total_plans, total_tasks, accomplishments
 
