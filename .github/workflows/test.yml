@@ -29,10 +29,8 @@ jobs:
 
       - name: Install dependencies
         working-directory: python
-        run: |
-          uv venv --python 3.12
-          uv pip install -e ".[dev]"
+        run: uv pip install --system -e ".[test]"
 
       - name: Run tests
         working-directory: python
-        run: uv run pytest tests/ -m "not docker and not e2e" --tb=short -q
+        run: pytest tests/ -m "not docker and not e2e and not e2e_slow and not odoo_ls" --tb=short -q
