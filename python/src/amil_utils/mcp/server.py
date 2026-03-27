@@ -10,6 +10,7 @@ Using print() corrupts the JSON-RPC stdio transport protocol.
 """
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import re
@@ -24,6 +25,7 @@ except ImportError:
     _HAS_MCP = False
 
 from amil_utils.mcp.odoo_client import OdooClient, OdooConfig
+from amil_utils.mcp.rate_limiter import RateLimiter
 
 # Configure logging to stderr -- stdout is the JSON-RPC transport
 logging.basicConfig(
@@ -103,6 +105,38 @@ def _get_client() -> OdooClient:
     return _client
 
 
+# ---------------------------------------------------------------------------
+# Rate limiting -- per-tool: 30 req/min, global: 100 req/min (CWE-400)
+# ---------------------------------------------------------------------------
+
+_rate_limiter = RateLimiter(max_requests=30, window_seconds=60, global_max=100)
+
+
+def _rate_limited(fn):
+    """Decorator that enforces rate limiting on an MCP tool function.
+
+    Returns an "ERROR: rate limit exceeded" string (instead of raising)
+    to keep the MCP server running when a tool is called too frequently.
+    """
+    @functools.wraps(fn)
+    def _wrapper(*args, **kwargs):
+        tool_name = fn.__name__
+        if not _rate_limiter.allow(tool_name):
+            remaining = _rate_limiter.remaining(tool_name)
+            logger.warning(
+                "Rate limit exceeded for tool '%s' (remaining=%d)",
+                tool_name,
+                remaining,
+            )
+            return (
+                f"ERROR: Rate limit exceeded for '{tool_name}'. "
+                f"Max 30 requests per minute per tool, 100 requests per minute globally. "
+                f"Remaining quota: {remaining}"
+            )
+        return fn(*args, **kwargs)
+    return _wrapper
+
+
 _MODEL_NAME_RE = re.compile(r"^[a-z][a-z0-9_.]+$")
 _FIELD_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _VIEW_TYPES = frozenset({"form", "tree", "kanban", "search", "calendar", "graph", "pivot", "activity"})
@@ -143,6 +177,7 @@ def _handle_error(exc: Exception) -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def check_connection() -> str:
     """Check connectivity and authentication to the Odoo instance.
 
@@ -162,6 +197,7 @@ def check_connection() -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def list_models(name_filter: str = "", limit: int = 100) -> str:
     """List all Odoo models available in the instance.
 
@@ -187,6 +223,7 @@ def list_models(name_filter: str = "", limit: int = 100) -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def get_model_fields(model_name: str) -> str:
     """Get field definitions for an Odoo model.
 
@@ -226,6 +263,7 @@ def get_model_fields(model_name: str) -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def list_installed_modules() -> str:
     """List all installed Odoo modules with their versions.
 
@@ -252,6 +290,7 @@ def list_installed_modules() -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def check_module_dependency(module_name: str) -> str:
     """Check if a specific Odoo module is installed in the instance.
 
@@ -285,6 +324,7 @@ def check_module_dependency(module_name: str) -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def get_view_arch(model_name: str, view_type: str = "") -> str:
     """Get XML view architecture for an Odoo model from ir.ui.view.
 
@@ -332,6 +372,7 @@ def get_view_arch(model_name: str, view_type: str = "") -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def get_view_inheritance_chain(model_name: str, view_type: str = "form") -> str:
     """Trace the full view inheritance chain for an Odoo model.
 
@@ -386,6 +427,7 @@ def get_view_inheritance_chain(model_name: str, view_type: str = "form") -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def get_model_relations(model_name: str) -> str:
     """Get all relational fields pointing to/from an Odoo model.
 
@@ -438,6 +480,7 @@ def get_model_relations(model_name: str) -> str:
 
 
 @mcp.tool()
+@_rate_limited
 def find_field_conflicts(model_name: str, field_name: str) -> str:
     """Check if a field already exists on an Odoo model (potential conflict).
 
