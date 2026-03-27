@@ -87,7 +87,7 @@ class TestDevInstanceConfig:
 
         assert "db_name = odoo_dev" in content, "odoo.conf must set db_name = odoo_dev"
         assert "list_db = False" in content, "odoo.conf must set list_db = False"
-        assert "admin_passwd = admin" in content, "odoo.conf must set admin_passwd = admin"
+        assert "admin_passwd = False" in content, "odoo.conf must set admin_passwd = False (no hardcoded passwords)"
 
     def test_env_file_defaults(self) -> None:
         """docker/dev/.env must contain ODOO_DEV_PORT=8069."""

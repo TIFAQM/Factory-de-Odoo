@@ -18,6 +18,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import re
 import warnings
 from difflib import get_close_matches
 from typing import Any, Literal
@@ -29,6 +30,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 # ---------------------------------------------------------------------------
 # Valid Odoo field types (16 total)
 # ---------------------------------------------------------------------------
+
+_MODULE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 VALID_FIELD_TYPES: frozenset[str] = frozenset({
     "Char",
@@ -678,6 +681,22 @@ class ModuleSpec(BaseModel):
     document_config: dict = {}
     academic_calendar: bool = False
     academic_config: dict = {}
+
+    @field_validator("module_name")
+    @classmethod
+    def validate_module_name_pattern(cls, v: str) -> str:
+        """Validate module_name matches Odoo naming conventions.
+
+        Prevents path traversal (``../../../tmp/evil``) and enforces
+        lowercase + underscores only. Same regex as docker_runner.py.
+        """
+        if not _MODULE_NAME_RE.fullmatch(v):
+            raise ValueError(
+                f"module_name '{v}' must match [a-z][a-z0-9_]* "
+                "(lowercase, underscores only, starts with letter). "
+                "This prevents path traversal and aligns with Odoo conventions."
+            )
+        return v
 
     @model_validator(mode="before")
     @classmethod
