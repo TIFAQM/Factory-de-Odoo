@@ -30,6 +30,25 @@ from .types import Result, InstallResult, TestResult
 
 _MODULE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
+_INFRA_PATTERNS = re.compile(
+    r"(?:Container\s+\w{12})|"   # Container IDs (12 hex chars)
+    r"(?:network\s+\S+)|"        # Network names
+    r"(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)",  # IP:port
+    re.IGNORECASE,
+)
+
+
+def _sanitize_docker_error(stderr: str, max_length: int = 200) -> str:
+    """Truncate and sanitize Docker stderr for error messages.
+
+    Removes infrastructure details (container IDs, network names, IP:port)
+    that could expose internal topology. Truncates to max_length chars.
+    """
+    cleaned = _INFRA_PATTERNS.sub("[REDACTED]", stderr)
+    if len(cleaned) > max_length:
+        cleaned = cleaned[:max_length] + "..."
+    return cleaned
+
 logger = logging.getLogger(__name__)
 
 COMPOSE_FILE = Path(__file__).parent.parent / "data" / "docker" / "persistent-compose.yml"
@@ -71,7 +90,7 @@ class PersistentDockerManager:
             capture_output=True, text=True, timeout=120,
         )
         if result.returncode != 0:
-            logger.error("Failed to start persistent Docker: %s", result.stderr)
+            logger.error("Failed to start persistent Docker: %s", _sanitize_docker_error(result.stderr))
             return False
 
         # Wait for Odoo to be healthy
@@ -108,7 +127,7 @@ class PersistentDockerManager:
         )
         if copy_result.returncode != 0:
             return Result(success=False,
-                          errors=(f"Failed to copy module: {copy_result.stderr}",))
+                          errors=(f"Failed to copy module: {_sanitize_docker_error(copy_result.stderr)}",))
 
         # Install via odoo CLI (list-form args — no bash -c to avoid CWE-78)
         install_result = subprocess.run(
