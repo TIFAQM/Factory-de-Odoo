@@ -36,6 +36,10 @@ _HEADER_ENCODING = "ascii"
 _BODY_ENCODING = "utf-8"
 _MAX_HEADER_SIZE = 8192  # 8 KB — guards against unbounded header accumulation
 _MAX_BODY_SIZE = 2 * 1024 * 1024  # 2 MB — normal LSP messages are <100 KB; 2 MB is a generous upper bound (defense-in-depth, CWE-400)
+_INDEX_TIMEOUT_S = 120
+_DIAG_TIMEOUT_S = 30
+_SHUTDOWN_WAIT_S = 5
+_KILL_WAIT_S = 5
 
 
 def encode_lsp_message(msg: dict[str, Any]) -> bytes:
@@ -140,8 +144,8 @@ class OdooLSClient:
         workspace_root: Path,
         *,
         log_level: str = "info",
-        index_timeout: int = 120,
-        diag_timeout: int = 30,
+        index_timeout: int = _INDEX_TIMEOUT_S,
+        diag_timeout: int = _DIAG_TIMEOUT_S,
         profile_name: str = "factory",
     ) -> None:
         self._binary_path = binary_path
@@ -315,7 +319,7 @@ class OdooLSClient:
                 logger.warning("Broken pipe during shutdown (server already exited)")
 
             try:
-                self._process.wait(timeout=5)
+                self._process.wait(timeout=_SHUTDOWN_WAIT_S)
             except subprocess.TimeoutExpired:
                 logger.warning("odoo-ls did not exit gracefully, killing")
                 self._kill()
@@ -609,7 +613,7 @@ class OdooLSClient:
             return
         try:
             self._process.kill()
-            self._process.wait(timeout=5)
+            self._process.wait(timeout=_KILL_WAIT_S)
         except (OSError, subprocess.TimeoutExpired) as exc:
             logger.debug("Failed to kill odoo-ls subprocess: %s", exc)
 

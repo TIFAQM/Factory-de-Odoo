@@ -65,8 +65,7 @@ def install_pip_package() -> bool:
 
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-e", str(PIPELINE_PYTHON),
-             "--break-system-packages", "--quiet"],
+            [sys.executable, "-m", "pip", "install", "-e", str(PIPELINE_PYTHON), "--quiet"],
             check=True,
             capture_output=True,
             text=True,
@@ -74,20 +73,23 @@ def install_pip_package() -> bool:
         ok("Installed amil-utils Python package")
         return True
     except subprocess.CalledProcessError as e:
-        # Try without --break-system-packages (older pip)
-        try:
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-e", str(PIPELINE_PYTHON), "--quiet"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            ok("Installed amil-utils Python package")
-            return True
-        except subprocess.CalledProcessError:
-            warn(f"Could not install amil-utils: {e.stderr.strip()}")
-            warn("  Install manually: pip install -e python")
-            return False
+        # Retry with --break-system-packages if the error is about externally-managed environment
+        if "externally-managed-environment" in (e.stderr or ""):
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-e", str(PIPELINE_PYTHON),
+                     "--break-system-packages", "--quiet"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                ok("Installed amil-utils Python package (with --break-system-packages)")
+                return True
+            except subprocess.CalledProcessError:
+                pass
+        warn(f"Could not install amil-utils: {e.stderr.strip()}")
+        warn("  Install manually: pip install -e python")
+        return False
 
 
 def copy_dir(src: Path, dest: Path) -> int:

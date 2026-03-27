@@ -27,6 +27,11 @@ _VALID_MODULE_NAME = re.compile(r"[a-z][a-z0-9_]+$")
 _DOCKER_MAX_RETRY_ATTEMPTS: int = 3
 _DOCKER_RETRY_DELAY_SECONDS: float = 2.0
 _DB_STARTUP_TIMEOUT_SECONDS: int = 30
+_COMPOSE_TIMEOUT_S: int = 120
+_INSTALL_TIMEOUT_S: int = 300
+_TEST_TIMEOUT_S: int = 600
+_DOCKER_INFO_TIMEOUT_S: int = 10
+_TEARDOWN_TIMEOUT_S: int = 60
 
 # Only these host env vars are passed to Docker compose subprocesses.
 # Prevents leaking secrets (AWS keys, GitHub tokens, etc.) — CWE-200.
@@ -75,7 +80,7 @@ def check_docker_available() -> bool:
         result = subprocess.run(
             ["docker", "info"],
             capture_output=True,
-            timeout=10,
+            timeout=_DOCKER_INFO_TIMEOUT_S,
         )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, OSError):
@@ -106,7 +111,7 @@ def _run_compose(
     compose_file: Path,
     args: list[str],
     env: dict[str, str],
-    timeout: int = 120,
+    timeout: int = _COMPOSE_TIMEOUT_S,
     project_name: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a docker compose command with the given arguments.
@@ -165,7 +170,7 @@ def _teardown(
             subprocess.run(
                 cmd,
                 capture_output=True,
-                timeout=60,
+                timeout=_TEARDOWN_TIMEOUT_S,
                 env=merged_env,
             )
             return  # Success — exit immediately
@@ -195,7 +200,7 @@ def _start_db_with_retry(
     compose_file: Path,
     env: dict[str, str],
     max_attempts: int = _DOCKER_MAX_RETRY_ATTEMPTS,
-    timeout: int = 120,
+    timeout: int = _COMPOSE_TIMEOUT_S,
     project_name: str | None = None,
 ) -> None:
     """Start the database service with retry and teardown between attempts.
@@ -232,7 +237,7 @@ def _start_db_with_retry(
 def docker_install_module(
     module_path: Path,
     compose_file: Path | None = None,
-    timeout: int = 300,
+    timeout: int = _INSTALL_TIMEOUT_S,
     odoo_version: str = "19.0",
 ) -> Result[InstallResult]:
     """Install an Odoo module in an ephemeral Docker environment.
@@ -328,7 +333,7 @@ def docker_install_module(
 def docker_run_tests(
     module_path: Path,
     compose_file: Path | None = None,
-    timeout: int = 600,
+    timeout: int = _TEST_TIMEOUT_S,
     odoo_version: str = "19.0",
 ) -> Result[tuple[TestResult, ...]]:
     """Run Odoo module tests in an ephemeral Docker environment.

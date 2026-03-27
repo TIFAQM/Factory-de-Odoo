@@ -18,6 +18,17 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - db-internal
 
   odoo:
     image: odoo:19.0
@@ -40,6 +51,23 @@ services:
       retries: 12
       start_period: 30s
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - db-internal
+      - default
+
+networks:
+  db-internal:
+    internal: true
 
 volumes:
   odoo-dev-db:

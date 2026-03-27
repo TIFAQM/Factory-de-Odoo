@@ -125,7 +125,7 @@ def main() -> None:
             )
 
     # Detect hook event name based on environment
-    hook_event = "AfterTool" if os.environ.get("GEMINI_API_KEY") else "PostToolUse"
+    hook_event = os.environ.get("AMIL_HOOK_EVENT", "PostToolUse")
 
     output = {
         "hookSpecificOutput": {

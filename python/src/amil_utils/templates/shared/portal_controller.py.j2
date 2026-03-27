@@ -2,7 +2,7 @@
 from collections import OrderedDict
 
 from odoo import http
-from odoo.exceptions import AccessError, MissingError
+from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 
@@ -152,10 +152,47 @@ class {{ controller_class }}(CustomerPortal):
             allowed_fields = {{ '{' }}{% for f in page.fields_editable %}'{{ f }}'{% if not loop.last %}, {% endif %}{% endfor %}{{ '}' }}
             vals = {k: v for k, v in post.items() if k in allowed_fields}
             # --- BUSINESS LOGIC START ---
-            # SECURITY: Validate field values before writing.
-            # .sudo() bypasses access rules -- ensure the portal user
-            # is authorized to modify this specific record.
-            # TODO: Add type coercion and domain-specific validation for each field.
+            # SECURITY: Validate and coerce field values before writing.
+            # .sudo() bypasses access rules -- type validation prevents
+            # injection of unexpected values through portal form fields.
+            try:
+{% if page.editable_field_types is defined and page.editable_field_types %}
+{% for fname, finfo in page.editable_field_types.items() %}
+{% if finfo.type == 'Integer' %}
+                if '{{ fname }}' in vals:
+                    try:
+                        vals['{{ fname }}'] = int(vals['{{ fname }}'])
+                    except (ValueError, TypeError):
+                        raise ValidationError('Invalid integer value for {{ fname }}.')
+{% elif finfo.type in ('Float', 'Monetary') %}
+                if '{{ fname }}' in vals:
+                    try:
+                        vals['{{ fname }}'] = float(vals['{{ fname }}'])
+                    except (ValueError, TypeError):
+                        raise ValidationError('Invalid numeric value for {{ fname }}.')
+{% elif finfo.type == 'Date' %}
+                if '{{ fname }}' in vals:
+                    import re as _re
+                    if not _re.match(r'^\d{4}-\d{2}-\d{2}$', str(vals['{{ fname }}'])):
+                        raise ValidationError('Invalid date format for {{ fname }}. Expected YYYY-MM-DD.')
+{% elif finfo.type == 'Boolean' %}
+                if '{{ fname }}' in vals:
+                    vals['{{ fname }}'] = bool(vals['{{ fname }}'])
+{% elif finfo.type == 'Selection' and finfo.selection_keys is defined %}
+                if '{{ fname }}' in vals:
+                    _allowed_{{ fname }} = {{ finfo.selection_keys | tojson }}
+                    if vals['{{ fname }}'] not in _allowed_{{ fname }}:
+                        raise ValidationError(
+                            '{{ fname }}: invalid selection value. '
+                            'Allowed: %s' % ', '.join(_allowed_{{ fname }})
+                        )
+{% endif %}
+{% endfor %}
+{% endif %}
+            except ValidationError:
+                raise
+            except Exception:
+                raise ValidationError('Invalid form data. Please check your inputs.')
             # --- BUSINESS LOGIC END ---
             {{ page.singular_name }}.sudo().write(vals)
             return request.redirect('{{ page.route }}')

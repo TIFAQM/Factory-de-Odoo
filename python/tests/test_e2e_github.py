@@ -7,10 +7,13 @@ when the token is not available.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 
 import pytest
+
+logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.e2e
 
@@ -125,7 +128,7 @@ def test_full_oca_index_build(tmp_path: object) -> None:
     count = build_oca_index(token=token, db_path=db_path)
     duration = time.monotonic() - start_time
 
-    print(f"\nFull OCA index build: {count} modules in {duration:.1f}s")
+    logger.info("Full OCA index build: %d modules in %.1fs", count, duration)
 
     assert count > 50, (
         f"Expected > 50 modules from full OCA build, got {count}"

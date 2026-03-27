@@ -29,7 +29,15 @@ from dataclasses import dataclass, field
 from .types import Result, InstallResult, TestResult
 from .docker_runner import _DOCKER_RETRY_DELAY_SECONDS, _DB_STARTUP_TIMEOUT_SECONDS
 
-_MODULE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_MODULE_NAME_RE = re.compile(r"[a-z][a-z0-9_]*")
+
+_COMPOSE_UP_TIMEOUT_S = 120
+_COPY_TIMEOUT_S = 30
+_INSTALL_TIMEOUT_S = 300
+_TEST_TIMEOUT_S = 600
+_TEST_VERBOSE_TIMEOUT_S = 900
+_STOP_TIMEOUT_S = 30
+_HEALTH_CHECK_TIMEOUT_S = 10
 
 _SANITIZE_MAX_LENGTH: int = 200
 
@@ -74,6 +82,10 @@ class PersistentDockerManager:
     _running: bool = False
     _state_dir: Path | None = None
 
+    def _compose_cmd(self, *extra_args: str) -> list[str]:
+        return ["docker", "compose", "-f", str(self.compose_file),
+                "-p", self.project_name, *extra_args]
+
     def ensure_running(self, state_dir: Path | None = None) -> bool:
         """Start the persistent instance if not already running.
 
@@ -88,9 +100,8 @@ class PersistentDockerManager:
 
         # Start containers
         result = subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name, "up", "-d", "--wait"],
-            capture_output=True, text=True, timeout=120,
+            self._compose_cmd("up", "-d", "--wait"),
+            capture_output=True, text=True, timeout=_COMPOSE_UP_TIMEOUT_S,
         )
         if result.returncode != 0:
             logger.error("Failed to start persistent Docker: %s", _sanitize_docker_error(result.stderr))
@@ -109,7 +120,7 @@ class PersistentDockerManager:
     @staticmethod
     def _validate_module_name(name: str) -> bool:
         """Validate module name against Odoo naming convention."""
-        return bool(_MODULE_NAME_RE.match(name))
+        return bool(_MODULE_NAME_RE.fullmatch(name))
 
     def install_module(self, module_path: Path) -> Result[InstallResult]:
         """Install a module into the running instance incrementally."""
@@ -123,10 +134,8 @@ class PersistentDockerManager:
 
         # Copy module into the running container's addons path
         copy_result = subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name,
-             "cp", str(module_path), f"odoo:/mnt/extra-addons/{module_name}"],
-            capture_output=True, text=True, timeout=30,
+            self._compose_cmd("cp", str(module_path), f"odoo:/mnt/extra-addons/{module_name}"),
+            capture_output=True, text=True, timeout=_COPY_TIMEOUT_S,
         )
         if copy_result.returncode != 0:
             return Result(success=False,
@@ -134,13 +143,12 @@ class PersistentDockerManager:
 
         # Install via odoo CLI (list-form args — no bash -c to avoid CWE-78)
         install_result = subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name,
-             "exec", "-T", "odoo",
-             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
-             "--no-http", "--stop-after-init",
-             "-i", module_name],
-            capture_output=True, text=True, timeout=300,
+            self._compose_cmd(
+                "exec", "-T", "odoo",
+                "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+                "--no-http", "--stop-after-init",
+                "-i", module_name),
+            capture_output=True, text=True, timeout=_INSTALL_TIMEOUT_S,
         )
 
         from .log_parser import parse_install_log
@@ -174,14 +182,13 @@ class PersistentDockerManager:
                           errors=(f"Invalid module name: {module_name!r}",))
 
         test_result = subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name,
-             "exec", "-T", "odoo",
-             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
-             "--no-http", "--stop-after-init",
-             "--test-tags", module_name,
-             "-u", module_name],
-            capture_output=True, text=True, timeout=600,
+            self._compose_cmd(
+                "exec", "-T", "odoo",
+                "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+                "--no-http", "--stop-after-init",
+                "--test-tags", module_name,
+                "-u", module_name),
+            capture_output=True, text=True, timeout=_TEST_TIMEOUT_S,
         )
 
         from .log_parser import parse_test_log
@@ -204,14 +211,13 @@ class PersistentDockerManager:
         modules = ",".join(module_names)
 
         test_result = subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name,
-             "exec", "-T", "odoo",
-             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
-             "--no-http", "--stop-after-init",
-             "--test-tags", tags,
-             "-u", modules],
-            capture_output=True, text=True, timeout=900,
+            self._compose_cmd(
+                "exec", "-T", "odoo",
+                "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+                "--no-http", "--stop-after-init",
+                "--test-tags", tags,
+                "-u", modules),
+            capture_output=True, text=True, timeout=_TEST_VERBOSE_TIMEOUT_S,
         )
 
         from .log_parser import parse_test_log
@@ -234,9 +240,8 @@ class PersistentDockerManager:
     def stop(self) -> None:
         """Stop the persistent instance (data preserved in volumes)."""
         subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name, "stop"],
-            capture_output=True, timeout=30,
+            self._compose_cmd("stop"),
+            capture_output=True, timeout=_STOP_TIMEOUT_S,
         )
         self._running = False
         self._save_state()
@@ -244,9 +249,8 @@ class PersistentDockerManager:
     def reset(self) -> None:
         """Destroy the persistent instance and all data."""
         subprocess.run(
-            ["docker", "compose", "-f", str(self.compose_file),
-             "-p", self.project_name, "down", "-v"],
-            capture_output=True, timeout=30,
+            self._compose_cmd("down", "-v"),
+            capture_output=True, timeout=_STOP_TIMEOUT_S,
         )
         self._running = False
         self.installed_modules = []
@@ -257,10 +261,8 @@ class PersistentDockerManager:
         """Check if the Odoo instance is responding."""
         try:
             result = subprocess.run(
-                ["docker", "compose", "-f", str(self.compose_file),
-                 "-p", self.project_name,
-                 "exec", "-T", "odoo", "curl", "-sf", "http://localhost:8069/web/health"],
-                capture_output=True, timeout=10,
+                self._compose_cmd("exec", "-T", "odoo", "curl", "-sf", "http://localhost:8069/web/health"),
+                capture_output=True, timeout=_HEALTH_CHECK_TIMEOUT_S,
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):

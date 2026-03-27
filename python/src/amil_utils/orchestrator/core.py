@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import subprocess
 from pathlib import Path, PurePosixPath
@@ -93,14 +92,16 @@ def load_config(cwd: str | Path) -> dict:
     # Migrate deprecated "depth" key to "granularity"
     if "depth" in parsed and "granularity" not in parsed:
         depth_map = {"quick": "coarse", "standard": "standard", "comprehensive": "fine"}
-        parsed["granularity"] = depth_map.get(parsed["depth"], parsed["depth"])
-        del parsed["depth"]
+        old_depth = parsed["depth"]
+        parsed = {k: v for k, v in parsed.items() if k != "depth"}
+        parsed = {**parsed, "granularity": depth_map.get(old_depth, old_depth)}
         try:
             config_path.write_text(json.dumps(parsed, indent=2), encoding="utf-8")
         except OSError:
-            pass  # best-effort migration
+            logger.debug("Failed to write migrated config", exc_info=True)
 
-    g = lambda key, nested=None: _config_get(parsed, key, nested)
+    def g(key, nested=None):
+        return _config_get(parsed, key, nested)
 
     parallelization_raw = g("parallelization")
     if isinstance(parallelization_raw, bool):
@@ -506,9 +507,7 @@ def ensure_within_cwd(cwd: str | Path, file_path: str | Path) -> Path:
     resolved = fp if fp.is_absolute() else cwd / fp
     normalized_cwd = cwd.resolve()
     normalized_target = resolved.resolve()
-    if normalized_target != normalized_cwd and not str(normalized_target).startswith(
-        str(normalized_cwd) + os.sep
-    ):
+    if not normalized_target.is_relative_to(normalized_cwd):
         raise ValueError(f'Path "{file_path}" is outside the project directory')
     return normalized_target
 

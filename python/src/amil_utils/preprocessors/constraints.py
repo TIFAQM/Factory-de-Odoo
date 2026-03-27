@@ -13,6 +13,9 @@ from amil_utils.utils.validate import validate_identifier, validate_message
 
 logger = logging.getLogger(__name__)
 
+# Regex for safe constraint conditions (only allows identifiers, operators, literals)
+_SAFE_CONDITION_RE = re.compile(r"^[a-zA-Z0-9_\s<>=!.,()\[\]'\"+-/*%]+$")
+
 # Dangerous AST node types that should never appear in generated constraint code
 _DANGEROUS_NODES = (ast.Import, ast.ImportFrom)
 # Dangerous function names
@@ -107,6 +110,8 @@ def _process_constraints(spec: dict[str, Any]) -> dict[str, Any]:
                 validate_identifier(f, "temporal constraint field")
             guards = " and ".join(f"rec.{f}" for f in fields)
             condition = c["condition"]
+            if not _SAFE_CONDITION_RE.match(condition):
+                raise ValueError(f"Unsafe constraint condition: {condition!r}")
             # Prefix field references with rec.
             check_condition = condition
             for field in fields:

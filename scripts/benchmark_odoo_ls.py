@@ -20,18 +20,21 @@ import sys
 import time
 from pathlib import Path
 
+# Ensure amil_utils is importable when running as a standalone script
+_src_dir = str(Path(__file__).resolve().parent.parent / "python" / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
+from amil_utils.validation.odoo_ls_client import encode_lsp_message as encode_message
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-BINARY = os.path.expanduser(
-    "~/Factory-de-Odoo/tools/odoo-ls/odoo_ls_server"
-)
-CONFIG = "/tmp/factory-benchmark/odools.toml"
-WORKSPACE = "/tmp/factory-benchmark"
-ODOO_SOURCE = os.path.expanduser(
-    "~/Factory-de-Odoo/tools/odoo-source/19.0"
-)
+BINARY = os.environ.get("ODOOLS_BINARY", os.path.expanduser("~/Factory-de-Odoo/tools/odoo-ls/odoo_ls_server"))
+CONFIG = os.environ.get("ODOOLS_CONFIG", "/tmp/factory-benchmark/odools.toml")
+WORKSPACE = os.environ.get("ODOOLS_WORKSPACE", "/tmp/factory-benchmark")
+ODOO_SOURCE = os.environ.get("ODOO_SOURCE_PATH", os.path.expanduser("~/Factory-de-Odoo/tools/odoo-source/19.0"))
 
 INDEXING_THRESHOLD_S = 120
 DIAG_LATENCY_THRESHOLD_S = 10
@@ -39,13 +42,6 @@ DIAG_LATENCY_THRESHOLD_S = 10
 # ---------------------------------------------------------------------------
 # LSP wire helpers
 # ---------------------------------------------------------------------------
-
-
-def encode_message(msg: dict) -> bytes:
-    """Encode a JSON-RPC message with Content-Length header."""
-    body = json.dumps(msg).encode("utf-8")
-    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
-    return header + body
 
 
 def read_message(stdout) -> dict | None:

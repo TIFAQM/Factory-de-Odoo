@@ -23,6 +23,7 @@ test = [
     "pytest>=8.0",
     "pytest-asyncio>=1.0,<2.0",
     "pytest-cov>=6.0",
+    "pytest-timeout>=2.0",
 ]
 pakistan = [
     "phonenumbers>=8.13,<10.0",
@@ -57,6 +58,7 @@ markers = [
     "e2e_slow: Full OCA index build (200+ repos, 3-5 min). Requires GITHUB_TOKEN.",
     "docker: Integration tests requiring Docker daemon. Skipped when Docker is unavailable.",
     "odoo_ls: Integration tests requiring odoo_ls_server binary and Odoo 19.0 source.",
+    "timeout: mark test with timeout",
 ]
 
 [tool.coverage.run]

@@ -743,6 +743,31 @@ def render_portal(
 
         controller_class = _to_class(module_name) + "Portal"
 
+        # Build field-type lookup for editable portal fields (H1 security fix).
+        # Maps model_name -> {field_name: {type, selection_keys}} from spec models.
+        all_models = module_context.get("models", [])
+        _model_field_map: dict[str, dict[str, dict[str, Any]]] = {}
+        for m in all_models:
+            m_name = m.get("name", "")
+            field_lookup: dict[str, dict[str, Any]] = {}
+            for f in m.get("fields", []):
+                f_info: dict[str, Any] = {"type": f.get("type", "Char")}
+                if f.get("selection"):
+                    f_info["selection_keys"] = [
+                        s[0] for s in f["selection"]
+                    ]
+                field_lookup[f["name"]] = f_info
+            _model_field_map[m_name] = field_lookup
+
+        # Enrich each editable page with per-field type info.
+        for page in portal_pages:
+            if page.get("fields_editable"):
+                fmap = _model_field_map.get(page["model"], {})
+                page["editable_field_types"] = {
+                    fname: fmap.get(fname, {"type": "Char"})
+                    for fname in page["fields_editable"]
+                }
+
         portal_ctx = {
             **module_context,
             "controller_class": controller_class,

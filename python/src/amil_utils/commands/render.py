@@ -223,9 +223,9 @@ def execute_render_module(
                         str(docs_dir / "dependencies.mmd"),
                         str(docs_dir / "er_diagram.mmd"),
                     ]
-                except Exception:
+                except (OSError, ImportError, ValueError, RuntimeError):
                     _logger.debug("Mermaid diagram generation failed", exc_info=True)
-        except Exception:
+        except (OSError, ImportError, ValueError, RuntimeError):
             _logger.debug("Registry update failed (non-blocking)", exc_info=True)
 
     except PydanticValidationError as exc:

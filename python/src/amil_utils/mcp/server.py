@@ -38,17 +38,28 @@ logger = logging.getLogger("odoo-mcp")
 _LOCALHOST_HOSTS = ("localhost", "127.0.0.1", "::1", "[::1]")
 
 
-def _warn_if_cleartext_remote(url: str) -> None:
-    """Warn if XML-RPC URL uses HTTP for a non-localhost host."""
+def _enforce_https_for_remote(url: str) -> None:
+    """Block non-localhost HTTP URLs unless ODOO_ALLOW_INSECURE=1 is set.
+
+    Raises SystemExit for remote hosts using HTTP, since XML-RPC
+    credentials would be sent in cleartext.  Localhost URLs are always
+    allowed regardless of scheme.
+    """
     if not url.startswith("http://"):
         return
     if any(host in url for host in _LOCALHOST_HOSTS):
         return
-    logger.warning(
-        "ODOO_URL uses HTTP for a remote host (%s). "
-        "XML-RPC credentials will be sent in cleartext. "
-        "Consider using HTTPS.",
-        url,
+    if os.environ.get("ODOO_ALLOW_INSECURE") == "1":
+        logger.warning(
+            "ODOO_URL uses HTTP for a remote host (%s). "
+            "ODOO_ALLOW_INSECURE=1 is set -- proceeding despite cleartext risk.",
+            url,
+        )
+        return
+    raise SystemExit(
+        f"ODOO_URL uses HTTP for a remote host ({url}). "
+        "XML-RPC credentials would be sent in cleartext. "
+        "Use HTTPS or set ODOO_ALLOW_INSECURE=1 to override."
     )
 
 
@@ -99,7 +110,7 @@ def _get_client() -> OdooClient:
             username=os.environ.get("ODOO_USER", "admin"),
             api_key=api_key,
         )
-        _warn_if_cleartext_remote(config.url)
+        _enforce_https_for_remote(config.url)
         _client = OdooClient(config)
         logger.info("OdooClient created for %s", config.url)
     return _client
