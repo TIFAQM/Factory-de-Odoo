@@ -57,6 +57,8 @@ class InstallResult:
 class TestResult:
     """Result of a single Odoo test case."""
 
+    __test__ = False  # Prevent pytest collection warning
+
     test_name: str
     passed: bool
     error_message: str = ""
