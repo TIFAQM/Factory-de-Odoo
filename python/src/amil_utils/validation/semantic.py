@@ -18,8 +18,11 @@ import ast
 import csv
 import difflib
 import json
+import logging
 import re
 import time
+
+_logger = logging.getLogger(__name__)
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -2419,32 +2422,32 @@ def check_comodel_depends(output_dir: Path) -> list[ValidationIssue]:
 
 
 def print_validation_report(result: SemanticValidationResult) -> None:
-    """Print a human-friendly semantic validation report."""
-    print(f"\n=== Semantic Validation: {result.module} ===")
-    print(f"Duration: {result.duration_ms}ms\n")
+    """Log a human-friendly semantic validation report."""
+    _logger.info("=== Semantic Validation: %s ===", result.module)
+    _logger.info("Duration: %dms", result.duration_ms)
 
     if not result.errors and not result.warnings:
-        print("All checks passed. No issues found.")
+        _logger.info("All checks passed. No issues found.")
         return
 
     if result.errors:
-        print(f"ERRORS ({len(result.errors)}):")
+        _logger.info("ERRORS (%d):", len(result.errors))
         for issue in result.errors:
             loc = f"{issue.file}"
             if issue.line:
                 loc += f":{issue.line}"
-            print(f"  [{issue.code}] {loc} -- {issue.message}")
+            _logger.info("  [%s] %s -- %s", issue.code, loc, issue.message)
             if issue.suggestion:
-                print(f"         Suggestion: {issue.suggestion}")
+                _logger.info("         Suggestion: %s", issue.suggestion)
 
     if result.warnings:
-        print(f"\nWARNINGS ({len(result.warnings)}):")
+        _logger.info("WARNINGS (%d):", len(result.warnings))
         for issue in result.warnings:
             loc = f"{issue.file}"
             if issue.line:
                 loc += f":{issue.line}"
-            print(f"  [{issue.code}] {loc} -- {issue.message}")
+            _logger.info("  [%s] %s -- %s", issue.code, loc, issue.message)
             if issue.suggestion:
-                print(f"         Suggestion: {issue.suggestion}")
+                _logger.info("         Suggestion: %s", issue.suggestion)
 
-    print(f"\nSummary: {len(result.errors)} error(s), {len(result.warnings)} warning(s)")
+    _logger.info("Summary: %d error(s), %d warning(s)", len(result.errors), len(result.warnings))

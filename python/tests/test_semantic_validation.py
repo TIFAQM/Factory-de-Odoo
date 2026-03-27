@@ -622,12 +622,13 @@ class TestResultStructure:
         result = semantic_validate(mod)
         assert result.duration_ms >= 0
 
-    def test_print_validation_report(self, tmp_path: Path, capsys) -> None:
+    def test_print_validation_report(self, tmp_path: Path, caplog) -> None:
+        import logging
         mod = _make_valid_module(tmp_path)
         result = semantic_validate(mod)
-        print_validation_report(result)
-        captured = capsys.readouterr()
-        assert "Semantic Validation" in captured.out or "validation" in captured.out.lower()
+        with caplog.at_level(logging.INFO):
+            print_validation_report(result)
+        assert any("Semantic Validation" in r.message for r in caplog.records)
 
 
 # ===========================================================================
