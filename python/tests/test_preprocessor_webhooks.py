@@ -78,6 +78,13 @@ class TestBuildWebhookEndpointModel:
         assert "target_model" in names
         assert "max_retries" in names
 
+    def test_secret_token_restricted_to_system_admins(self) -> None:
+        model = _build_webhook_endpoint_model("test_mod")
+        secret_field = next(f for f in model["fields"] if f["name"] == "secret_token")
+        assert secret_field.get("groups") == "base.group_system", (
+            "secret_token must be restricted to base.group_system (CWE-312)"
+        )
+
     def test_has_unique_constraint(self) -> None:
         model = _build_webhook_endpoint_model("test_mod")
         constraint_names = [c["name"] for c in model.get("sql_constraints", [])]

@@ -45,6 +45,7 @@ def _build_webhook_endpoint_model(module_name: str) -> dict[str, Any]:
                 "type": "Char",
                 "string": "Secret Token",
                 "copy": False,
+                "groups": "base.group_system",
                 "help": "HMAC signing secret for payload verification",
             },
             {
