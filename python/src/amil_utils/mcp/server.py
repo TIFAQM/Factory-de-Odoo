@@ -33,6 +33,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger("odoo-mcp")
 
+_LOCALHOST_HOSTS = ("localhost", "127.0.0.1", "::1", "[::1]")
+
+
+def _warn_if_cleartext_remote(url: str) -> None:
+    """Warn if XML-RPC URL uses HTTP for a non-localhost host."""
+    if not url.startswith("http://"):
+        return
+    if any(host in url for host in _LOCALHOST_HOSTS):
+        return
+    logger.warning(
+        "ODOO_URL uses HTTP for a remote host (%s). "
+        "XML-RPC credentials will be sent in cleartext. "
+        "Consider using HTTPS.",
+        url,
+    )
+
+
 # FastMCP server instance -- tool decorators register against this object
 if _HAS_MCP:
     mcp = FastMCP("odoo-introspection")
@@ -80,6 +97,7 @@ def _get_client() -> OdooClient:
             username=os.environ.get("ODOO_USER", "admin"),
             api_key=api_key,
         )
+        _warn_if_cleartext_remote(config.url)
         _client = OdooClient(config)
         logger.info("OdooClient created for %s", config.url)
     return _client
