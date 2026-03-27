@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 _HEADER_ENCODING = "ascii"
 _BODY_ENCODING = "utf-8"
 _MAX_HEADER_SIZE = 8192  # 8 KB — guards against unbounded header accumulation
-_MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB — guards against oversized messages
+_MAX_BODY_SIZE = 2 * 1024 * 1024  # 2 MB — normal LSP messages are <100 KB; 2 MB is a generous upper bound (defense-in-depth, CWE-400)
 
 
 def encode_lsp_message(msg: dict[str, Any]) -> bytes:
@@ -390,7 +390,8 @@ class OdooLSClient:
             logger.debug("Reader loop ended: %s", exc)
             return
         except Exception as exc:
-            logger.error("Reader loop crashed: %s", exc, exc_info=True)
+            logger.error("Reader loop crashed: %s", exc)
+            logger.debug("Full traceback:", exc_info=True)
             return
 
     def _handle_message(self, msg: dict[str, Any]) -> None:
