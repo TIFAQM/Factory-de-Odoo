@@ -1,0 +1,35 @@
+{# website_list.xml.j2 -- Public listing page #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="website_{{ page.id }}" name="{{ page.title }}">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <div class="container py-4">
+                    <h1>{{ page.title }}</h1>
+                    <div class="row">
+                        <t t-foreach="{{ page.plural_name }}" t-as="item">
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+{% for field in page.fields_visible %}
+{% if loop.first %}
+                                        <h5 class="card-title" t-field="item.{{ field }}"/>
+{% else %}
+                                        <p class="card-text" t-field="item.{{ field }}"/>
+{% endif %}
+{% endfor %}
+{% if page.get("detail_url") %}
+                                        <a t-attf-href="{{ page.detail_url }}/#{slug(item)}" class="btn btn-primary btn-sm">
+                                            View Details
+                                        </a>
+{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

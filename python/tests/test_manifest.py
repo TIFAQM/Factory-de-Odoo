@@ -442,14 +442,14 @@ class TestRenderModuleManifest:
             assert name in manifest.stages
 
     def test_stage_names_constant_has_all_14_stages(self):
-        """STAGE_NAMES constant lists all 14 stages (Phase 63: +bulk)."""
+        """STAGE_NAMES constant lists all 15 stages (Phase F16: +website)."""
         from amil_utils.renderer import STAGE_NAMES
 
-        assert len(STAGE_NAMES) == 14
+        assert len(STAGE_NAMES) == 15
         expected = [
             "manifest", "models", "extensions", "views", "security", "mail_templates",
             "wizards", "tests", "static", "cron", "reports", "controllers", "portal",
-            "bulk",
+            "website", "bulk",
         ]
         assert STAGE_NAMES == expected
 
@@ -599,8 +599,8 @@ class TestResumeSpecChanged:
             resume_from=old_manifest,
         )
 
-        # ALL 14 stages should have been called (full re-run, Phase 63: +bulk)
-        assert len(called_stages) == 14
+        # ALL 15 stages should have been called (full re-run, Phase F16: +website)
+        assert len(called_stages) == 15
         assert called_stages == STAGE_NAMES
 
 

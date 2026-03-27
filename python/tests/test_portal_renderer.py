@@ -715,7 +715,7 @@ class TestStageNamesIncludesPortal:
 
     def test_stage_count(self):
         from amil_utils.renderer import STAGE_NAMES
-        assert len(STAGE_NAMES) == 14
+        assert len(STAGE_NAMES) == 15
 
     def test_portal_after_controllers(self):
         from amil_utils.renderer import STAGE_NAMES

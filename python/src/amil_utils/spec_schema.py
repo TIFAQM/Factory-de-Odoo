@@ -59,6 +59,8 @@ from amil_utils.spec_schema_inner import (  # noqa: E402, F401
     ViewHintSpec,
     ViewInsertionSpec,
     WebhookSpec,
+    WebsitePageSpec,
+    WebsiteSpec,
     WorkflowSpec,
     WorkflowTransitionSpec,
     _MODULE_NAME_RE,
@@ -220,6 +222,7 @@ class ModuleSpec(BaseModel):
     reports: list[ReportSpec] = []
     controllers: list[dict] | None = None
     portal: PortalSpec | None = None
+    website_pages: WebsiteSpec | None = None
     bulk_operations: list[BulkOperationSpec] = []
     owl_components: list[OWLComponentSpec] = []
     dashboards: list[dict] = []

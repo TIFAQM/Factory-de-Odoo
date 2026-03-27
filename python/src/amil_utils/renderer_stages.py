@@ -854,6 +854,124 @@ def render_portal(
         return Result.fail(f"render_portal failed: {exc}")
 
 
+def render_website(
+    env: "Environment",
+    spec: dict[str, Any],
+    module_dir: Path,
+    module_context: dict[str, Any],
+) -> "Result[list[Path]]":
+    """Render public website controller, QWeb templates, menus, and assets.
+
+    Generates:
+    - controllers/website.py (http.Controller subclass with website=True routes)
+    - controllers/__init__.py updated with website import
+    - views/website_{page_id}.xml per list page
+    - views/website_{page_id}_detail.xml per detail page
+    - views/website_{page_id}.xml per static page
+    - views/website_menus.xml (website.menu records)
+    - data/website_assets.xml (frontend CSS asset bundle)
+    - static/src/css/website.css (minimal CSS file)
+
+    Returns Result.ok([]) when spec has no website section.
+    """
+    try:
+        if not spec.get("has_website"):
+            return Result.ok([])
+
+        created: list[Path] = []
+        module_name = module_context["module_name"]
+        website_pages = spec.get("website_pages", [])
+        website_auth = spec.get("website_auth", "public")
+
+        # Ensure website_pages is a list of dicts (not a WebsiteSpec object)
+        if hasattr(website_pages, "model_dump"):
+            website_pages = website_pages.model_dump().get("pages", [])
+        elif isinstance(website_pages, dict):
+            website_pages = website_pages.get("pages", [])
+
+        controller_class = _to_class(module_name) + "Website"
+
+        website_ctx = {
+            **module_context,
+            "controller_class": controller_class,
+            "website_pages": website_pages,
+            "website_auth": website_auth,
+            "module_technical_name": module_name,
+        }
+
+        # Render controller
+        created.append(render_template(
+            env, "website_controller.py.j2",
+            module_dir / "controllers" / "website.py",
+            website_ctx,
+        ))
+
+        # Update controllers/__init__.py to import website module
+        init_path = module_dir / "controllers" / "__init__.py"
+        init_path.parent.mkdir(parents=True, exist_ok=True)
+        existing_imports = ""
+        if init_path.exists():
+            existing_imports = init_path.read_text(encoding="utf-8")
+        if "from . import website" not in existing_imports:
+            new_content = existing_imports.rstrip("\n")
+            if new_content:
+                new_content += "\n"
+            new_content += "from . import website\n"
+            init_path.write_text(new_content, encoding="utf-8")
+        created.append(init_path)
+
+        # Render per-page QWeb templates
+        for page in website_pages:
+            page_ctx = {**website_ctx, "page": page}
+            if page.get("type") == "list":
+                created.append(render_template(
+                    env, "website_list.xml.j2",
+                    module_dir / "views" / f"website_{page['id']}.xml",
+                    page_ctx,
+                ))
+            elif page.get("type") == "detail":
+                created.append(render_template(
+                    env, "website_detail.xml.j2",
+                    module_dir / "views" / f"website_{page['id']}_detail.xml",
+                    page_ctx,
+                ))
+            elif page.get("type") == "static":
+                created.append(render_template(
+                    env, "website_static.xml.j2",
+                    module_dir / "views" / f"website_{page['id']}.xml",
+                    page_ctx,
+                ))
+
+        # Render website menus
+        menu_pages = [p for p in website_pages if p.get("show_in_menu", True)]
+        if menu_pages:
+            created.append(render_template(
+                env, "website_menus.xml.j2",
+                module_dir / "views" / "website_menus.xml",
+                website_ctx,
+            ))
+
+        # Render website assets
+        created.append(render_template(
+            env, "website_assets.xml.j2",
+            module_dir / "data" / "website_assets.xml",
+            website_ctx,
+        ))
+
+        # Render CSS file
+        css_dir = module_dir / "static" / "src" / "css"
+        css_dir.mkdir(parents=True, exist_ok=True)
+        created.append(render_template(
+            env, "website_css.css.j2",
+            css_dir / "website.css",
+            website_ctx,
+        ))
+
+        return Result.ok(created)
+    except Exception as exc:
+        return Result.fail(f"render_website failed: {exc}")
+
+
 def render_bulk(
     env: "Environment",
     spec: dict[str, Any],

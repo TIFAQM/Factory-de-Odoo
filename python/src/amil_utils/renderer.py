@@ -70,6 +70,7 @@ from amil_utils.renderer_stages import (  # noqa: F401 — re-exported for backw
     render_reports,
     render_controllers,
     render_portal,
+    render_website,
     render_bulk,
     render_migrations,
     render_settings,
@@ -88,7 +89,7 @@ _logger = logging.getLogger("amil.renderer")
 STAGE_NAMES: list[str] = [
     "manifest", "models", "extensions", "views", "security", "mail_templates",
     "wizards", "tests", "static", "cron", "reports", "controllers", "portal",
-    "bulk",
+    "website", "bulk",
 ]
 
 
@@ -323,6 +324,7 @@ def render_module(
         ("reports", lambda: render_reports(env, spec, module_dir, ctx)),
         ("controllers", lambda: render_controllers(env, spec, module_dir, ctx)),
         ("portal", lambda: render_portal(env, spec, module_dir, ctx)),
+        ("website", lambda: render_website(env, spec, module_dir, ctx)),
         ("bulk", lambda: render_bulk(env, spec, module_dir, ctx)),
         ("migrations", lambda: render_migrations(env, spec, module_dir, ctx)),
         ("settings", lambda: render_settings(env, spec, module_dir, ctx)),

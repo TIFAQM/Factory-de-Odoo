@@ -171,6 +171,47 @@ class PortalSpec(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Website-level specs (Phase F16)
+# ---------------------------------------------------------------------------
+
+
+class WebsitePageSpec(BaseModel):
+    """A single public website page."""
+
+    model_config = ConfigDict(extra="allow", protected_namespaces=())
+
+    id: str
+    url: str
+    title: str
+    type: str = "list"  # list, detail, static
+    model: str | None = None
+    fields_visible: list[str] = Field(default_factory=list)
+    published: bool = True
+    seo_title: str | None = None
+    seo_description: str | None = None
+    show_in_menu: bool = True
+    menu_sequence: int = 50
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        if v not in ("list", "detail", "static"):
+            raise ValueError(
+                f"type must be 'list', 'detail', or 'static', got '{v}'"
+            )
+        return v
+
+
+class WebsiteSpec(BaseModel):
+    """Website section of a module spec."""
+
+    model_config = ConfigDict(extra="allow", protected_namespaces=())
+
+    pages: list[WebsitePageSpec] = Field(default_factory=list)
+    default_auth: str = "public"
+
+
+# ---------------------------------------------------------------------------
 # Chain-level specs (Phase 61)
 # ---------------------------------------------------------------------------
 

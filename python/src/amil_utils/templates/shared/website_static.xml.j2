@@ -1,0 +1,18 @@
+{# website_static.xml.j2 -- Static website page #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="website_{{ page.id }}" name="{{ page.title }}">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <div class="container py-4">
+                    <h1>{{ page.title }}</h1>
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <p>Content for {{ page.title }} goes here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

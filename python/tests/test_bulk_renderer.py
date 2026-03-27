@@ -591,16 +591,16 @@ class TestStageNamesUpdate:
     """Tests for STAGE_NAMES constant update."""
 
     def test_stage_names_has_14_entries(self):
-        """STAGE_NAMES has 14 entries with bulk as 14th."""
+        """STAGE_NAMES has 15 entries with bulk as 15th."""
         from amil_utils.renderer import STAGE_NAMES
 
-        assert len(STAGE_NAMES) == 14
-        assert STAGE_NAMES[13] == "bulk"
+        assert len(STAGE_NAMES) == 15
+        assert STAGE_NAMES[14] == "bulk"
 
-    def test_stage_names_bulk_after_portal(self):
-        """bulk comes after portal in STAGE_NAMES."""
+    def test_stage_names_bulk_after_website(self):
+        """bulk comes after website in STAGE_NAMES."""
         from amil_utils.renderer import STAGE_NAMES
 
-        portal_idx = STAGE_NAMES.index("portal")
+        website_idx = STAGE_NAMES.index("website")
         bulk_idx = STAGE_NAMES.index("bulk")
-        assert bulk_idx == portal_idx + 1
+        assert bulk_idx == website_idx + 1

@@ -1,0 +1,9 @@
+{# website_assets.xml.j2 -- Frontend CSS/JS assets #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_frontend" inherit_id="web.assets_frontend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" href="/{{ module_technical_name }}/static/src/css/website.css"/>
+        </xpath>
+    </template>
+</odoo>

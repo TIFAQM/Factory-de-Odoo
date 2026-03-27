@@ -1,0 +1,28 @@
+{# website_detail.xml.j2 -- Public detail page #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="website_{{ page.id }}_detail" name="{{ page.title }} Detail">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <div class="container py-4">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ page.get('list_url', '/') }}">{{ page.title }}</a></li>
+                            <li class="breadcrumb-item active" t-field="{{ page.singular_name }}.display_name"/>
+                        </ol>
+                    </nav>
+                    <div class="row">
+                        <div class="col-lg-8">
+{% for field in page.fields_visible %}
+                            <div class="mb-3">
+                                <strong>{{ field | replace('_', ' ') | title }}:</strong>
+                                <span t-field="{{ page.singular_name }}.{{ field }}"/>
+                            </div>
+{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

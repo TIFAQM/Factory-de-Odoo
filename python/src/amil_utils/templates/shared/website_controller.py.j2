@@ -1,0 +1,38 @@
+{# website_controller.py.j2 -- Public website controller #}
+from odoo import http
+from odoo.http import request
+{% if website_pages | selectattr("type", "equalto", "detail") | list %}
+from odoo.addons.http_routing.models.ir_http import slug
+{% endif %}
+
+
+class {{ controller_class }}(http.Controller):
+{% for page in website_pages %}
+{% if page.type == "list" %}
+
+    @http.route('{{ page.url }}', type='http', auth='{{ website_auth }}', website=True, sitemap=True)
+    def {{ page.id }}_list(self, page=1, **kw):
+        """Public listing page for {{ page.title }}."""
+        domain = [('website_published', '=', True)]
+        items = request.env['{{ page.model }}'].sudo().search(domain)
+        return request.render('{{ module_technical_name }}.website_{{ page.id }}', {
+            '{{ page.plural_name }}': items,
+        })
+{% elif page.type == "detail" %}
+
+    @http.route('{{ page.url }}/<model("{{ page.model }}"):item>', type='http', auth='{{ website_auth }}', website=True, sitemap=True)
+    def {{ page.id }}_detail(self, item, **kw):
+        """Public detail page for {{ page.title }}."""
+        if not item.sudo().website_published:
+            raise request.not_found()
+        return request.render('{{ module_technical_name }}.website_{{ page.id }}_detail', {
+            '{{ page.singular_name }}': item,
+        })
+{% elif page.type == "static" %}
+
+    @http.route('{{ page.url }}', type='http', auth='{{ website_auth }}', website=True, sitemap=True)
+    def {{ page.id }}_page(self, **kw):
+        """Static page: {{ page.title }}."""
+        return request.render('{{ module_technical_name }}.website_{{ page.id }}')
+{% endif %}
+{% endfor %}

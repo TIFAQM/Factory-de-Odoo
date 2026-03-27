@@ -1,0 +1,12 @@
+{# website_menus.xml.j2 -- Website navigation menu items #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+{% for page in website_pages if page.show_in_menu %}
+    <record id="menu_website_{{ page.id }}" model="website.menu">
+        <field name="name">{{ page.title }}</field>
+        <field name="url">{{ page.url }}</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">{{ page.menu_sequence }}</field>
+    </record>
+{% endfor %}
+</odoo>
