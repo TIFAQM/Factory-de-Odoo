@@ -185,18 +185,20 @@ def notify_hooks(
             getattr(hook, method)(*args, **kwargs)
         except CheckpointPause:
             raise  # Intentional pause, propagate
-        except Exception:
+        except Exception as exc:
             if method in _CRITICAL_METHODS:
                 logger.error(
-                    "Critical hook %s.%s failed",
+                    "Critical hook %s.%s failed: %s",
                     type(hook).__name__,
                     method,
-                    exc_info=True,
+                    exc,
                 )
+                logger.debug("Full traceback:", exc_info=True)
                 raise
             logger.warning(
-                "Hook %s.%s failed",
+                "Hook %s.%s failed: %s",
                 type(hook).__name__,
                 method,
-                exc_info=True,
+                exc,
             )
+            logger.debug("Full traceback:", exc_info=True)

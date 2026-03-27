@@ -165,23 +165,25 @@ def _teardown(
                 env=merged_env,
             )
             return  # Success — exit immediately
-        except Exception:
+        except Exception as exc:
             if attempt < max_attempts:
                 backoff = 2 ** (attempt - 1)  # 1s, 2s
                 logger.warning(
-                    "Teardown attempt %d/%d failed, retrying in %ds",
+                    "Teardown attempt %d/%d failed, retrying in %ds: %s",
                     attempt,
                     max_attempts,
                     backoff,
-                    exc_info=True,
+                    exc,
                 )
+                logger.debug("Full traceback:", exc_info=True)
                 time.sleep(backoff)
             else:
                 logger.error(
-                    "Teardown failed after %d attempts — containers/volumes may be leaked",
+                    "Teardown failed after %d attempts — containers/volumes may be leaked: %s",
                     max_attempts,
-                    exc_info=True,
+                    exc,
                 )
+                logger.debug("Full traceback:", exc_info=True)
                 # logger.error above already logs; avoid redundant print
 
 
@@ -206,16 +208,17 @@ def _start_db_with_retry(
                 project_name=project_name,
             )
             return  # Success
-        except Exception:
+        except Exception as exc:
             if attempt < max_attempts:
                 backoff = 2 ** (attempt - 1)  # 1s, 2s
                 logger.warning(
-                    "DB startup attempt %d/%d failed, tearing down and retrying in %ds",
+                    "DB startup attempt %d/%d failed, tearing down and retrying in %ds: %s",
                     attempt,
                     max_attempts,
                     backoff,
-                    exc_info=True,
+                    exc,
                 )
+                logger.debug("Full traceback:", exc_info=True)
                 _teardown(compose_file, env, project_name=project_name)
                 time.sleep(backoff)
             else:
@@ -407,7 +410,8 @@ def docker_run_tests(
         logger.warning("Docker test run timed out after %ds", timeout)
         return Result.fail(f"Docker test run timed out after {timeout}s")
     except Exception as exc:
-        logger.warning("Docker test run failed", exc_info=True)
+        logger.warning("Docker test run failed: %s", exc)
+        logger.debug("Full traceback:", exc_info=True)
         return Result.fail(f"Docker test run failed: {exc}")
     finally:
         _teardown(compose_file, env, project_name=project_name)

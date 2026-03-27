@@ -100,5 +100,6 @@ def run_pylint_odoo(
         logger.warning("pylint-odoo timed out after %d seconds for %s", timeout, module_path)
         return Result.fail(f"pylint-odoo timed out after {timeout}s for {module_path}")
     except Exception as exc:
-        logger.warning("pylint-odoo failed for %s", module_path, exc_info=True)
+        logger.warning("pylint-odoo failed for %s: %s", module_path, exc)
+        logger.debug("Full traceback:", exc_info=True)
         return Result.fail(f"pylint-odoo failed for {module_path}: {exc}")
