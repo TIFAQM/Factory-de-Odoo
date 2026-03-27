@@ -107,7 +107,7 @@ def _artifacts_intact(manifest: "GenerationManifest", stage_name: str, module_di
             entry = next((e for e in manifest.artifacts.files if e.path == rel_path), None)
             if entry and actual_sha != entry.sha256:
                 return False
-        except Exception:
+        except (OSError, ValueError):
             return False
     return True
 
@@ -510,8 +510,8 @@ def render_module(
                 artifact_entries.append(ArtifactEntry(path=rel, sha256=sha))
                 if fpath.suffix in ('.py', '.xml', '.csv', '.txt', '.js', '.css', '.scss'):
                     total_lines += len(fpath.read_text(encoding="utf-8", errors="ignore").splitlines())
-            except Exception:
-                pass
+            except (OSError, ValueError) as exc:
+                _logger.warning("Failed to compute artifact entry for %s: %s", fpath, exc)
 
     manifest = session.to_manifest(
         preprocessing=PreprocessingInfo(preprocessors_run=preprocessors_run, duration_ms=pre_duration_ms),

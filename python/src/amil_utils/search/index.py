@@ -263,7 +263,7 @@ def build_oca_index(
         # Get root contents of 19.0 branch
         try:
             contents = repo.get_contents("", ref="19.0")
-        except Exception:
+        except (GithubException, OSError):
             if progress_callback:
                 progress_callback(idx + 1, total_repos)
             continue
@@ -280,7 +280,7 @@ def build_oca_index(
             # Check for __manifest__.py in the module directory
             try:
                 manifest_file = repo.get_contents(f"{module_name}/__manifest__.py", ref="19.0")
-            except Exception:
+            except (GithubException, OSError):
                 continue
 
             # Parse manifest
@@ -386,7 +386,7 @@ def get_index_status(db_path: str | None = None) -> IndexStatus:
             db_path=resolved_path,
             size_bytes=size_bytes,
         )
-    except Exception:
+    except (OSError, ValueError, RuntimeError):
         return IndexStatus(
             exists=False,
             module_count=0,
