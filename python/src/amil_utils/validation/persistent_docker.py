@@ -110,16 +110,14 @@ class PersistentDockerManager:
             return Result(success=False,
                           errors=(f"Failed to copy module: {copy_result.stderr}",))
 
-        # Install via odoo CLI (update module list + install)
-        install_cmd = (
-            f"odoo -c /etc/odoo/odoo.conf -d odoo_factory "
-            f"--no-http --stop-after-init "
-            f"-i {module_name}"
-        )
+        # Install via odoo CLI (list-form args — no bash -c to avoid CWE-78)
         install_result = subprocess.run(
             ["docker", "compose", "-f", str(self.compose_file),
              "-p", self.project_name,
-             "exec", "-T", "odoo", "bash", "-c", install_cmd],
+             "exec", "-T", "odoo",
+             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+             "--no-http", "--stop-after-init",
+             "-i", module_name],
             capture_output=True, text=True, timeout=300,
         )
 
@@ -153,16 +151,14 @@ class PersistentDockerManager:
             return Result(success=False,
                           errors=(f"Invalid module name: {module_name!r}",))
 
-        test_cmd = (
-            f"odoo -c /etc/odoo/odoo.conf -d odoo_factory "
-            f"--no-http --stop-after-init "
-            f"--test-tags={module_name} "
-            f"-u {module_name}"
-        )
         test_result = subprocess.run(
             ["docker", "compose", "-f", str(self.compose_file),
              "-p", self.project_name,
-             "exec", "-T", "odoo", "bash", "-c", test_cmd],
+             "exec", "-T", "odoo",
+             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+             "--no-http", "--stop-after-init",
+             "--test-tags", module_name,
+             "-u", module_name],
             capture_output=True, text=True, timeout=600,
         )
 
@@ -185,16 +181,14 @@ class PersistentDockerManager:
         tags = ",".join(module_names)
         modules = ",".join(module_names)
 
-        test_cmd = (
-            f"odoo -c /etc/odoo/odoo.conf -d odoo_factory "
-            f"--no-http --stop-after-init "
-            f"--test-tags={tags} "
-            f"-u {modules}"
-        )
         test_result = subprocess.run(
             ["docker", "compose", "-f", str(self.compose_file),
              "-p", self.project_name,
-             "exec", "-T", "odoo", "bash", "-c", test_cmd],
+             "exec", "-T", "odoo",
+             "odoo", "-c", "/etc/odoo/odoo.conf", "-d", "odoo_factory",
+             "--no-http", "--stop-after-init",
+             "--test-tags", tags,
+             "-u", modules],
             capture_output=True, text=True, timeout=900,
         )
 
