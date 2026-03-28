@@ -6,13 +6,16 @@ from pathlib import Path
 
 import pytest
 
+import amil_utils.orchestrator.dependency_graph as dg_module
 from amil_utils.orchestrator.dependency_graph import (
+    _load_external_module_names,
     compute_tiers,
     dep_graph_build,
     dep_graph_can_generate,
     dep_graph_order,
     dep_graph_tiers,
     topo_sort,
+    validate_external_dependency,
 )
 
 
@@ -193,3 +196,126 @@ class TestDepGraphCanGenerate:
         result = dep_graph_can_generate(tmp_path, "mod_b")
         assert result["can_generate"] is False
         assert len(result["blocked_by"]) == 1
+
+
+@pytest.fixture(autouse=False)
+def _clear_caches():
+    """Clear module-level caches before and after each version-aware test."""
+    dg_module._external_modules_cache.clear()
+    dg_module._renames_cache = None
+    yield
+    dg_module._external_modules_cache.clear()
+    dg_module._renames_cache = None
+
+
+class TestVersionAwareExternalModules:
+    """Tests for version-aware external module list (C3)."""
+
+    def test_hr_contract_not_in_external_modules_v19(
+        self, _clear_caches: None,
+    ) -> None:
+        """hr_contract was renamed to hr in Odoo 19, so it should be excluded."""
+        external = _load_external_module_names("19.0")
+        assert "hr_contract" not in external
+
+    def test_hr_contract_in_external_modules_v17(
+        self, _clear_caches: None,
+    ) -> None:
+        """hr_contract exists in Odoo 17, so it should be included."""
+        external = _load_external_module_names("17.0")
+        assert "hr_contract" in external
+
+    def test_bus_not_in_external_modules_v19(
+        self, _clear_caches: None,
+    ) -> None:
+        """bus was renamed to mail in Odoo 19, so it should be excluded."""
+        external = _load_external_module_names("19.0")
+        assert "bus" not in external
+
+    def test_bus_in_external_modules_v17(
+        self, _clear_caches: None,
+    ) -> None:
+        """bus exists in Odoo 17, so it should be included."""
+        external = _load_external_module_names("17.0")
+        assert "bus" in external
+
+    def test_base_always_present(self, _clear_caches: None) -> None:
+        """Core modules like 'base' should always be present."""
+        for version in ("17.0", "19.0"):
+            external = _load_external_module_names(version)
+            assert "base" in external
+
+    def test_unknown_version_no_renames(self, _clear_caches: None) -> None:
+        """Unknown version should apply no renames — all modules present."""
+        external = _load_external_module_names("99.0")
+        # hr_contract should still be present since no renames for 99.0
+        assert "hr_contract" in external
+        assert "bus" in external
+
+
+class TestValidateExternalDependency:
+    """Tests for validate_external_dependency."""
+
+    def test_renamed_dep_returns_warning(self, _clear_caches: None) -> None:
+        result = validate_external_dependency("hr_contract", "19.0")
+        assert result is not None
+        assert result["dependency"] == "hr_contract"
+        assert result["renamed_to"] == "hr"
+        assert result["version"] == "19.0"
+        assert "renamed" in result["message"]
+
+    def test_valid_dep_returns_none(self, _clear_caches: None) -> None:
+        result = validate_external_dependency("sale", "19.0")
+        assert result is None
+
+    def test_merged_dep_returns_warning(self, _clear_caches: None) -> None:
+        result = validate_external_dependency("sale_async_emails", "19.0")
+        assert result is not None
+        assert result["renamed_to"] == "sale"
+
+    def test_unknown_version_returns_none(self, _clear_caches: None) -> None:
+        """Unknown version has no renames, so everything should be valid."""
+        result = validate_external_dependency("hr_contract", "99.0")
+        assert result is None
+
+    def test_valid_dep_for_old_version(self, _clear_caches: None) -> None:
+        """hr_contract is not renamed in 17.0, should return None."""
+        result = validate_external_dependency("hr_contract", "17.0")
+        assert result is None
+
+
+class TestTopoSortWithVersion:
+    """Tests for topo_sort with odoo_version parameter."""
+
+    def test_topo_sort_works_with_version_param(
+        self, _clear_caches: None,
+    ) -> None:
+        """topo_sort should still produce correct order with odoo_version."""
+        modules = {
+            "a": {"depends": []},
+            "b": {"depends": ["a"]},
+            "c": {"depends": ["b"]},
+        }
+        order = topo_sort(modules, odoo_version="19.0")
+        assert order.index("a") < order.index("b") < order.index("c")
+
+    def test_topo_sort_default_version_is_19(
+        self, _clear_caches: None,
+    ) -> None:
+        """Default odoo_version should be '19.0'."""
+        modules = {"x": {"depends": []}}
+        # Should not raise — just verify it runs with default
+        order = topo_sort(modules)
+        assert "x" in order
+
+    def test_topo_sort_skips_renamed_external_dep(
+        self, _clear_caches: None,
+    ) -> None:
+        """A module depending on 'hr' (valid in 19.0) should sort fine."""
+        modules = {
+            "my_mod": {"depends": ["hr"]},
+        }
+        order = topo_sort(modules, odoo_version="19.0")
+        assert "my_mod" in order
+        # hr is external, not in result
+        assert "hr" not in order

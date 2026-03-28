@@ -10,29 +10,110 @@ Reads module dependency data from module_status.json and provides:
 from __future__ import annotations
 
 import json
-from functools import lru_cache
 from pathlib import Path
 
 from amil_utils.orchestrator.module_status import read_status_file
 
+# ── Module-level caches ────────────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
-def _load_external_module_names() -> frozenset[str]:
-    """Load known Odoo module names that are external (not generated)."""
+_external_modules_cache: dict[str, frozenset[str]] = {}
+_renames_cache: dict | None = None
+
+
+def _load_renames_data() -> dict:
+    """Load module renames/merges data, cached at module level."""
+    global _renames_cache  # noqa: PLW0603
+    if _renames_cache is not None:
+        return _renames_cache
+    data_file = Path(__file__).parent.parent / "data" / "module_renames.json"
+    try:
+        raw = json.loads(data_file.read_text(encoding="utf-8"))
+        _renames_cache = raw if isinstance(raw, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        _renames_cache = {}
+    return _renames_cache
+
+
+def _get_renamed_modules(odoo_version: str) -> frozenset[str]:
+    """Return the set of module names that were renamed or merged in the given version."""
+    renames_data = _load_renames_data()
+    version_data = renames_data.get(odoo_version, {})
+    removed: set[str] = set()
+    removed.update(version_data.get("modules_renamed", {}).keys())
+    removed.update(version_data.get("modules_merged", {}).keys())
+    return frozenset(removed)
+
+
+def _load_external_module_names(odoo_version: str = "19.0") -> frozenset[str]:
+    """Load known Odoo module names that are external (not generated).
+
+    Args:
+        odoo_version: Odoo version string (e.g. "17.0", "19.0").
+                      Modules renamed/merged in this version are excluded.
+    """
+    if odoo_version in _external_modules_cache:
+        return _external_modules_cache[odoo_version]
+
     data_file = Path(__file__).parent.parent / "data" / "known_odoo_models.json"
     try:
         raw = json.loads(data_file.read_text(encoding="utf-8"))
         if isinstance(raw, dict) and "models" in raw:
             modules = set()
-            for model_name in raw["models"]:
+            for model_name, model_info in raw["models"].items():
                 parts = model_name.split(".")
                 if parts:
                     modules.add(parts[0])
+                # Also extract from the explicit "module" field
+                if isinstance(model_info, dict) and model_info.get("module"):
+                    modules.add(model_info["module"])
             modules.update({"base", "web", "mail", "account", "stock", "hr", "sale", "purchase", "project", "crm", "website", "portal", "board", "bus"})
-            return frozenset(modules)
+            # Filter out modules renamed/merged in the target version
+            renamed = _get_renamed_modules(odoo_version)
+            result = frozenset(modules - renamed)
+            _external_modules_cache[odoo_version] = result
+            return result
     except (OSError, json.JSONDecodeError):
         pass
-    return frozenset({"base", "web", "mail"})
+    fallback = frozenset({"base", "web", "mail"})
+    _external_modules_cache[odoo_version] = fallback
+    return fallback
+
+
+def validate_external_dependency(
+    dep_name: str, odoo_version: str = "19.0",
+) -> dict | None:
+    """Check if a dependency has been renamed/merged in the target Odoo version.
+
+    Returns None if dep is valid, or a dict with warning info if renamed/merged.
+    """
+    renames_data = _load_renames_data()
+    version_data = renames_data.get(odoo_version, {})
+
+    renamed_to = version_data.get("modules_renamed", {}).get(dep_name)
+    if renamed_to is not None:
+        return {
+            "dependency": dep_name,
+            "renamed_to": renamed_to,
+            "version": odoo_version,
+            "message": (
+                f"Module '{dep_name}' was renamed to "
+                f"'{renamed_to}' in Odoo {odoo_version}"
+            ),
+        }
+
+    merged_into = version_data.get("modules_merged", {}).get(dep_name)
+    if merged_into is not None:
+        return {
+            "dependency": dep_name,
+            "renamed_to": merged_into,
+            "version": odoo_version,
+            "message": (
+                f"Module '{dep_name}' was renamed to "
+                f"'{merged_into}' in Odoo {odoo_version}"
+            ),
+        }
+
+    return None
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -115,6 +196,7 @@ def topo_sort(
     *,
     strict: bool = True,
     external_modules: frozenset[str] | None = None,
+    odoo_version: str = "19.0",
 ) -> list[str]:
     """DFS-based topological sort with cycle detection.
 
@@ -125,6 +207,7 @@ def topo_sort(
                 skip the phantom dependency.
         external_modules: Known external Odoo module names to skip silently.
                           Defaults to names derived from known_odoo_models.json.
+        odoo_version: Odoo version string for filtering renamed/merged modules.
 
     Returns:
         Module names in dependency order (deps before dependents).
@@ -133,7 +216,7 @@ def topo_sort(
         ValueError: If a circular dependency is detected, or if strict=True
                     and an unknown dependency is encountered.
     """
-    external_modules = external_modules or _load_external_module_names()
+    external_modules = external_modules or _load_external_module_names(odoo_version)
     visited: set[str] = set()
     visiting: set[str] = set()
     result: list[str] = []
@@ -190,7 +273,9 @@ def dep_graph_build(cwd: str | Path) -> dict:
     return {"modules": modules}
 
 
-def dep_graph_order(cwd: str | Path) -> list[str]:
+def dep_graph_order(
+    cwd: str | Path, *, odoo_version: str = "19.0",
+) -> list[str]:
     """Return modules in topological (generation) order."""
     data = read_status_file(cwd)
     modules: dict[str, dict] = {}
@@ -198,7 +283,7 @@ def dep_graph_order(cwd: str | Path) -> list[str]:
     for name, mod in data.get("modules", {}).items():
         modules[name] = {"depends": mod.get("depends", [])}
 
-    return topo_sort(modules)
+    return topo_sort(modules, odoo_version=odoo_version)
 
 
 def dep_graph_tiers(cwd: str | Path) -> dict:
