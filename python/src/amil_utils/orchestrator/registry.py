@@ -79,6 +79,8 @@ def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
     Used during backward transitions to clean stale spec data.
     Returns the updated registry.
     """
+    if not module_name:
+        raise ValueError("module_name is required for registry removal")
     cwd = Path(cwd)
     registry = read_registry_file(cwd)
 

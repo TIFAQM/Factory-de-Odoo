@@ -14,6 +14,59 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 
+def _execute_tier_parallel(
+    *,
+    cwd: Path,
+    tier_modules: list[str],
+    fn: Callable[[Path, str], dict[str, Any]],
+    max_concurrency: int = 3,
+    label: str = "Tier-parallel",
+) -> list[dict[str, Any]]:
+    """Execute fn for all modules in a tier concurrently.
+
+    Each call invokes ``fn(cwd, module_name)`` which should return a dict
+    with at least ``{"success": bool}``.
+
+    Results are returned in the original submission order.
+
+    Parameters
+    ----------
+    cwd:
+        Project working directory.
+    tier_modules:
+        Module names in this tier (no cross-dependencies).
+    fn:
+        Callable that processes a single module.
+    max_concurrency:
+        Maximum simultaneous executions (default 3).
+    label:
+        Log prefix for info/error messages.
+    """
+    if not tier_modules:
+        return []
+
+    results: dict[str, dict[str, Any]] = {}
+
+    with ThreadPoolExecutor(max_workers=max_concurrency) as pool:
+        future_to_name = {
+            pool.submit(fn, cwd, name): name
+            for name in tier_modules
+        }
+        for future in as_completed(future_to_name):
+            name = future_to_name[future]
+            try:
+                result = future.result()
+                results[name] = result
+                status = "OK" if result.get("success") else "FAIL"
+                logger.info("%s %s: %s", label, name, status)
+            except Exception as exc:
+                logger.error("%s %s crashed: %s", label, name, exc)
+                results[name] = {"success": False, "error": str(exc)}
+
+    # Return in original submission order
+    return [results[name] for name in tier_modules]
+
+
 def generate_tier_parallel(
     *,
     cwd: Path,
@@ -27,41 +80,14 @@ def generate_tier_parallel(
     return a dict with at least ``{"success": bool}``.
 
     Results are returned in the original submission order.
-
-    Parameters
-    ----------
-    cwd:
-        Project working directory.
-    tier_modules:
-        Module names in this tier (no cross-dependencies).
-    generate_fn:
-        Callable that generates a single module.
-    max_concurrency:
-        Maximum simultaneous generations (default 3).
     """
-    if not tier_modules:
-        return []
-
-    results: dict[str, dict[str, Any]] = {}
-
-    with ThreadPoolExecutor(max_workers=max_concurrency) as pool:
-        future_to_name = {
-            pool.submit(generate_fn, cwd, name): name
-            for name in tier_modules
-        }
-        for future in as_completed(future_to_name):
-            name = future_to_name[future]
-            try:
-                result = future.result()
-                results[name] = result
-                status = "OK" if result.get("success") else "FAIL"
-                logger.info("Tier-parallel %s: %s", name, status)
-            except Exception as exc:
-                logger.error("Tier-parallel %s crashed: %s", name, exc)
-                results[name] = {"success": False, "error": str(exc)}
-
-    # Return in original submission order
-    return [results[name] for name in tier_modules]
+    return _execute_tier_parallel(
+        cwd=cwd,
+        tier_modules=tier_modules,
+        fn=generate_fn,
+        max_concurrency=max_concurrency,
+        label="Tier-parallel",
+    )
 
 
 def validate_tier_parallel(
@@ -77,38 +103,11 @@ def validate_tier_parallel(
     return a dict with at least ``{"success": bool}``.
 
     Results are returned in the original submission order.
-
-    Parameters
-    ----------
-    cwd:
-        Project working directory.
-    tier_modules:
-        Module names in this tier (no cross-dependencies).
-    validate_fn:
-        Callable that validates a single module.
-    max_concurrency:
-        Maximum simultaneous validations (default 3).
     """
-    if not tier_modules:
-        return []
-
-    results: dict[str, dict[str, Any]] = {}
-
-    with ThreadPoolExecutor(max_workers=max_concurrency) as pool:
-        future_to_name = {
-            pool.submit(validate_fn, cwd, name): name
-            for name in tier_modules
-        }
-        for future in as_completed(future_to_name):
-            name = future_to_name[future]
-            try:
-                result = future.result()
-                results[name] = result
-                status = "OK" if result.get("success") else "FAIL"
-                logger.info("Validate-parallel %s: %s", name, status)
-            except Exception as exc:
-                logger.error("Validate-parallel %s crashed: %s", name, exc)
-                results[name] = {"success": False, "error": str(exc)}
-
-    # Return in original submission order
-    return [results[name] for name in tier_modules]
+    return _execute_tier_parallel(
+        cwd=cwd,
+        tier_modules=tier_modules,
+        fn=validate_fn,
+        max_concurrency=max_concurrency,
+        label="Validate-parallel",
+    )

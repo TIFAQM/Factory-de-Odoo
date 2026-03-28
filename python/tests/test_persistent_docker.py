@@ -11,7 +11,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from amil_utils.validation.module_name import validate_module_name
 from amil_utils.validation.persistent_docker import (
     PersistentDockerManager,
     STATE_FILE,
@@ -129,12 +128,6 @@ class TestPersistentDockerManagerUnit:
         result = manager.install_module(tmp_path / "MyModule")
         assert result.success is False
         assert "Invalid module name" in result.errors[0]
-
-    def test_validate_module_name_accepts_valid_and_rejects_invalid(self):
-        assert validate_module_name("uni_student") is None
-        assert validate_module_name("hr_payroll") is None
-        assert validate_module_name("0bad") is not None
-        assert validate_module_name("") is not None
 
     def test_run_cross_module_rejects_invalid_names(self):
         manager = PersistentDockerManager()

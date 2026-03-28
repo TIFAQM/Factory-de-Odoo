@@ -279,12 +279,14 @@ def check_field_renames(spec: dict, odoo_version: str = "19.0") -> dict:
 def run_all_checks(spec: dict, registry: dict) -> dict:
     """Run all 4 checks and aggregate results."""
     warnings.warn(_DEPRECATION_NOTICE, DeprecationWarning, stacklevel=2)
-    checks = [
-        check_many2one_targets(spec, registry),
-        check_duplicate_models(spec, registry),
-        check_computed_depends(spec, registry),
-        check_security_groups(spec, registry),
-    ]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        checks = [
+            check_many2one_targets(spec, registry),
+            check_duplicate_models(spec, registry),
+            check_computed_depends(spec, registry),
+            check_security_groups(spec, registry),
+        ]
     all_pass = all(c["status"] == "pass" for c in checks)
     return {
         "status": "pass" if all_pass else "fail",

@@ -1,7 +1,10 @@
 {
   "_meta": {
     "description": "Odoo module renames and merges by version",
-    "sources": ["https://ocu.winotto.com/articles/whats-new-odoo-19"]
+    "last_verified": "2026-03-28",
+    "sources": [
+      "https://ocu.winotto.com/articles/whats-new-odoo-19"
+    ]
   },
   "19.0": {
     "modules_renamed": {
