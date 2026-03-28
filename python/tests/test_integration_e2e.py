@@ -219,8 +219,9 @@ class TestDockerIntegration:
     mail.thread inheritance for line-item models. This mismatch causes
     Docker install failures for specs with line-item models.
 
-    These tests are marked xfail until the template is fixed to check
-    the 'chatter' context variable (renderer_context.py line 120-122).
+    test_docker_install is marked xfail until the template is fixed to
+    check the 'chatter' context variable. test_docker_tests runs
+    normally and is expected to pass.
     """
 
     @pytest.fixture(autouse=True)

@@ -59,7 +59,7 @@ def _atomic_write_json(file_path: Path, data: dict) -> None:
 
     tmp_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
     try:
-        tmp_file.rename(file_path)
+        tmp_file.replace(file_path)
     except OSError:
         tmp_file.unlink(missing_ok=True)
         raise

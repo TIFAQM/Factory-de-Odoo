@@ -396,12 +396,12 @@ class TestAtomicWriteJsonRegistry:
         assert tmp_files == [], f"Leftover tmp files: {tmp_files}"
 
     def test_tmp_cleaned_up_on_rename_failure(self, tmp_path: Path) -> None:
-        """When rename raises OSError, the temp file must be cleaned up."""
+        """When replace raises OSError, the temp file must be cleaned up."""
         planning = tmp_path / ".planning"
         planning.mkdir()
         target = planning / "model_registry.json"
 
-        with patch("pathlib.Path.rename", side_effect=OSError("mock rename failure")):
+        with patch("pathlib.Path.replace", side_effect=OSError("mock rename failure")):
             with pytest.raises(OSError, match="mock rename failure"):
                 _atomic_write_json(target, {"_meta": {"version": 1}, "models": {}})
 

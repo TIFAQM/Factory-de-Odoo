@@ -359,10 +359,13 @@ def _compute_needs_api_and_translate(ctx: dict[str, Any], model: dict[str, Any])
         for c in complex_constraints
     )
     # I3: @api.private on internal helpers requires api import (Odoo 19.0+)
-    has_private_helpers = ctx.get("has_webhooks", False) or any(
+    odoo_version = ctx.get("odoo_version", "")
+    has_private_helpers = (
+        odoo_version >= "19.0" and ctx.get("has_webhooks", False)
+    ) or (odoo_version >= "19.0" and any(
         not c.get("type", "").startswith(("temporal", "pk_", "ac_year_", "ac_term_", "doc_file_", "ac_action", "doc_action"))
         for c in complex_constraints
-    )
+    ))
     needs_api = bool(
         ctx["computed_fields"] or ctx["onchange_fields"] or ctx["constrained_fields"]
         or ctx["sequence_fields"] or has_temporal or ctx["has_create_override"]

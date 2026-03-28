@@ -67,7 +67,7 @@ def _atomic_write_json(file_path: Path, data: dict) -> None:
     tmp_path = file_path.parent / f"{file_path.name}.{uuid.uuid4().hex[:8]}.tmp"
     tmp_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     try:
-        tmp_path.rename(file_path)
+        tmp_path.replace(file_path)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise
