@@ -12,6 +12,7 @@ import json
 import logging
 import re
 import shutil
+import uuid
 from datetime import date
 from functools import cmp_to_key
 from pathlib import Path
@@ -178,8 +179,19 @@ _REMOVAL_MANIFEST_NAME = ".removal_manifest.json"
 def _write_manifest(phases_dir: Path, manifest: dict) -> Path:
     """Write transaction manifest for atomic phase removal."""
     manifest_path = phases_dir / _REMOVAL_MANIFEST_NAME
-    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    _atomic_write_manifest(manifest_path, manifest)
     return manifest_path
+
+
+def _atomic_write_manifest(file_path: Path, data: dict) -> None:
+    """Write manifest JSON atomically via temp file + replace."""
+    tmp = file_path.parent / f"{file_path.name}.{uuid.uuid4().hex[:8]}.tmp"
+    try:
+        tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        tmp.replace(file_path)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 def _update_manifest_op(manifest_path: Path, op_index: int, status: str) -> None:
@@ -190,7 +202,7 @@ def _update_manifest_op(manifest_path: Path, op_index: int, status: str) -> None
         for i, op in enumerate(data["operations"])
     ]
     updated_data = {**data, "operations": updated_ops}
-    manifest_path.write_text(json.dumps(updated_data, indent=2), encoding="utf-8")
+    _atomic_write_manifest(manifest_path, updated_data)
 
 
 def _rollback_operations(manifest_path: Path, phases_dir: Path) -> list[dict]:
@@ -428,7 +440,10 @@ def phase_remove(cwd: str | Path, target_phase: str, *, force: bool = False) -> 
                 logger.debug("Failed to restore STATE.md during rollback: %s", exc)
         # Rollback completed rename operations
         _rollback_operations(manifest_path, phases_dir)
-        manifest_path.unlink(missing_ok=True)
+        try:
+            manifest_path.unlink(missing_ok=True)
+        except OSError as exc:
+            logger.debug("Failed to remove manifest during rollback: %s", exc)
         raise
 
 
