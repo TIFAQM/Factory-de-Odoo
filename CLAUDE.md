@@ -22,7 +22,7 @@ is preferred to prevent mid-task disruption.
 
 ### Architecture
 ```
-agents/                — 28 AI agent definitions (19 orchestrator + 9 pipeline)
+agents/                — 29 AI agent definitions (20 orchestrator + 9 pipeline)
 amil/                  — Workflows, references, templates, knowledge base
 commands/amil/         — 46 slash commands (/amil:* prefix)
 hooks/                 — 3 event hooks
@@ -85,7 +85,7 @@ Modules progress sequentially. Only one module generates at a time.
 ### Development
 ```bash
 cd python
-uv run pytest tests/ -q                    # Full suite (~4,017 tests)
-uv run pytest tests/orchestrator/ -q       # Orchestrator only (~698 tests)
+uv run pytest tests/ -q                    # Full suite (~4,093 tests)
+uv run pytest tests/orchestrator/ -q       # Orchestrator only (~713 tests)
 uv run pytest tests/ -m "not docker" -q    # Skip Docker tests
 ```

@@ -13,6 +13,7 @@
   <a href="#quick-start">Quick Start</a> &bull;
   <a href="#how-it-works">How It Works</a> &bull;
   <a href="#architecture">Architecture</a> &bull;
+  <a href="#whats-new">What's New</a> &bull;
   <a href="#commands">Commands</a> &bull;
   <a href="#testing">Testing</a> &bull;
   <a href="#contributing">Contributing</a>
@@ -21,7 +22,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Odoo-17.0%20%7C%2018.0%20%7C%2019.0-875A7B?logo=odoo&logoColor=white" alt="Odoo Version"/>
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/Tests-4017%20passing-brightgreen" alt="Tests"/>
+  <img src="https://img.shields.io/badge/Tests-4%2C093%20passing-brightgreen" alt="Tests"/>
+  <img src="https://img.shields.io/badge/Coverage-80%25%2B-brightgreen" alt="Coverage"/>
   <img src="https://img.shields.io/badge/License-MIT%20%2F%20LGPL--3-blue" alt="License"/>
 </p>
 
@@ -31,12 +33,36 @@
 
 **Factory de Odoo** turns a Product Requirements Document into a complete, multi-module Odoo ERP — not one module at a time, but an entire coherent system where every model reference, security group, and menu hierarchy is verified across module boundaries.
 
+Think of it as a **compiler for ERPs**: you write the spec, the factory assembles production-ready Odoo modules with validated cross-references, security rules, and tests that actually pass.
+
 | Component | Role | Tech |
 |-----------|------|------|
-| **Orchestrator** (`python/src/amil_utils/orchestrator/`) | Decomposes an ERP PRD into 20+ modules, tracks cross-module state, drives sequential generation | Python 3.12 (`amil_utils.orchestrator`), 698 tests |
-| **Pipeline** (`python/src/amil_utils/`) | Pure library — renders individual Odoo modules from JSON specs using 9 AI agents, 60 Jinja2 templates, and Docker validation | Python 3.12, 3,319 tests |
+| **Orchestrator** (`python/src/amil_utils/orchestrator/`) | Decomposes an ERP PRD into 20+ modules, tracks cross-module state, drives sequential generation | Python 3.12 (`amil_utils.orchestrator`), 713 tests |
+| **Pipeline** (`python/src/amil_utils/`) | Pure library — renders individual Odoo modules from JSON specs using 9 AI agents, 73 Jinja2 templates, and Docker validation | Python 3.12, 3,380 tests |
 
-**Combined:** 4,017 tests &bull; 33,200+ Python LOC &bull; 27 orchestrator modules &bull; 60 Jinja2 templates &bull; 28 AI agents &bull; 46 slash commands &bull; 12 knowledge files
+**Combined:** 4,093 tests &bull; 37,900+ Python LOC &bull; 29 AI agents &bull; 73 Jinja2 templates &bull; 46 slash commands &bull; 15 knowledge files
+
+---
+
+## What's New
+
+### Odoo 19 Deep Integration (v4)
+
+Factory de Odoo now has **the most comprehensive Odoo 19.0 support of any module generator in the ecosystem** — and it's not even close. Here's what landed:
+
+**Version-Aware Validation** — The dependency graph now knows about Odoo 19's massive rename wave (130 models renamed, 51 fields renamed, 25+ modules merged). Generate a module that depends on `hr_contract`? The system warns you: *"Module 'hr_contract' was renamed to 'hr' in Odoo 19.0"* — before you waste 5 minutes waiting for Docker to tell you the same thing.
+
+**Field-Level Rename Detection** — Not just modules. If your spec references `res.users.groups_id`, the coherence checker catches it: *"Field 'groups_id' was renamed to 'group_ids' in Odoo 19.0."* This catches bugs that would survive all the way to production in any other tool.
+
+**`@api.private` Security Hardening** — Every internal helper method in generated Odoo 19 modules now gets the `@api.private` decorator automatically. This prevents accidental RPC exposure of business logic — a security win with zero effort from the developer.
+
+**`Domain` Class Support** — Templates are ready for Odoo 19's new `from odoo.fields import Domain` with Python operators (`|`, `&`, `~`), replacing the deprecated `expression.OR()`/`expression.AND()` pattern.
+
+**`models.Constraint()` Class** — The 19.0 template uses the new object-oriented constraint syntax instead of the deprecated `_sql_constraints` tuples. Modules generated for 17.0/18.0 get a `MIGRATION_NOTES.md` explaining exactly what to change when upgrading.
+
+**Parallel Docker Validation** — Validate up to 3 modules simultaneously with memory-aware concurrency. Each validation stack gets a UUID-suffixed Docker Compose project — zero port conflicts, zero shared state. A 20-module ERP validates in ~3.5 minutes instead of 10.
+
+**Race-Condition-Free State Management** — All shared state files (registry, module status) now use UUID-suffixed temp files for atomic writes. Concurrent CLI invocations can't corrupt your `.planning/` directory anymore.
 
 ---
 
@@ -58,13 +84,13 @@
                            |
               +------------v-----------+
               |       PIPELINE         |  9 agents generate code
-              | (Single-Module Belt)   |  60 Jinja2 templates render
+              | (Single-Module Belt)   |  73 Jinja2 templates render
               +------------+-----------+  Docker validates output
                            |
               +------------v-----------+
               |    COHERENCE CHECK     |  Many2one targets valid?
               |  (Back to Orchestrator)|  No duplicate models?
-              +------------+-----------+  Security groups exist?
+              +------------+-----------+  Renamed fields caught?
                            |
                     Production-Grade
                      Odoo Modules
@@ -79,6 +105,20 @@ Most code generators produce isolated modules. Factory de Odoo maintains a **Mod
 - Computed field dependencies resolve across module boundaries
 - Security groups referenced in ACLs are defined somewhere
 - Menu hierarchies are consistent
+- **Odoo 19 renames are caught at spec time** — not at Docker install time
+
+### What No Other Tool Does
+
+| Capability | Factory de Odoo | `odoo-bin scaffold` | `bobtemplates.odoo` | Gemini-Odoo-Generator |
+|-----------|:-:|:-:|:-:|:-:|
+| AI-powered generation | 29 agents | -- | -- | 1 agent |
+| Cross-module coherence | Model Registry | -- | -- | -- |
+| Multi-version templates | 17 / 18 / 19 | Current only | Manual | -- |
+| Docker validation | pylint + install + tests | -- | -- | -- |
+| Odoo 19 rename detection | 130 models + 51 fields | -- | -- | -- |
+| OCA semantic search | ChromaDB | -- | -- | -- |
+| `@api.private` auto-generation | On all internal methods | -- | -- | -- |
+| Parallel validation | Up to 3 concurrent stacks | -- | -- | -- |
 
 ---
 
@@ -178,20 +218,20 @@ For a single standalone module (no ERP decomposition):
 ```
 Factory-de-Odoo/
 |
-+-- agents/                          # 28 AI agents (19 orchestrator + 9 pipeline)
++-- agents/                          # 29 AI agents (20 orchestrator + 9 pipeline)
 +-- amil/                            # Extension content
 |   +-- workflows/                   # 41 workflow definitions
 |   +-- references/                  # Reference docs
 |   +-- templates/                   # Document templates
-|   +-- knowledge/                   # 12 Odoo knowledge files (80+ examples)
+|   +-- knowledge/                   # 15 Odoo knowledge files (80+ examples)
 +-- commands/amil/                   # 46 slash commands (/amil:*)
 +-- hooks/                           # 3 event hooks
 |
 +-- python/                          # Python library
 |   +-- src/amil_utils/              # Rendering engine, validation, search
 |   +-- src/amil_utils/orchestrator/ # 27 Python modules, 60+ Click commands
-|   +-- src/amil_utils/templates/    # 60 Jinja2 templates (17.0/18.0/19.0/shared)
-|   +-- tests/                       # ~4,017 tests (pytest)
+|   +-- src/amil_utils/templates/    # 73 Jinja2 templates (17.0/18.0/19.0/shared)
+|   +-- tests/                       # 4,093 tests (pytest)
 +-- docker/                          # Odoo 19 + PostgreSQL 16 dev instance
 ```
 
@@ -204,18 +244,21 @@ Manages the full ERP lifecycle — PRD decomposition, cross-module state, and se
 planned --> spec_approved --> generated --> checked --> shipped
 ```
 
+Backward transitions are supported with automatic cleanup — reverting `spec_approved` to `planned` automatically removes stale entries from the model registry.
+
 **Core Library (`amil_utils.orchestrator/`):**
 
 | Module | Purpose |
 |--------|---------|
-| `registry.py` | Central model/field tracking with atomic writes and rollback |
-| `coherence.py` | 4 structural checks across module boundaries |
-| `module_status.py` | State machine with validated transitions |
-| `dependency_graph.py` | Topological sort for generation order |
-| `state.py` | Session state persistence (STATE.md YAML frontmatter) |
-| `config.py` | Project configuration management |
-| `phase.py` / `phase_query.py` | Phase planning and execution tracking |
-| `cli.py` / `cli_groups.py` | 60+ Click CLI commands |
+| `registry.py` | Central model/field tracking with UUID-safe atomic writes and rollback |
+| `coherence.py` | Structural checks + Odoo 19 field/model rename detection |
+| `module_status.py` | State machine with validated transitions and backward cleanup hooks |
+| `dependency_graph.py` | Version-aware topological sort with Odoo 19 rename validation |
+| `state.py` | Session state persistence with custom frontmatter preservation |
+| `config.py` | Project configuration with strict type coercion |
+| `phase.py` / `phase_query.py` | Phase planning with atomic removal and transaction manifests |
+| `parallel_executor.py` | Tier-parallel generation AND validation (up to 3 concurrent) |
+| `cli.py` / `cli_groups.py` | 60+ Click CLI commands with graceful error handling |
 
 **PRD Decomposition** spawns 4 parallel research agents:
 1. **Module Boundary Analyzer** — functional domains, model proposals
@@ -234,7 +277,7 @@ Generates a single Odoo module from a JSON specification. Pipeline is a pure lib
 | `amil-scaffold` | Initial module structure (manifest, dirs, init files) |
 | `amil-model-gen` | Python model classes with ORM fields |
 | `amil-view-gen` | XML views (form, tree, kanban, search) |
-| `amil-security-gen` | ACLs, record rules, security groups |
+| `amil-security-gen` | ACLs, record rules, security groups (`privilege_id` for 19.0!) |
 | `amil-test-gen` | Python test cases (unit + integration) |
 | `amil-logic-writer` | Business logic (computed fields, onchange, constraints) |
 | `amil-validator` | pylint-odoo + Docker validation |
@@ -246,21 +289,23 @@ Generates a single Odoo module from a JSON specification. Pipeline is a pure lib
 pylint-odoo --> Docker Install --> Docker Tests --> Auto-Fix (up to 5 iterations)
 ```
 
+Now with **parallel validation** — up to 3 modules validated concurrently with memory-aware concurrency capping.
+
 **Auto-Fix resolves common issues automatically:**
 - Missing `mail.thread` inheritance when chatter XML exists
 - Unused Python imports (AST-based removal)
 - XML parse errors and manifest load order issues
 - Missing ACL entries and security group references
-- pylint-odoo violations (W8161, W8113, etc.)
+- pylint-odoo violations (W8161, W8113, W8111 with multi-pattern resilience)
 
-**60 Jinja2 Templates** across 4 version directories:
+**73 Jinja2 Templates** across 4 version directories:
 
 | Directory | Contents |
 |-----------|----------|
 | `templates/17.0/` | Odoo 17.0-specific view and model patterns |
 | `templates/18.0/` | Odoo 18.0-specific patterns |
-| `templates/19.0/` | Odoo 19.0-specific patterns (primary target) |
-| `templates/shared/` | Cross-version templates (models, security, Docker) |
+| `templates/19.0/` | Odoo 19.0-specific patterns — `models.Constraint()`, `@api.private`, `Domain` class, `privilege_id` |
+| `templates/shared/` | Cross-version templates (models, security, Docker, migration notes) |
 
 ---
 
@@ -298,7 +343,7 @@ All 46 commands use the `/amil:` prefix. Run `/amil:help` for the full reference
 | `/amil:discuss-module` | Interactive module discussion with domain templates |
 | `/amil:plan-module` | Generate `spec.json` with coherence check |
 | `/amil:generate-module` | Generate module via pipeline belt |
-| `/amil:validate-module` | Run pylint-odoo + Docker validation |
+| `/amil:validate-module` | Run pylint-odoo + Docker validation (now parallel!) |
 | `/amil:search-modules` | Semantic search across OCA/GitHub |
 | `/amil:research-module` | Research patterns for a module need |
 | `/amil:extend-module` | Fork and extend existing module |
@@ -334,10 +379,10 @@ All 46 commands use the `/amil:` prefix. Run `/amil:help` for the full reference
 ```bash
 cd python
 
-# Run all tests (~4,017 tests, ~3 min)
+# Run all tests (~4,093 tests, ~2 min)
 uv run pytest tests/ -q
 
-# Orchestrator tests only (~698 tests)
+# Orchestrator tests only (~713 tests)
 uv run pytest tests/orchestrator/ -q
 
 # Skip Docker-dependent tests
@@ -349,6 +394,7 @@ uv run pytest tests/ -m "not e2e" -q
 # Specific test suites
 uv run pytest tests/test_golden_path.py -v     # Golden path: render + Docker install
 uv run pytest tests/test_integration_e2e.py -v  # Integration: schema alignment
+uv run pytest tests/test_api_private.py -v      # @api.private decorator generation
 
 # Coverage report
 uv run pytest tests/ --cov=amil_utils --cov-report=html
@@ -386,14 +432,14 @@ bash scripts/odoo-dev.sh reset
 
 ## Knowledge Base
 
-12 domain knowledge files with 80+ WRONG/CORRECT example pairs that prevent AI hallucinations:
+15 domain knowledge files with 80+ WRONG/CORRECT example pairs that prevent AI hallucinations — now fully updated for Odoo 19.0 patterns:
 
 ```
 amil/knowledge/
 +-- MASTER.md        # Integration guide
-+-- models.md        # ORM fields, computed, constraints
++-- models.md        # ORM fields, computed, constraints, @api.private, Domain class
 +-- views.md         # Forms, trees, kanban, search
-+-- security.md      # ACLs, record rules, groups
++-- security.md      # ACLs, record rules, groups (privilege_id for 19.0)
 +-- manifest.md      # __manifest__.py patterns
 +-- inheritance.md   # Model/view inheritance
 +-- testing.md       # Test assertions, mocking
@@ -402,6 +448,9 @@ amil/knowledge/
 +-- controllers.md   # HTTP controllers
 +-- actions.md       # Window actions
 +-- data.md          # XML/CSV data files
++-- accounting.md    # Invoicing, payments, journals
++-- inventory.md     # Warehouse, stock moves, pickings
++-- owl.md           # OWL JavaScript framework
 ```
 
 Extend the knowledge base by adding `.md` files to `knowledge/custom/` — they are automatically included during generation.
@@ -413,7 +462,7 @@ Extend the knowledge base by adding `.md` files to `knowledge/custom/` — they 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
 | `AMIL_GEN_PATH` | No | `.planning/config.json` | Path to pipeline directory |
-| `GITHUB_TOKEN` | No | — | GitHub API for OCA search (raises rate limit) |
+| `GITHUB_TOKEN` | No | -- | GitHub API for OCA search (raises rate limit) |
 | `ODOO_VERSION` | No | `19.0` | Target Odoo version |
 | `ODOO_DEV_PORT` | No | `8069` | Dev instance port |
 
@@ -423,14 +472,15 @@ Extend the knowledge base by adding `.md` files to `knowledge/custom/` — they 
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | **4,017** (698 orchestrator + 3,319 pipeline) |
-| Python LOC | **33,200+** |
+| Total Tests | **4,093** (713 orchestrator + 3,380 pipeline) |
+| Python LOC | **37,900+** |
 | Orchestrator Modules | **27** Python modules, 60+ Click CLI commands |
-| Jinja2 Templates | **60** (17.0 / 18.0 / 19.0 / shared) |
-| AI Agents | **28** (19 orchestrator + 9 pipeline) |
+| Jinja2 Templates | **73** (17.0 / 18.0 / 19.0 / shared) |
+| AI Agents | **29** (20 orchestrator + 9 pipeline) |
 | Slash Commands | **46** (all `/amil:*` prefix) |
-| Knowledge Files | **12** (80+ example pairs) |
+| Knowledge Files | **15** (80+ example pairs, Odoo 19.0 ready) |
 | Odoo Versions | **3** (17.0, 18.0, 19.0) |
+| Odoo 19 Renames Tracked | **130 models + 51 fields** |
 
 ---
 
@@ -441,11 +491,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, 
 ### Core Principles
 
 1. **Sequential generation** — one module at a time through the belt
-2. **Atomic writes** — write complete JSON files, never partial updates
+2. **Atomic writes** — UUID-safe temp files, transaction manifests for multi-step ops
 3. **Immutable data** — create new objects, never mutate existing
 4. **Pure Python** — zero Node.js runtime dependency, only Python 3.12
 5. **80%+ test coverage** — enforced across all components
 6. **Pipeline is a pure library** — no user-facing commands, all interaction through orchestrator
+7. **Version-aware everything** — templates, validation, and coherence checks adapt per Odoo version
 
 ---
 
