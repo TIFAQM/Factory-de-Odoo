@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -74,10 +75,11 @@ def _parse_value(value: str) -> object:
             return json.loads(value)
         except json.JSONDecodeError as exc:
             logger.debug("Failed to parse config value as JSON: %s", exc)
-    try:
-        return int(value) if "." not in str(value) else float(value)
-    except (ValueError, TypeError) as exc:
-        logger.debug("Failed to parse config value as number: %s", exc)
+    # Strict numeric parsing — no scientific notation
+    if re.match(r"^-?\d+$", str(value)):
+        return int(value)
+    if re.match(r"^-?\d+\.\d+$", str(value)):
+        return float(value)
     return value
 
 

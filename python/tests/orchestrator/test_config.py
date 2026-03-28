@@ -9,6 +9,7 @@ import pytest
 from amil_utils.orchestrator.config import (
     VALID_LOCALIZATIONS,
     VALID_ODOO_VERSIONS,
+    _parse_value,
     config_ensure_section,
     config_get,
     config_set,
@@ -152,3 +153,29 @@ class TestConfigGet:
     def test_missing_config_raises(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError):
             config_get(tmp_path, "anything")
+
+
+class TestParseValueStrictNumeric:
+    def test_integer(self) -> None:
+        assert _parse_value("123") == 123
+        assert isinstance(_parse_value("123"), int)
+
+    def test_float(self) -> None:
+        result = _parse_value("12.5")
+        assert result == 12.5
+        assert isinstance(result, float)
+
+    def test_scientific_notation_stays_string(self) -> None:
+        assert _parse_value("123.4e5") == "123.4e5"
+        assert isinstance(_parse_value("123.4e5"), str)
+
+    def test_negative_integer(self) -> None:
+        assert _parse_value("-42") == -42
+        assert isinstance(_parse_value("-42"), int)
+
+    def test_boolean_true(self) -> None:
+        assert _parse_value("true") is True
+
+    def test_plain_string(self) -> None:
+        assert _parse_value("hello") == "hello"
+        assert isinstance(_parse_value("hello"), str)
