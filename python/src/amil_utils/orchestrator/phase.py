@@ -277,8 +277,10 @@ def phase_repair(cwd: str | Path) -> dict:
 def phase_remove(cwd: str | Path, target_phase: str, *, force: bool = False) -> dict:
     """Remove a phase: delete directory, renumber subsequent, update ROADMAP/STATE.
 
-    Uses a transaction manifest to ensure atomicity. If the process fails
-    mid-operation, ``phase_repair()`` can reverse completed operations.
+    Uses a transaction manifest so that renumbering and ROADMAP/STATE updates
+    are best-effort transactional: if the process fails mid-operation,
+    ``phase_repair()`` can reverse completed rename operations. The initial
+    deletion of the phase directory itself is not rollbackable.
     """
     if not target_phase:
         raise ValueError("phase number required for phase remove")
@@ -336,6 +338,9 @@ def phase_remove(cwd: str | Path, target_phase: str, *, force: bool = False) -> 
         "operations": planned_ops,
     }
     manifest_path = _write_manifest(phases_dir, manifest)
+
+    # Snapshot ROADMAP.md so we can restore it on rollback
+    roadmap_backup = roadmap_path.read_text(encoding="utf-8")
 
     try:
         op_index = 0
@@ -404,7 +409,12 @@ def phase_remove(cwd: str | Path, target_phase: str, *, force: bool = False) -> 
             "state_updated": state_updated,
         }
     except Exception:
-        # Rollback completed operations
+        # Restore ROADMAP.md to pre-removal state
+        try:
+            roadmap_path.write_text(roadmap_backup, encoding="utf-8")
+        except OSError as exc:
+            logger.debug("Failed to restore ROADMAP.md during rollback: %s", exc)
+        # Rollback completed rename operations
         _rollback_operations(manifest_path, phases_dir)
         manifest_path.unlink(missing_ok=True)
         raise
