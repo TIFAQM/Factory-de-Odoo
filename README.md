@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Odoo-17.0%20%7C%2018.0%20%7C%2019.0-875A7B?logo=odoo&logoColor=white" alt="Odoo Version"/>
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/Tests-2953%20passing-brightgreen" alt="Tests"/>
+  <img src="https://img.shields.io/badge/Tests-4017%20passing-brightgreen" alt="Tests"/>
   <img src="https://img.shields.io/badge/License-MIT%20%2F%20LGPL--3-blue" alt="License"/>
 </p>
 
@@ -33,10 +33,10 @@
 
 | Component | Role | Tech |
 |-----------|------|------|
-| **Orchestrator** (`python/src/amil_utils/orchestrator/`) | Decomposes an ERP PRD into 20+ modules, tracks cross-module state, drives sequential generation | Python 3.12 (`amil_utils.orchestrator`), 485 tests |
-| **Pipeline** (`python/src/amil_utils/`) | Pure library — renders individual Odoo modules from JSON specs using 9 AI agents, 60 Jinja2 templates, and Docker validation | Python 3.12, 2,468 tests |
+| **Orchestrator** (`python/src/amil_utils/orchestrator/`) | Decomposes an ERP PRD into 20+ modules, tracks cross-module state, drives sequential generation | Python 3.12 (`amil_utils.orchestrator`), 698 tests |
+| **Pipeline** (`python/src/amil_utils/`) | Pure library — renders individual Odoo modules from JSON specs using 9 AI agents, 60 Jinja2 templates, and Docker validation | Python 3.12, 3,319 tests |
 
-**Combined:** 2,953 tests &bull; 33,200+ Python LOC &bull; 27 orchestrator modules &bull; 60 Jinja2 templates &bull; 28 AI agents &bull; 46 slash commands &bull; 12 knowledge files
+**Combined:** 4,017 tests &bull; 33,200+ Python LOC &bull; 27 orchestrator modules &bull; 60 Jinja2 templates &bull; 28 AI agents &bull; 46 slash commands &bull; 12 knowledge files
 
 ---
 
@@ -191,7 +191,7 @@ Factory-de-Odoo/
 |   +-- src/amil_utils/              # Rendering engine, validation, search
 |   +-- src/amil_utils/orchestrator/ # 27 Python modules, 60+ Click commands
 |   +-- src/amil_utils/templates/    # 60 Jinja2 templates (17.0/18.0/19.0/shared)
-|   +-- tests/                       # ~2,900 tests (pytest)
+|   +-- tests/                       # ~4,017 tests (pytest)
 +-- docker/                          # Odoo 19 + PostgreSQL 16 dev instance
 ```
 
@@ -334,10 +334,10 @@ All 46 commands use the `/amil:` prefix. Run `/amil:help` for the full reference
 ```bash
 cd python
 
-# Run all tests (~2,953 tests, ~3 min)
+# Run all tests (~4,017 tests, ~3 min)
 uv run pytest tests/ -q
 
-# Orchestrator tests only (~485 tests)
+# Orchestrator tests only (~698 tests)
 uv run pytest tests/orchestrator/ -q
 
 # Skip Docker-dependent tests
@@ -423,7 +423,7 @@ Extend the knowledge base by adding `.md` files to `knowledge/custom/` — they 
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | **2,953** (485 orchestrator + 2,468 pipeline) |
+| Total Tests | **4,017** (698 orchestrator + 3,319 pipeline) |
 | Python LOC | **33,200+** |
 | Orchestrator Modules | **27** Python modules, 60+ Click CLI commands |
 | Jinja2 Templates | **60** (17.0 / 18.0 / 19.0 / shared) |

@@ -85,7 +85,7 @@ Modules progress sequentially. Only one module generates at a time.
 ### Development
 ```bash
 cd python
-uv run pytest tests/ -q                    # Full suite (~2,900 tests)
-uv run pytest tests/orchestrator/ -q       # Orchestrator only (~500 tests)
+uv run pytest tests/ -q                    # Full suite (~4,017 tests)
+uv run pytest tests/orchestrator/ -q       # Orchestrator only (~698 tests)
 uv run pytest tests/ -m "not docker" -q    # Skip Docker tests
 ```

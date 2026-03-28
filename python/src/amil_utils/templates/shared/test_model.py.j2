@@ -64,7 +64,8 @@ class Test{{ model_name | to_class }}(TransactionCase):
 {% if field.name == 'name' %}
     def test_display_name(self):
         """Test that display_name returns the expected value."""
-{% if odoo_version >= "18.0" %}
+{# Version gate: name_get() removed in Odoo 18.0+. String comparison works correctly: "19.0" >= "18.0" is True. #}
+{% if odoo_version is defined and odoo_version >= "18.0" %}
         self.assertTrue(
             self.test_record.display_name,
             "display_name should return a truthy value",

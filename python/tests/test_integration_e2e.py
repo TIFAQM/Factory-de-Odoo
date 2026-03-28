@@ -233,7 +233,7 @@ class TestDockerIntegration:
 
     @pytest.mark.xfail(
         reason="view_form.xml.j2 adds chatter to line-item models that lack mail.thread",
-        strict=False,
+        strict=True,
     )
     def test_docker_install(self, rendered_module: Path):
         """Module should install successfully in Docker Odoo."""
@@ -245,7 +245,7 @@ class TestDockerIntegration:
 
     @pytest.mark.xfail(
         reason="Depends on test_docker_install; same chatter template bug",
-        strict=False,
+        strict=True,
     )
     def test_docker_tests(self, rendered_module: Path):
         """Generated Odoo tests should pass in Docker."""

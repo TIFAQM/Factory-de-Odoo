@@ -10,9 +10,12 @@ Reads module dependency data from module_status.json and provides:
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from amil_utils.orchestrator.module_status import read_status_file
+
+logger = logging.getLogger(__name__)
 
 # ── Module-level caches ────────────────────────────────────────────────────
 
@@ -162,9 +165,7 @@ def _visit(
                 f"Unknown dependency '{name}' referenced by {referrer}"
             )
         else:
-            import logging
-
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "Unknown dependency '%s' referenced by %s — skipping",
                 name,
                 referrer,
