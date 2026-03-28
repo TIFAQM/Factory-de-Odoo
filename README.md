@@ -451,7 +451,12 @@ uv run pytest tests/ --cov=amil_utils --cov-report=html
 
 ## Dev Instance
 
-A persistent Odoo 19 CE + PostgreSQL 16 development instance for manual testing:
+A persistent Odoo 19 CE + PostgreSQL 16 development instance for manual testing.
+
+> **First-time setup:** Copy the example env file before starting:
+> ```bash
+> cp docker/dev/.env.example docker/dev/.env
+> ```
 
 ```bash
 cd docker

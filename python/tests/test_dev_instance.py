@@ -89,12 +89,27 @@ class TestDevInstanceConfig:
         assert "list_db = False" in content, "odoo.conf must set list_db = False"
         assert "admin_passwd = False" in content, "odoo.conf must set admin_passwd = False (no hardcoded passwords)"
 
-    def test_env_file_defaults(self) -> None:
-        """docker/dev/.env must contain ODOO_DEV_PORT=8069."""
-        env_path = PROJECT_ROOT / "docker" / "dev" / ".env"
+    def test_env_example_defaults(self) -> None:
+        """docker/dev/.env.example must contain ODOO_DEV_PORT=8069."""
+        env_path = PROJECT_ROOT / "docker" / "dev" / ".env.example"
         content = env_path.read_text()
 
-        assert "ODOO_DEV_PORT=8069" in content, ".env must set ODOO_DEV_PORT=8069"
+        assert "ODOO_DEV_PORT=8069" in content, ".env.example must set ODOO_DEV_PORT=8069"
+
+    def test_env_not_tracked(self) -> None:
+        """docker/dev/.env must NOT be tracked by git (security)."""
+        import subprocess
+
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", "docker/dev/.env"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode != 0, (
+            "docker/dev/.env must not be tracked by git — "
+            "run 'git rm --cached docker/dev/.env' to untrack it"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +199,7 @@ class TestManagementScript:
 # Docker integration tests: Live instance verification
 # ---------------------------------------------------------------------------
 
-# XML-RPC connection defaults (matching docker/dev/.env)
+# XML-RPC connection defaults (matching docker/dev/.env.example)
 _ODOO_DEV_PORT = os.environ.get("ODOO_DEV_PORT", "8069")
 _ODOO_URL = f"http://localhost:{_ODOO_DEV_PORT}"
 _ODOO_DB = os.environ.get("ODOO_DEV_DB", "odoo_dev")
