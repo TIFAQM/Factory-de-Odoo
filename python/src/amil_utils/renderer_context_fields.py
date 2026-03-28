@@ -141,6 +141,7 @@ def _build_field_context(model: dict[str, Any], fields: list[dict[str, Any]]) ->
         "write_constraints": model.get("write_constraints", []),
         "has_create_override": bool(model.get("override_sources", {}).get("create")),
         "has_write_override": bool(model.get("override_sources", {}).get("write")),
+        "has_domain_logic": model.get("has_domain_logic", False),
     }
 
 
@@ -357,11 +358,17 @@ def _compute_needs_api_and_translate(ctx: dict[str, Any], model: dict[str, Any])
         or c.get("type", "").startswith("doc_file_")
         for c in complex_constraints
     )
+    # I3: @api.private on internal helpers requires api import (Odoo 19.0+)
+    has_private_helpers = ctx.get("has_webhooks", False) or any(
+        not c.get("type", "").startswith(("temporal", "pk_", "ac_year_", "ac_term_", "doc_file_", "ac_action", "doc_action"))
+        for c in complex_constraints
+    )
     needs_api = bool(
         ctx["computed_fields"] or ctx["onchange_fields"] or ctx["constrained_fields"]
         or ctx["sequence_fields"] or has_temporal or ctx["has_create_override"]
         or ctx["cron_methods"] or ctx.get("is_bulk") or ctx.get("is_cacheable")
         or ctx.get("is_archival") or ctx.get("has_audit") or has_domain_constraints
+        or has_private_helpers
     )
 
     return {"needs_api": needs_api, "needs_translate": needs_translate}

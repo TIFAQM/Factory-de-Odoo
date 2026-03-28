@@ -629,7 +629,7 @@ def _search_display_name(self, name, domain=None, operator='ilike', limit=100, o
 | `read_group()` | Public API method | **Replaced** by `_read_group()` and `formatted_read_group()` | **Breaking** -- direct `read_group()` calls fail |
 | `@api.returns` | Available (deprecated) | **Removed** | **Breaking** -- decorator causes `AttributeError` |
 | `_sql_constraints` | Standard list of tuples | `models.Constraint` class recommended | **Recommendation** -- old syntax still works but new pattern preferred |
-| Domain expressions | `from odoo.osv import expression` + `expression.OR(...)` | `from odoo.domains import Domain` + `Domain.OR(...)` | **New API** -- old import still works but new `Domain` class preferred |
+| Domain expressions | `from odoo.osv import expression` + `expression.OR(...)` | `from odoo.fields import Domain` + `Domain(...) \| Domain(...)` | **New API** -- old import still works but new `Domain` class preferred |
 
 ### `name_get()` fully removed -- use `_compute_display_name()`
 
@@ -695,25 +695,76 @@ code_unique = models.Constraint(
 
 **Why:** The `models.Constraint` class provides a more structured and extensible way to define SQL constraints. The old `_sql_constraints` list-of-tuples pattern still works but the new class is preferred for new modules.
 
-### Domain expression helpers
+### Domain Construction
 
-**Old pattern:**
+#### Simple Domains (all versions)
+```python
+# List syntax works in all Odoo versions
+domain = [('state', '=', 'draft'), ('active', '=', True)]
+records = self.env['sale.order'].search(domain)
+```
+
+#### Complex Domains — OR/AND Composition
+
+WRONG (Odoo 19.0 — deprecated):
+```python
+from odoo.osv.expression import OR, AND
+domain = OR([[('state', '=', 'draft')], [('state', '=', 'sent')]])
+combined = AND([domain, [('active', '=', True)]])
+```
+
+CORRECT (Odoo 19.0):
+```python
+from odoo.fields import Domain
+domain = Domain("state", "=", "draft") | Domain("state", "=", "sent")
+combined = domain & Domain("active", "=", True)
+```
+
+CORRECT (Odoo 17.0-18.0 — expression module still available):
 ```python
 from odoo.osv import expression
-
-domain = expression.OR([domain1, domain2])
-domain = expression.AND([domain1, domain2])
+domain = expression.OR([[('state', '=', 'draft')], [('state', '=', 'sent')]])
 ```
 
-**New pattern (19.0):**
+Note: Simple list syntax `[('field', 'op', value)]` remains valid in all versions.
+Use `Domain` class only when composing OR/AND logic in Odoo 19.0+.
+
+### @api.private (Odoo 19.0+)
+
+Marks methods as non-RPC-callable. Prevents external API access to internal logic.
+
+**WRONG (Odoo 19.0 -- internal method exposed to RPC):**
 ```python
-from odoo.domains import Domain
-
-domain = Domain.OR([domain1, domain2])
-domain = Domain.AND([domain1, domain2])
+def _prepare_invoice_values(self):
+    return {'partner_id': self.partner_id.id}
 ```
 
-**Why:** The new `Domain` class provides a cleaner API for domain manipulation. The old `expression` module still works but the new import is preferred.
+**CORRECT (Odoo 19.0 -- internal method protected):**
+```python
+@api.private
+def _prepare_invoice_values(self):
+    return {'partner_id': self.partner_id.id}
+```
+
+**Why:** Without `@api.private`, any method starting with `_` can still be called via XML-RPC or JSON-RPC by external integrations. `@api.private` blocks RPC access entirely, hardening internal logic against unauthorized external calls.
+
+**Do NOT use `@api.private` on:**
+- ORM overrides: `create()`, `write()`, `unlink()`
+- Computed field methods with `@api.depends`
+- Constraint methods with `@api.constrains`
+- Onchange methods with `@api.onchange`
+- Methods decorated with `@api.model` or `@api.model_create_multi`
+- Methods called by XML actions or buttons (these need RPC access)
+- ORM hooks: `_search_display_name()`, `_compute_display_name()`
+- Cached methods with `@tools.ormcache`
+
+**Use `@api.private` on:**
+- `_prepare_*` helper methods
+- `_get_*` internal data retrieval
+- `_audit_*` internal audit helpers
+- `_webhook_*` internal extension points
+- `_post_*` internal processing hooks
+- Any standalone `_check_*` validator not decorated with `@api.constrains`
 
 ---
 *Odoo 17.0/18.0/19.0 Models & ORM -- loaded by model generation agents*

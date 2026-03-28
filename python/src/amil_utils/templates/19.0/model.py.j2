@@ -1,7 +1,11 @@
 {# model.py.j2 -- Odoo 19.0 Python model file with fields and constraints #}
 {# 19.0 differences from 18.0: name_get() fully removed, Constraint class recommended,
-   @api.returns removed, Domain.OR replaces expression.OR #}
+   @api.returns removed, Domain class replaces expression.OR/AND,
+   @api.private on internal helper methods (non-RPC-callable) #}
 from odoo import {{ 'api, ' if needs_api }}fields, models{{ ', tools' if needs_tools }}
+{% if has_domain_logic %}
+from odoo.fields import Domain
+{% endif %}
 {% if has_constraints or constrained_fields %}
 from odoo.exceptions import ValidationError
 {% endif %}
@@ -263,6 +267,7 @@ class {{ model_name | to_class }}(models.Model):
         {{ constraint.check_body | indent(8) }}
 {% else %}
 
+    @api.private
     def _check_{{ constraint.name }}(self):
         for rec in self:
             {{ constraint.check_body | indent(12) }}
@@ -364,6 +369,7 @@ class {{ model_name | to_class }}(models.Model):
         """Return set of field names tracked for audit."""
         return {{ audit_field_names | sort | list }}
 
+    @api.private
     def _audit_read_old(self, vals):
         """Read current values for fields about to be written."""
         audit_fields = [f for f in vals if f in self._audit_tracked_fields()]
@@ -388,6 +394,7 @@ class {{ model_name | to_class }}(models.Model):
             old_data[record.id] = record_old
         return old_data
 
+    @api.private
     def _audit_log_changes(self, old_values, vals):
         """Create audit.trail.log entries for changed fields."""
         AuditLog = self.env['audit.trail.log'].sudo().with_context(_audit_skip=True)
@@ -501,6 +508,7 @@ class {{ model_name | to_class }}(models.Model):
 {% endif %}
 {% if is_bulk %}
 
+    @api.private
     def _post_create_processing(self):
         """Post-creation logic executed for each record in batch."""
         # TODO: implement post-create processing
@@ -509,6 +517,7 @@ class {{ model_name | to_class }}(models.Model):
 {% if has_webhooks %}
 {% if webhook_on_create %}
 
+    @api.private
     def _webhook_post_create(self, vals):
         """Extension point: called after record creation.
 
@@ -519,6 +528,7 @@ class {{ model_name | to_class }}(models.Model):
 {% endif %}
 {% if webhook_on_write %}
 
+    @api.private
     def _webhook_post_write(self, vals, old_vals):
         """Extension point: called after write when watched fields change.
 
@@ -530,6 +540,7 @@ class {{ model_name | to_class }}(models.Model):
 {% endif %}
 {% if webhook_on_unlink %}
 
+    @api.private
     def _webhook_pre_unlink(self):
         """Extension point: called before record deletion.
 

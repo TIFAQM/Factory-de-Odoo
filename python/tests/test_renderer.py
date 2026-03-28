@@ -6061,3 +6061,111 @@ class TestMultiCompanyRendering:
         model_py = (tmp_path / "test_mc_dup" / "models" / "test_order.py").read_text()
         # company_id should appear exactly once in field definitions
         assert model_py.count("company_id = fields.Many2one") == 1
+
+
+# ---------------------------------------------------------------------------
+# I8: Domain class import (Odoo 19.0)
+# ---------------------------------------------------------------------------
+
+
+class TestDomainKnowledgeBase:
+    """Verify knowledge base contains Domain class documentation."""
+
+    def test_knowledge_base_contains_domain_section(self):
+        """models.md must contain the Domain Construction section."""
+        kb_path = Path(__file__).resolve().parent.parent.parent / "amil" / "knowledge" / "models.md"
+        content = kb_path.read_text(encoding="utf-8")
+        assert "### Domain Construction" in content
+        assert "from odoo.fields import Domain" in content
+        assert "Domain(\"state\", \"=\", \"draft\")" in content
+
+
+class TestDomainImport19:
+    """19.0 template renders Domain import only when has_domain_logic is True."""
+
+    def test_domain_import_rendered_when_flag_true(self, tmp_path):
+        """19.0 model with has_domain_logic=True renders 'from odoo.fields import Domain'."""
+        spec = {
+            "module_name": "test_domain",
+            "depends": ["base"],
+            "odoo_version": "19.0",
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "has_domain_logic": True,
+                    "fields": [
+                        {"name": "name", "type": "Char", "required": True},
+                    ],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_domain" / "models" / "test_order.py").read_text()
+        assert "from odoo.fields import Domain" in model_py
+
+    def test_domain_import_not_rendered_when_flag_false(self, tmp_path):
+        """19.0 model with has_domain_logic=False does NOT render Domain import."""
+        spec = {
+            "module_name": "test_no_domain",
+            "depends": ["base"],
+            "odoo_version": "19.0",
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "has_domain_logic": False,
+                    "fields": [
+                        {"name": "name", "type": "Char", "required": True},
+                    ],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_no_domain" / "models" / "test_order.py").read_text()
+        assert "from odoo.fields import Domain" not in model_py
+
+    def test_domain_import_not_rendered_by_default(self, tmp_path):
+        """19.0 model without has_domain_logic key does NOT render Domain import."""
+        spec = {
+            "module_name": "test_default_domain",
+            "depends": ["base"],
+            "odoo_version": "19.0",
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "fields": [
+                        {"name": "name", "type": "Char", "required": True},
+                    ],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_default_domain" / "models" / "test_order.py").read_text()
+        assert "from odoo.fields import Domain" not in model_py
+
+
+class TestDomainImport17:
+    """17.0 template never renders Domain import regardless of flag."""
+
+    def test_17_never_renders_domain_import(self, tmp_path):
+        """17.0 model never renders Domain import even with has_domain_logic=True."""
+        spec = {
+            "module_name": "test_domain_17",
+            "depends": ["base"],
+            "odoo_version": "17.0",
+            "models": [
+                {
+                    "name": "test.order",
+                    "description": "Test Order",
+                    "has_domain_logic": True,
+                    "fields": [
+                        {"name": "name", "type": "Char", "required": True},
+                    ],
+                },
+            ],
+        }
+        files, _ = render_module(spec, get_template_dir(), tmp_path)
+        model_py = (tmp_path / "test_domain_17" / "models" / "test_order.py").read_text()
+        assert "from odoo.fields import Domain" not in model_py
