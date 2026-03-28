@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -10,8 +12,10 @@ from amil_utils.orchestrator.registry import (
     EMPTY_REGISTRY,
     MODEL_NAME_PATTERN,
     RELATIONAL_TYPES,
+    _atomic_write_json,
     read_model_from_registry,
     read_registry_file,
+    remove_module_from_registry,
     rollback_registry,
     spec_to_manifest,
     stats_registry,
@@ -329,3 +333,105 @@ class TestTieredRegistryInjection:
         }))
         result = tiered_registry_injection(tmp_path, "nonexistent")
         assert result["models"] == {}
+
+
+class TestAtomicWriteJsonRegistry:
+    """Tests for _atomic_write_json race condition fix and error handling."""
+
+    def test_concurrent_writes_no_corruption(self, tmp_path: Path) -> None:
+        """Two threads writing to the same file simultaneously must not corrupt data."""
+        planning = tmp_path / ".planning"
+        planning.mkdir()
+        target = planning / "model_registry.json"
+        target.write_text(json.dumps({"seed": True}), encoding="utf-8")
+
+        barrier = threading.Barrier(2, timeout=5)
+        errors: list[Exception] = []
+
+        def writer(value: int) -> None:
+            try:
+                barrier.wait()
+                data = {"_meta": {"version": value}, "models": {}}
+                _atomic_write_json(target, data)
+            except Exception as exc:
+                errors.append(exc)
+
+        t1 = threading.Thread(target=writer, args=(1,))
+        t2 = threading.Thread(target=writer, args=(2,))
+        t1.start()
+        t2.start()
+        t1.join(timeout=10)
+        t2.join(timeout=10)
+
+        assert not errors, f"Unexpected errors: {errors}"
+        # File must be valid JSON — one of the two writers won
+        raw = target.read_text(encoding="utf-8")
+        result = json.loads(raw)
+        assert result["_meta"]["version"] in (1, 2)
+
+    def test_no_leftover_tmp_files_after_concurrent_writes(self, tmp_path: Path) -> None:
+        """After concurrent writes, no .tmp files should remain."""
+        planning = tmp_path / ".planning"
+        planning.mkdir()
+        target = planning / "model_registry.json"
+        target.write_text(json.dumps({"seed": True}), encoding="utf-8")
+
+        barrier = threading.Barrier(4, timeout=5)
+        errors: list[Exception] = []
+
+        def writer(value: int) -> None:
+            try:
+                barrier.wait()
+                _atomic_write_json(target, {"_meta": {"version": value}, "models": {}})
+            except Exception as exc:
+                errors.append(exc)
+
+        threads = [threading.Thread(target=writer, args=(i,)) for i in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=10)
+
+        tmp_files = list(planning.glob("*.tmp"))
+        assert tmp_files == [], f"Leftover tmp files: {tmp_files}"
+
+    def test_tmp_cleaned_up_on_rename_failure(self, tmp_path: Path) -> None:
+        """When rename raises OSError, the temp file must be cleaned up."""
+        planning = tmp_path / ".planning"
+        planning.mkdir()
+        target = planning / "model_registry.json"
+
+        with patch("pathlib.Path.rename", side_effect=OSError("mock rename failure")):
+            with pytest.raises(OSError, match="mock rename failure"):
+                _atomic_write_json(target, {"_meta": {"version": 1}, "models": {}})
+
+        tmp_files = list(planning.glob("*.tmp"))
+        assert tmp_files == [], f"Temp file not cleaned up: {tmp_files}"
+
+    def test_backup_created_on_write(self, tmp_path: Path) -> None:
+        """Backup .bak file should still be created when target exists."""
+        planning = tmp_path / ".planning"
+        planning.mkdir()
+        target = planning / "model_registry.json"
+        original = {"_meta": {"version": 1}, "models": {}}
+        target.write_text(json.dumps(original, indent=2), encoding="utf-8")
+
+        updated = {"_meta": {"version": 2}, "models": {"new.model": {}}}
+        _atomic_write_json(target, updated)
+
+        bak_path = planning / "model_registry.json.bak"
+        assert bak_path.exists()
+        bak_data = json.loads(bak_path.read_text(encoding="utf-8"))
+        assert bak_data["_meta"]["version"] == 1
+
+    def test_no_backup_when_target_missing(self, tmp_path: Path) -> None:
+        """No .bak should be created when the target file does not exist yet."""
+        planning = tmp_path / ".planning"
+        planning.mkdir()
+        target = planning / "model_registry.json"
+
+        _atomic_write_json(target, {"_meta": {"version": 1}, "models": {}})
+
+        bak_path = planning / "model_registry.json.bak"
+        assert not bak_path.exists()
+        assert target.exists()

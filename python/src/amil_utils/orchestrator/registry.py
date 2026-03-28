@@ -11,6 +11,7 @@ import copy
 import json
 import re
 import shutil
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,13 +51,17 @@ def _bak_path(cwd: Path) -> Path:
 def _atomic_write_json(file_path: Path, data: dict) -> None:
     """Atomic write: backup existing → write tmp → rename."""
     bak_file = file_path.with_suffix(file_path.suffix + ".bak")
-    tmp_file = file_path.with_suffix(file_path.suffix + ".tmp")
+    tmp_file = file_path.parent / f"{file_path.name}.{uuid.uuid4().hex[:8]}.tmp"
 
     if file_path.exists():
         shutil.copy2(str(file_path), str(bak_file))
 
     tmp_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    tmp_file.rename(file_path)
+    try:
+        tmp_file.rename(file_path)
+    except OSError:
+        tmp_file.unlink(missing_ok=True)
+        raise
 
 
 def _empty_registry() -> dict:
@@ -65,6 +70,54 @@ def _empty_registry() -> dict:
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
+
+
+def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
+    """Remove all models contributed by a module from the registry.
+
+    Used during backward transitions to clean stale spec data.
+    Returns the updated registry.
+    """
+    cwd = Path(cwd)
+    registry = read_registry_file(cwd)
+
+    # Build new models dict excluding entries owned by the module
+    new_models = {
+        key: model
+        for key, model in registry["models"].items()
+        if model.get("module") != module_name
+    }
+
+    # Clean up contributing lists in remaining models (remove module_name)
+    cleaned_models = {}
+    for key, model in new_models.items():
+        contributing = model.get("contributing", [])
+        if module_name in contributing:
+            cleaned_models[key] = {
+                **model,
+                "contributing": [c for c in contributing if c != module_name],
+            }
+        else:
+            cleaned_models[key] = {**model}
+
+    # Clean up modules_contributing in _meta
+    meta_contributing = [
+        m for m in registry["_meta"].get("modules_contributing", [])
+        if m != module_name
+    ]
+
+    new_registry = {
+        "_meta": {
+            **registry["_meta"],
+            "version": registry["_meta"]["version"] + 1,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "modules_contributing": meta_contributing,
+        },
+        "models": cleaned_models,
+    }
+
+    _atomic_write_json(_registry_path(cwd), new_registry)
+    return new_registry
 
 
 def read_registry_file(cwd: str | Path) -> dict:

@@ -7,8 +7,12 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -25,6 +29,11 @@ _EMPTY_MODULE_STATUS: dict = {
     "modules": {},
     "tiers": {},
 }
+
+_BACKWARD_TRANSITIONS: frozenset[tuple[str, str]] = frozenset({
+    ("spec_approved", "planned"),
+    ("generated", "spec_approved"),
+})
 
 
 # ── Internal helpers ─────────────────────────────────────────────────────────
@@ -55,9 +64,13 @@ def _atomic_write_json(file_path: Path, data: dict) -> None:
     if file_path.exists():
         import shutil
         shutil.copy2(str(file_path), str(backup_path))
-    tmp_path = file_path.with_suffix(file_path.suffix + ".tmp")
+    tmp_path = file_path.parent / f"{file_path.name}.{uuid.uuid4().hex[:8]}.tmp"
     tmp_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    tmp_path.rename(file_path)
+    try:
+        tmp_path.rename(file_path)
+    except OSError:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def _write_status_file(cwd: Path, data: dict) -> dict:
@@ -146,6 +159,16 @@ def module_status_transition(
             f'Invalid transition: {module_name} cannot go from '
             f'"{current_status}" to "{new_status}". Allowed: {allowed_str}'
         )
+
+    # Backward transition cleanup
+    if (current_status, new_status) in _BACKWARD_TRANSITIONS:
+        logger.warning(
+            "Module '%s' transitioning backward: %s → %s",
+            module_name, current_status, new_status,
+        )
+        if current_status == "spec_approved" and new_status == "planned":
+            from amil_utils.orchestrator.registry import remove_module_from_registry
+            remove_module_from_registry(cwd, module_name)
 
     now = _now_iso()
     updated_module = {
