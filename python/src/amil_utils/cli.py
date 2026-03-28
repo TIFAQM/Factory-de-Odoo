@@ -208,7 +208,7 @@ def check_edition(spec_file: str, json_output: bool) -> None:
 @click.option("--json", "json_output", is_flag=True)
 @click.option("--pylintrc", type=click.Path(exists=True))
 @click.option("--parallel", is_flag=True, default=False, help="Validate multiple modules in parallel")
-@click.option("--concurrency", default=2, type=int, help="Max parallel validations (default 2)")
+@click.option("--concurrency", default=3, type=int, help="Max parallel validations (default 3)")
 def validate(
     module_path: tuple[str, ...],
     pylint_only: bool,

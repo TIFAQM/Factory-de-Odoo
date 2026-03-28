@@ -14,13 +14,37 @@ from typing import Any
 _logger = logging.getLogger(__name__)
 
 
+def _cap_concurrency(requested: int) -> int:
+    """Cap concurrency based on available system memory.
+
+    Each Docker validation stack uses ~1-1.5GB RAM. Cap at available_memory / 1.5GB.
+    Falls back to requested value if psutil is unavailable.
+    """
+    try:
+        import psutil
+
+        mem_gb = psutil.virtual_memory().available / (1024**3)
+        max_safe = max(1, int(mem_gb / 1.5))
+        if requested > max_safe:
+            _logger.warning(
+                "Capping Docker validation concurrency from %d to %d (%.1fGB RAM available)",
+                requested,
+                max_safe,
+                mem_gb,
+            )
+            return max_safe
+    except ImportError:
+        pass
+    return requested
+
+
 def execute_validate_parallel(
     module_paths: list[str],
     *,
     pylint_only: bool = False,
     auto_fix: bool = False,
     pylintrc: str | None = None,
-    concurrency: int = 2,
+    concurrency: int = 3,
 ) -> list[dict[str, Any]]:
     """Validate multiple Odoo modules in parallel.
 
@@ -38,7 +62,7 @@ def execute_validate_parallel(
     pylintrc:
         Optional path to a pylintrc file.
     concurrency:
-        Maximum number of parallel validations (default 2).
+        Maximum number of parallel validations (default 3).
 
     Returns
     -------
@@ -47,6 +71,8 @@ def execute_validate_parallel(
     """
     if not module_paths:
         return []
+
+    concurrency = _cap_concurrency(concurrency)
 
     results: dict[str, dict[str, Any]] = {}
 

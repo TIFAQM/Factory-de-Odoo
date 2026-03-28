@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import types
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -10,6 +11,7 @@ import pytest
 from click.testing import CliRunner
 
 from amil_utils.cli import main
+from amil_utils.commands.validate import _cap_concurrency, execute_validate_parallel
 from amil_utils.validation.types import (
     InstallResult,
     Result,
@@ -225,3 +227,45 @@ class TestValidateExitCodes:
 
         result = runner.invoke(main, ["validate", str(module_dir)])
         assert result.exit_code == 1
+
+
+class TestCapConcurrency:
+    """Tests for the _cap_concurrency resource guard."""
+
+    def test_cap_concurrency_low_memory(self) -> None:
+        """When only 2GB available, cap concurrency to 1."""
+        mock_psutil = MagicMock()
+        mock_psutil.virtual_memory.return_value = MagicMock(
+            available=2 * (1024**3),  # 2 GB
+        )
+        with patch.dict("sys.modules", {"psutil": mock_psutil}):
+            result = _cap_concurrency(3)
+        assert result == 1
+
+    def test_cap_concurrency_adequate_memory(self) -> None:
+        """When 6GB available, keep requested concurrency of 3."""
+        mock_psutil = MagicMock()
+        mock_psutil.virtual_memory.return_value = MagicMock(
+            available=6 * (1024**3),  # 6 GB
+        )
+        with patch.dict("sys.modules", {"psutil": mock_psutil}):
+            result = _cap_concurrency(3)
+        assert result == 3
+
+    def test_cap_concurrency_no_psutil(self) -> None:
+        """When psutil is not installed, return requested value unchanged."""
+        with patch.dict("sys.modules", {"psutil": None}):
+            result = _cap_concurrency(5)
+        assert result == 5
+
+
+class TestDefaultConcurrency:
+    """Tests for the updated default concurrency value."""
+
+    def test_default_concurrency_is_3(self) -> None:
+        """Verify execute_validate_parallel default concurrency is now 3."""
+        import inspect
+
+        sig = inspect.signature(execute_validate_parallel)
+        default = sig.parameters["concurrency"].default
+        assert default == 3

@@ -62,3 +62,53 @@ def generate_tier_parallel(
 
     # Return in original submission order
     return [results[name] for name in tier_modules]
+
+
+def validate_tier_parallel(
+    *,
+    cwd: Path,
+    tier_modules: list[str],
+    validate_fn: Callable[[Path, str], dict[str, Any]],
+    max_concurrency: int = 3,
+) -> list[dict[str, Any]]:
+    """Validate all modules in a tier concurrently.
+
+    Each validation calls ``validate_fn(cwd, module_name)`` which should
+    return a dict with at least ``{"success": bool}``.
+
+    Results are returned in the original submission order.
+
+    Parameters
+    ----------
+    cwd:
+        Project working directory.
+    tier_modules:
+        Module names in this tier (no cross-dependencies).
+    validate_fn:
+        Callable that validates a single module.
+    max_concurrency:
+        Maximum simultaneous validations (default 3).
+    """
+    if not tier_modules:
+        return []
+
+    results: dict[str, dict[str, Any]] = {}
+
+    with ThreadPoolExecutor(max_workers=max_concurrency) as pool:
+        future_to_name = {
+            pool.submit(validate_fn, cwd, name): name
+            for name in tier_modules
+        }
+        for future in as_completed(future_to_name):
+            name = future_to_name[future]
+            try:
+                result = future.result()
+                results[name] = result
+                status = "OK" if result.get("success") else "FAIL"
+                logger.info("Validate-parallel %s: %s", name, status)
+            except Exception as exc:
+                logger.error("Validate-parallel %s crashed: %s", name, exc)
+                results[name] = {"success": False, "error": str(exc)}
+
+    # Return in original submission order
+    return [results[name] for name in tier_modules]
