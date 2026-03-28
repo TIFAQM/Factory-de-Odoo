@@ -7,6 +7,7 @@ from amil_utils.orchestrator.coherence import (
     _load_base_models,
     check_computed_depends,
     check_duplicate_models,
+    check_field_renames,
     check_many2one_targets,
     check_security_groups,
     run_all_checks,
@@ -237,3 +238,39 @@ class TestCoherenceDeprecationWarnings:
     def test_run_all_checks_emits_deprecation(self) -> None:
         with pytest.warns(DeprecationWarning, match="odoo-ls"):
             run_all_checks({"models": []}, {"models": {}})
+
+
+class TestCheckFieldRenames:
+    """Tests for check_field_renames (I1 field-level renames)."""
+
+    def test_check_field_renames_detects_renamed_comodel(self) -> None:
+        """A spec referencing hr.contract as comodel should fail for 19.0."""
+        spec = {"models": [{"name": "my.model", "fields": [
+            {"name": "contract_id", "type": "Many2one", "comodel_name": "hr.contract"},
+        ]}]}
+        result = check_field_renames(spec, "19.0")
+        assert result["status"] == "fail"
+        assert result["check"] == "field_renames"
+        assert len(result["violations"]) >= 1
+        violation = result["violations"][0]
+        assert violation["model"] == "hr.contract"
+        assert violation["renamed_to"] == "hr.version"
+
+    def test_check_field_renames_clean_spec_passes(self) -> None:
+        """A spec with valid model/field references should pass."""
+        spec = {"models": [{"name": "my.model", "fields": [
+            {"name": "partner_id", "type": "Many2one", "comodel_name": "res.partner"},
+            {"name": "name", "type": "Char"},
+        ]}]}
+        result = check_field_renames(spec, "19.0")
+        assert result["status"] == "pass"
+        assert result["violations"] == []
+
+    def test_check_field_renames_old_version_passes(self) -> None:
+        """Same spec with hr.contract comodel should pass for 17.0."""
+        spec = {"models": [{"name": "my.model", "fields": [
+            {"name": "contract_id", "type": "Many2one", "comodel_name": "hr.contract"},
+        ]}]}
+        result = check_field_renames(spec, "17.0")
+        assert result["status"] == "pass"
+        assert result["violations"] == []

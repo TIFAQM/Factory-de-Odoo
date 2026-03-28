@@ -12,6 +12,8 @@ import warnings
 from functools import lru_cache
 from pathlib import Path
 
+from amil_utils.orchestrator.dependency_graph import validate_field_reference
+
 # ── Deprecation ──────────────────────────────────────────────────────────────
 __deprecated__ = True
 _DEPRECATION_NOTICE = (
@@ -212,6 +214,60 @@ def check_security_groups(spec: dict, registry: dict) -> dict:
 
     return {
         "check": "security_groups",
+        "status": "pass" if not violations else "fail",
+        "violations": violations,
+    }
+
+
+# ── Field/Model Rename Check (NOT deprecated — supplements odoo-ls) ─────────
+
+
+def check_field_renames(spec: dict, odoo_version: str = "19.0") -> dict:
+    """Check that spec fields don't reference renamed Odoo 19 fields/models.
+
+    Unlike other coherence checks, this is NOT deprecated -- it supplements
+    odoo-ls validation with rename-specific checks.
+    """
+    violations: list[dict] = []
+
+    for model in spec.get("models") or []:
+        model_name = model.get("name", "")
+
+        # Check if the model itself was renamed
+        result = validate_field_reference(model_name, "", odoo_version)
+        if result is not None and result["type"] == "model_rename":
+            violations.append(result)
+            continue  # skip field checks for renamed model
+
+        for field in model.get("fields") or []:
+            field_name = field.get("name", "")
+
+            # Check if the field name is a renamed field on this model
+            field_result = validate_field_reference(
+                model_name, field_name, odoo_version,
+            )
+            if field_result is not None and field_result["type"] == "field_rename":
+                violations.append(field_result)
+
+            # Check if comodel_name references a renamed model
+            comodel = field.get("comodel_name")
+            if comodel:
+                comodel_result = validate_field_reference(
+                    comodel, "", odoo_version,
+                )
+                if comodel_result is not None and comodel_result["type"] == "model_rename":
+                    violations.append({
+                        **comodel_result,
+                        "field": field_name,
+                        "message": (
+                            f"Field '{model_name}.{field_name}' references "
+                            f"model '{comodel}' which was renamed to "
+                            f"'{comodel_result['renamed_to']}' in Odoo {odoo_version}"
+                        ),
+                    })
+
+    return {
+        "check": "field_renames",
         "status": "pass" if not violations else "fail",
         "violations": violations,
     }

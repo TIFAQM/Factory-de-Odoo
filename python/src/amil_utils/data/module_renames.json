@@ -13,6 +13,21 @@
     "modules_merged": {
       "sale_async_emails": "sale",
       "hr_contract": "hr"
+    },
+    "fields_renamed": {
+      "res.users": {"groups_id": "group_ids"},
+      "res.groups": {"users": "user_ids", "category_id": "privilege_id"},
+      "hr.work.entry": {"contract_id": "version_id"},
+      "purchase.order.line": {"product_uom": "product_uom_id", "taxes_id": "tax_ids"},
+      "purchase.order": {"notes": "note"},
+      "sale.order.line": {"product_uom": "product_uom_id"}
+    },
+    "models_renamed": {
+      "hr.contract": "hr.version",
+      "procurement.group": "stock.reference",
+      "stock.quant.package": "stock.package",
+      "bus.presence": "mail.presence",
+      "hr.candidate": "hr.applicant"
     }
   }
 }

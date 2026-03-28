@@ -118,6 +118,56 @@ def validate_external_dependency(
 
     return None
 
+
+def validate_field_reference(
+    model_name: str,
+    field_name: str,
+    odoo_version: str = "19.0",
+) -> dict | None:
+    """Check if a field has been renamed in the target Odoo version.
+
+    Returns None if field is valid, or a dict with warning info if renamed.
+    Also checks if the model itself was renamed.
+    """
+    renames_data = _load_renames_data()
+    version_data = renames_data.get(odoo_version, {})
+
+    # Check model rename first
+    models_renamed = version_data.get("models_renamed", {})
+    new_model = models_renamed.get(model_name)
+    if new_model is not None:
+        return {
+            "model": model_name,
+            "field": field_name,
+            "renamed_to": new_model,
+            "type": "model_rename",
+            "version": odoo_version,
+            "message": (
+                f"Model '{model_name}' was renamed to "
+                f"'{new_model}' in Odoo {odoo_version}"
+            ),
+        }
+
+    # Check field rename
+    fields_renamed = version_data.get("fields_renamed", {})
+    model_fields = fields_renamed.get(model_name, {})
+    new_field = model_fields.get(field_name)
+    if new_field is not None:
+        return {
+            "model": model_name,
+            "field": field_name,
+            "renamed_to": new_field,
+            "type": "field_rename",
+            "version": odoo_version,
+            "message": (
+                f"Field '{model_name}.{field_name}' was renamed to "
+                f"'{new_field}' in Odoo {odoo_version}"
+            ),
+        }
+
+    return None
+
+
 # ── Constants ────────────────────────────────────────────────────────────────
 
 TIER_LABELS: list[str] = ["foundation", "core", "operations", "communication"]

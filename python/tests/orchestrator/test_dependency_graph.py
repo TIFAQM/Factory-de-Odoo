@@ -16,6 +16,7 @@ from amil_utils.orchestrator.dependency_graph import (
     dep_graph_tiers,
     topo_sort,
     validate_external_dependency,
+    validate_field_reference,
 )
 
 
@@ -319,3 +320,46 @@ class TestTopoSortWithVersion:
         assert "my_mod" in order
         # hr is external, not in result
         assert "hr" not in order
+
+
+class TestValidateFieldReference:
+    """Tests for validate_field_reference (I1 field-level renames)."""
+
+    def test_validate_field_reference_renamed_field(
+        self, _clear_caches: None,
+    ) -> None:
+        """res.users.groups_id was renamed to group_ids in Odoo 19."""
+        result = validate_field_reference("res.users", "groups_id", "19.0")
+        assert result is not None
+        assert result["type"] == "field_rename"
+        assert result["model"] == "res.users"
+        assert result["field"] == "groups_id"
+        assert result["renamed_to"] == "group_ids"
+        assert result["version"] == "19.0"
+        assert "renamed" in result["message"]
+
+    def test_validate_field_reference_valid_field(
+        self, _clear_caches: None,
+    ) -> None:
+        """res.users.login is not renamed -- should return None."""
+        result = validate_field_reference("res.users", "login", "19.0")
+        assert result is None
+
+    def test_validate_field_reference_old_version(
+        self, _clear_caches: None,
+    ) -> None:
+        """groups_id is not renamed in 17.0 -- should return None."""
+        result = validate_field_reference("res.users", "groups_id", "17.0")
+        assert result is None
+
+    def test_validate_field_reference_renamed_model(
+        self, _clear_caches: None,
+    ) -> None:
+        """hr.contract was renamed to hr.version in Odoo 19 -- model warning."""
+        result = validate_field_reference("hr.contract", "any_field", "19.0")
+        assert result is not None
+        assert result["type"] == "model_rename"
+        assert result["model"] == "hr.contract"
+        assert result["renamed_to"] == "hr.version"
+        assert result["version"] == "19.0"
+        assert "renamed" in result["message"]
