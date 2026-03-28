@@ -33,8 +33,10 @@ def _cap_concurrency(requested: int) -> int:
                 mem_gb,
             )
             return max_safe
-    except Exception:
+    except ImportError:
         pass
+    except Exception as exc:
+        _logger.debug("Could not read system memory for concurrency cap: %s", exc)
     return requested
 
 

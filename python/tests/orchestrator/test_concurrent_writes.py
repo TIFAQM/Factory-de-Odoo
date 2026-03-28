@@ -130,7 +130,15 @@ class TestConcurrentModuleStatus:
     """Verify concurrent module status operations produce consistent state."""
 
     def test_concurrent_module_init(self, tmp_path: Path) -> None:
-        """3 threads each init a different module. All 3 must appear in final state."""
+        """3 threads each init a different module. All 3 must appear in final state.
+
+        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
+        (file remains valid JSON, no partial writes). Under last-writer-wins
+        semantics, some operations may be lost -- the retry below recovers
+        these to verify final state. The atomic write correctness (UUID temp
+        files + replace()) is validated separately in test_registry.py and
+        test_module_status.py.
+        """
         _seed_module_status(tmp_path)
         barrier = threading.Barrier(3)
         errors: list[Exception] = []
@@ -182,6 +190,13 @@ class TestConcurrentModuleStatus:
         """3 modules in 'planned' state. 3 threads transition each to 'spec_approved'.
 
         All 3 must be 'spec_approved' in the final state.
+
+        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
+        (file remains valid JSON, no partial writes). Under last-writer-wins
+        semantics, some operations may be lost -- the retry below recovers
+        these to verify final state. The atomic write correctness (UUID temp
+        files + replace()) is validated separately in test_registry.py and
+        test_module_status.py.
         """
         module_names = ["sale_order", "purchase_order", "stock_move"]
         initial_modules = {
@@ -242,6 +257,13 @@ class TestConcurrentRegistryUpdates:
         """2 threads call update_registry with specs for different modules.
 
         Both modules must appear in the final registry.
+
+        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
+        (file remains valid JSON, no partial writes). Under last-writer-wins
+        semantics, some operations may be lost -- the retry below recovers
+        these to verify final state. The atomic write correctness (UUID temp
+        files + replace()) is validated separately in test_registry.py and
+        test_module_status.py.
         """
         _seed_registry(tmp_path)
 

@@ -376,7 +376,9 @@ class TestPhaseRemoveAtomicity:
         # because the first rename was rolled back
         dir_names = {d for d in dirs}
         # 03-advanced should be back (reversed from 02-advanced)
-        assert "03-advanced" in dir_names or "02-advanced" in dir_names
+        assert "03-advanced" in dir_names, (
+            f"Rollback should restore original name. Found: {dir_names}"
+        )
 
     def test_phase_repair_with_orphaned_manifest(self, tmp_path: Path) -> None:
         """phase_repair reverses completed renames from an orphaned manifest."""

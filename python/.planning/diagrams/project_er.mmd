@@ -1,0 +1,15 @@
+erDiagram
+    uni_fee_invoice {
+        Char name
+        Selection state
+        Monetary amount_total
+    }
+    uni_fee_line {
+        Char name
+        Monetary amount
+    }
+    uni_student {
+        Char name
+    }
+    uni_fee_invoice }o..|| uni_student : student_id
+    uni_fee_line }o--|| uni_fee_invoice : invoice_id

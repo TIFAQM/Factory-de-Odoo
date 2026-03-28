@@ -169,6 +169,11 @@ def module_status_transition(
         if current_status == "spec_approved" and new_status == "planned":
             from amil_utils.orchestrator.registry import remove_module_from_registry
             remove_module_from_registry(cwd, module_name)
+        elif current_status == "generated" and new_status == "spec_approved":
+            # No cleanup needed: generated files remain on disk and will be
+            # overwritten during re-generation. Registry entries stay valid
+            # since the spec hasn't changed (only regeneration is needed).
+            pass
 
     now = _now_iso()
     updated_module = {
