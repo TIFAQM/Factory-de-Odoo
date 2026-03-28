@@ -38,6 +38,13 @@ logger = logging.getLogger("odoo-mcp")
 _LOCALHOST_HOSTS = ("localhost", "127.0.0.1", "::1", "[::1]")
 
 
+def _mask(value: str) -> str:
+    """Mask a sensitive value, showing only first 4 characters."""
+    if len(value) <= 4:
+        return "***"
+    return value[:4] + "***"
+
+
 def _enforce_https_for_remote(url: str) -> None:
     """Block non-localhost HTTP URLs unless ODOO_ALLOW_INSECURE=1 is set.
 
@@ -167,19 +174,28 @@ def _validate_field_name(name: str) -> str | None:
     return None
 
 
+def _sanitize_error(msg: str) -> str:
+    """Remove any API key value from an error message string."""
+    api_key = os.environ.get("ODOO_API_KEY", "")
+    if api_key and api_key in msg:
+        return msg.replace(api_key, _mask(api_key))
+    return msg
+
+
 def _handle_error(exc: Exception) -> str:
     """Format exception as a tool-safe error string.
 
     Returns a string prefixed with "ERROR:" describing the failure.
     Never raises -- always returns a string so the MCP server keeps running.
+    Sanitizes any leaked API key values from the error message.
     """
     if isinstance(exc, (ConnectionRefusedError, OSError)):
-        return f"ERROR: Cannot connect to Odoo instance: {exc}"
+        return _sanitize_error(f"ERROR: Cannot connect to Odoo instance: {exc}")
     if isinstance(exc, xmlrpc.client.Fault):
-        return f"ERROR: Odoo XML-RPC fault: {exc.faultString}"
+        return _sanitize_error(f"ERROR: Odoo XML-RPC fault: {exc.faultString}")
     if isinstance(exc, ConnectionError):
-        return f"ERROR: {exc}"
-    return f"ERROR: Unexpected error: {exc}"
+        return _sanitize_error(f"ERROR: {exc}")
+    return _sanitize_error(f"ERROR: Unexpected error: {exc}")
 
 
 # ---------------------------------------------------------------------------

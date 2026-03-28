@@ -492,3 +492,64 @@ async def test_xmlrpc_fault_get_model_fields(server, mock_client):
     text = result[0].text
     assert "ERROR" in text
     assert "XML-RPC" in text
+
+
+# ---------------------------------------------------------------------------
+# _mask helper tests (M4 -- API key masking)
+# ---------------------------------------------------------------------------
+
+
+class TestMask:
+    """Test _mask() helper for sensitive value masking."""
+
+    def test_mask_long_key(self):
+        """Long API key shows first 4 chars followed by '***'."""
+        from amil_utils.mcp.server import _mask
+        assert _mask("sk-proj-abc123def456") == "sk-p***"
+
+    def test_mask_short_value(self):
+        """Value with 2 chars returns '***' (too short to reveal)."""
+        from amil_utils.mcp.server import _mask
+        assert _mask("ab") == "***"
+
+    def test_mask_empty_value(self):
+        """Empty string returns '***'."""
+        from amil_utils.mcp.server import _mask
+        assert _mask("") == "***"
+
+    def test_mask_exactly_four_chars(self):
+        """Value with exactly 4 chars returns '***' (boundary case)."""
+        from amil_utils.mcp.server import _mask
+        assert _mask("abcd") == "***"
+
+    def test_mask_five_chars(self):
+        """Value with 5 chars shows first 4 + '***'."""
+        from amil_utils.mcp.server import _mask
+        assert _mask("abcde") == "abcd***"
+
+
+class TestSanitizeError:
+    """Test _sanitize_error() scrubs API key from error messages."""
+
+    def test_sanitize_removes_api_key(self, monkeypatch):
+        """Error message containing the API key gets it replaced with masked form."""
+        monkeypatch.setenv("ODOO_API_KEY", "sk-proj-secret123")
+        from amil_utils.mcp.server import _sanitize_error
+        msg = "Authentication failed with key sk-proj-secret123 on server"
+        result = _sanitize_error(msg)
+        assert "sk-proj-secret123" not in result
+        assert "sk-p***" in result
+
+    def test_sanitize_leaves_safe_messages(self, monkeypatch):
+        """Error message without the API key is returned unchanged."""
+        monkeypatch.setenv("ODOO_API_KEY", "sk-proj-secret123")
+        from amil_utils.mcp.server import _sanitize_error
+        msg = "ERROR: Cannot connect to Odoo instance"
+        assert _sanitize_error(msg) == msg
+
+    def test_sanitize_handles_no_key_set(self, monkeypatch):
+        """When ODOO_API_KEY is unset, messages pass through unchanged."""
+        monkeypatch.delenv("ODOO_API_KEY", raising=False)
+        from amil_utils.mcp.server import _sanitize_error
+        msg = "ERROR: some error happened"
+        assert _sanitize_error(msg) == msg
