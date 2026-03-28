@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import shutil
 import subprocess
 import time
@@ -18,11 +17,10 @@ import uuid
 from pathlib import Path
 
 from amil_utils.validation.log_parser import parse_install_log, parse_test_log
+from amil_utils.validation.module_name import validate_module_name
 from amil_utils.validation.types import InstallResult, Result, TestResult
 
 logger = logging.getLogger(__name__)
-
-_VALID_MODULE_NAME = re.compile(r"[a-z][a-z0-9_]+$")
 
 _DOCKER_MAX_RETRY_ATTEMPTS: int = 3
 _DOCKER_RETRY_DELAY_SECONDS: float = 2.0
@@ -52,19 +50,6 @@ def _unique_project_name(module_name: str) -> str:
     port conflicts between concurrent or orphaned Docker Compose environments.
     """
     return f"factory-{module_name}-{uuid.uuid4().hex[:8]}"
-
-
-def _validate_module_name(name: str) -> str | None:
-    """Validate an Odoo module name.
-
-    Returns None if valid, or an error message if invalid.
-    """
-    if not _VALID_MODULE_NAME.fullmatch(name):
-        return (
-            f"Invalid module name '{name}': must start with a lowercase letter "
-            f"and contain only lowercase letters, digits, and underscores"
-        )
-    return None
 
 
 def check_docker_available() -> bool:
@@ -264,7 +249,7 @@ def docker_install_module(
         compose_file = get_compose_file()
 
     module_name = module_path.name
-    name_error = _validate_module_name(module_name)
+    name_error = validate_module_name(module_name)
     if name_error:
         return Result.fail(name_error)
 
@@ -361,7 +346,7 @@ def docker_run_tests(
         compose_file = get_compose_file()
 
     module_name = module_path.name
-    name_error = _validate_module_name(module_name)
+    name_error = validate_module_name(module_name)
     if name_error:
         return Result.fail(name_error)
 

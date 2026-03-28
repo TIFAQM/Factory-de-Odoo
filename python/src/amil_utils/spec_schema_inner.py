@@ -9,16 +9,11 @@ These models are re-exported from ``spec_schema`` for backward compatibility.
 
 from __future__ import annotations
 
-import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-# ---------------------------------------------------------------------------
-# Valid Odoo field types (16 total)
-# ---------------------------------------------------------------------------
-
-_MODULE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+from amil_utils.validation.module_name import MODULE_NAME_RE as _MODULE_NAME_RE
 
 VALID_FIELD_TYPES: frozenset[str] = frozenset({
     "Char",

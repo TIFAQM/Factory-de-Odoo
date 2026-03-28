@@ -1,5 +1,9 @@
 """Validation infrastructure for Odoo module quality checks."""
 
+from amil_utils.validation.module_name import (  # noqa: F401
+    MODULE_NAME_RE,
+    validate_module_name,
+)
 from amil_utils.validation.docker_runner import (  # noqa: F401
     check_docker_available,
     docker_install_module,
@@ -44,6 +48,8 @@ from amil_utils.validation.types import (  # noqa: F401
 )
 
 __all__ = [
+    "MODULE_NAME_RE",
+    "validate_module_name",
     "find_python_path",
     "generate_odools_toml",
     "SemanticValidationResult",

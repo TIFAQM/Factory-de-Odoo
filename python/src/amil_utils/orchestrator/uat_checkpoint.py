@@ -5,11 +5,10 @@ Ported from orchestrator/amil/bin/lib/uat-checkpoint.cjs (168 lines, since delet
 from __future__ import annotations
 
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-_MODULE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+from amil_utils.validation.module_name import MODULE_NAME_RE as _MODULE_NAME_RE
 
 
 def is_checkpoint_due(

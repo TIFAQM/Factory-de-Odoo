@@ -28,8 +28,7 @@ from dataclasses import dataclass, field
 
 from .types import Result, InstallResult, TestResult
 from .docker_runner import _DOCKER_RETRY_DELAY_SECONDS, _DB_STARTUP_TIMEOUT_SECONDS
-
-_MODULE_NAME_RE = re.compile(r"[a-z][a-z0-9_]*")
+from .module_name import validate_module_name
 
 _COMPOSE_UP_TIMEOUT_S = 120
 _COPY_TIMEOUT_S = 30
@@ -117,20 +116,15 @@ class PersistentDockerManager:
 
         return False
 
-    @staticmethod
-    def _validate_module_name(name: str) -> bool:
-        """Validate module name against Odoo naming convention."""
-        return bool(_MODULE_NAME_RE.fullmatch(name))
-
     def install_module(self, module_path: Path) -> Result[InstallResult]:
         """Install a module into the running instance incrementally."""
         if not self._running:
             return Result(success=False, errors=("Persistent Docker not running",))
 
         module_name = module_path.name
-        if not self._validate_module_name(module_name):
-            return Result(success=False,
-                          errors=(f"Invalid module name: {module_name!r} (must match [a-z][a-z0-9_]*)",))
+        name_error = validate_module_name(module_name)
+        if name_error:
+            return Result(success=False, errors=(name_error,))
 
         # Copy module into the running container's addons path
         copy_result = subprocess.run(
@@ -177,9 +171,9 @@ class PersistentDockerManager:
     def run_module_tests(self, module_path: Path) -> Result[tuple[TestResult, ...]]:
         """Run tests for a specific module in the persistent instance."""
         module_name = module_path.name
-        if not self._validate_module_name(module_name):
-            return Result(success=False,
-                          errors=(f"Invalid module name: {module_name!r}",))
+        name_error = validate_module_name(module_name)
+        if name_error:
+            return Result(success=False, errors=(name_error,))
 
         test_result = subprocess.run(
             self._compose_cmd(
@@ -204,9 +198,9 @@ class PersistentDockerManager:
         that per-module tests miss.
         """
         for name in module_names:
-            if not self._validate_module_name(name):
-                return Result(success=False,
-                              errors=(f"Invalid module name: {name!r}",))
+            name_error = validate_module_name(name)
+            if name_error:
+                return Result(success=False, errors=(name_error,))
         tags = ",".join(module_names)
         modules = ",".join(module_names)
 
