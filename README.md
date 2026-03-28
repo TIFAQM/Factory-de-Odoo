@@ -64,6 +64,41 @@ Factory de Odoo now has **the most comprehensive Odoo 19.0 support of any module
 
 **Race-Condition-Free State Management** — All shared state files (registry, module status) now use UUID-suffixed temp files for atomic writes. Concurrent CLI invocations can't corrupt your `.planning/` directory anymore.
 
+### Semantic Validation with odoo-ls
+
+Factory de Odoo ships with a **headless LSP client** that talks to Odoo's own language server (`odoo-ls`) over JSON-RPC. This means generated modules get the same semantic validation that Odoo developers see in their IDE — missing imports, undefined model references, invalid field types — all caught automatically before Docker even starts. The traditional `coherence.py` checks are still available as a fallback (`--skip-odoo-ls`), but odoo-ls is the primary validation path now.
+
+Four files power this integration:
+- `odoo_ls_client.py` — Headless LSP process management with thread-safe stdin/stdout framing
+- `odoo_ls_config.py` — Per-project server configuration
+- `odoo_ls_validator.py` — Diagnostic collection and severity mapping
+- `odoo_ls_fixer.py` — Auto-remediation for common LSP diagnostics
+
+### Website & Portal Module Generation
+
+The latest pipeline release (F16) added a complete **website module generation subsystem** — 13 new templates covering everything from portal controllers to SEO menus:
+
+- Portal views (list, detail, editable detail) with `website.published.mixin`
+- Website controllers with proper routing decorators
+- Portal access rules and security
+- SEO-ready static pages and menu hierarchies
+- Website assets (CSS, JS) scaffolding
+- A dedicated `amil-website-architect` agent for portal architecture design
+
+### MCP Server — Live Odoo Introspection
+
+The built-in MCP (Model Context Protocol) server bridges your AI coding assistant directly to a running Odoo instance via XML-RPC. Query models, inspect fields, read view inheritance chains, and verify record rules — all without leaving your terminal. Rate-limited (30 req/min per tool, 100 req/min global) with HTTPS enforcement for remote instances and API key masking in all logs.
+
+### Multi-AI Runtime Support
+
+Factory de Odoo runs on **any AI coding assistant** — not just Claude Code. Full installer and runtime support for:
+- **Claude Code** (primary)
+- **Gemini CLI** (full workflow support, `AfterTool` hooks)
+- **Codex** (multi-agent config, `request_user_input` mapping)
+- **OpenCode** (runtime config directory detection)
+
+All 46 slash commands, 29 agents, and 41 workflows work across runtimes.
+
 ---
 
 ## How It Works
@@ -114,11 +149,15 @@ Most code generators produce isolated modules. Factory de Odoo maintains a **Mod
 | AI-powered generation | 29 agents | -- | -- | 1 agent |
 | Cross-module coherence | Model Registry | -- | -- | -- |
 | Multi-version templates | 17 / 18 / 19 | Current only | Manual | -- |
+| Semantic validation (odoo-ls) | Headless LSP client | -- | -- | -- |
 | Docker validation | pylint + install + tests | -- | -- | -- |
 | Odoo 19 rename detection | 130 models + 51 fields | -- | -- | -- |
 | OCA semantic search | ChromaDB | -- | -- | -- |
+| Website/portal generation | 13 templates + architect agent | -- | -- | -- |
+| MCP server (live introspection) | XML-RPC bridge, rate-limited | -- | -- | -- |
 | `@api.private` auto-generation | On all internal methods | -- | -- | -- |
 | Parallel validation | Up to 3 concurrent stacks | -- | -- | -- |
+| Multi-AI runtime | Claude, Gemini, Codex, OpenCode | -- | -- | -- |
 
 ---
 
@@ -284,12 +323,12 @@ Generates a single Odoo module from a JSON specification. Pipeline is a pure lib
 | `amil-search` | ChromaDB semantic search across OCA repositories |
 | `amil-extend` | Fork-and-extend existing modules via `_inherit` |
 
-**Validation Pipeline:**
+**Validation Pipeline (3 tiers):**
 ```
-pylint-odoo --> Docker Install --> Docker Tests --> Auto-Fix (up to 5 iterations)
+odoo-ls (semantic) --> pylint-odoo (lint) --> Docker Install + Tests --> Auto-Fix (up to 5 iterations)
 ```
 
-Now with **parallel validation** — up to 3 modules validated concurrently with memory-aware concurrency capping.
+The pipeline starts with **odoo-ls semantic validation** (LSP-powered, catches undefined references and type errors), then runs **pylint-odoo** for style/convention checks, and finally **Docker install + test execution** for runtime verification. Now with **parallel validation** — up to 3 modules validated concurrently with memory-aware concurrency capping.
 
 **Auto-Fix resolves common issues automatically:**
 - Missing `mail.thread` inheritance when chatter XML exists
