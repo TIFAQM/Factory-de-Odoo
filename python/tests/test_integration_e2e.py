@@ -243,10 +243,6 @@ class TestDockerIntegration:
         assert result.success, f"Docker install failed: {result.errors}"
         assert result.data.success, f"Docker install failed: {result.data.error_message}"
 
-    @pytest.mark.xfail(
-        reason="Depends on test_docker_install; same chatter template bug",
-        strict=True,
-    )
     def test_docker_tests(self, rendered_module: Path):
         """Generated Odoo tests should pass in Docker."""
         from amil_utils.validation.docker_runner import docker_run_tests
