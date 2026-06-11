@@ -10,6 +10,22 @@ class Test{{ model_name | to_class }}(TransactionCase):
     """Test cases for the {{ model_description }} model."""
 
     @classmethod
+    def _m2o(cls, comodel):
+        """Return a usable record id for a Many2one target.
+
+        Searches for any existing record first (covers base/demo data),
+        then falls back to creating a minimal record.
+        """
+        Model = cls.env[comodel]
+        existing = Model.search([], limit=1)
+        if existing:
+            return existing.id
+        vals = {}
+        if "name" in Model._fields:
+            vals["name"] = "Test %s" % comodel
+        return Model.create(vals).id
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.test_record_vals = {
@@ -35,7 +51,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": cls.env.ref("base.main_company").id,
+            "{{ field.name }}": cls._m2o("{{ field.comodel_name or field.comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
@@ -137,7 +153,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": self.env.ref("base.main_company").id,
+            "{{ field.name }}": self._m2o("{{ field.comodel_name or field.comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
@@ -176,7 +192,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
                 "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-                "{{ field.name }}": self.env.ref("base.main_company").id,
+                "{{ field.name }}": self._m2o("{{ field.comodel_name or field.comodel }}"),
 {% else %}
                 "{{ field.name }}": "Test value",
 {% endif %}
