@@ -17,7 +17,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         then falls back to creating a minimal record.
         """
         Model = cls.env[comodel]
-        existing = Model.search([], limit=1)
+        existing = Model.search([], limit=1, order="id asc")
         if existing:
             return existing.id
         vals = {}
@@ -51,7 +51,9 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": cls._m2o("{{ field.comodel_name or field.comodel }}"),
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+            "{{ field.name }}": cls._m2o("{{ m2o_comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
@@ -153,7 +155,9 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": self._m2o("{{ field.comodel_name or field.comodel }}"),
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+            "{{ field.name }}": self._m2o("{{ m2o_comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
@@ -192,7 +196,9 @@ class Test{{ model_name | to_class }}(TransactionCase):
                 "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-                "{{ field.name }}": self._m2o("{{ field.comodel_name or field.comodel }}"),
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+                "{{ field.name }}": self._m2o("{{ m2o_comodel }}"),
 {% else %}
                 "{{ field.name }}": "Test value",
 {% endif %}

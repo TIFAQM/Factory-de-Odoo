@@ -115,6 +115,15 @@ def _artifacts_intact(manifest: "GenerationManifest", stage_name: str, module_di
 
 
 
+def _template_fail(message: str) -> None:
+    """Raise ValueError from a Jinja2 template guard expression.
+
+    Called as ``{{ fail("...") }}`` inside a ``{% if %}`` guard to produce a loud,
+    descriptive error at render time rather than silently emitting a bad value.
+    """
+    raise ValueError(message)
+
+
 def _register_filters(env: Environment) -> Environment:
     """Register Odoo-specific Jinja2 filters on an Environment.
 
@@ -128,6 +137,7 @@ def _register_filters(env: Environment) -> Environment:
     env.filters["to_class"] = _to_class
     env.filters["to_python_var"] = _to_python_var
     env.filters["to_xml_id"] = _to_xml_id
+    env.globals["fail"] = _template_fail
     return env
 
 
