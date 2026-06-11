@@ -330,3 +330,54 @@ class TestSpecScoreAll:
         assert "hr_core" in scores
         assert "hr_leave" in scores
         assert "hr_payroll" in scores
+
+    def test_score_all_includes_cross_module_points(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        """Modules with no unresolved comodel refs must receive cross-module bonus (+10).
+
+        We verify CLI output matches the library directly: call score_all_modules on
+        the same normalised fixture and compare — guaranteeing CLI == library behaviour.
+        """
+        import json as _json
+        from pathlib import Path as _Path
+
+        from amil_utils.orchestrator.spec_completeness import score_all_modules
+
+        self._seed_planned_module(tmp_path)
+
+        # Build the same normalised decomp the CLI will produce
+        decomp_path = tmp_path / ".planning" / "research" / "decomposition.json"
+        decomp = _json.loads(decomp_path.read_text(encoding="utf-8"))
+
+        from amil_utils.orchestrator.cli_erp_commands import _normalise_for_scoring
+
+        normalised_modules = [_normalise_for_scoring(m) for m in decomp.get("modules", [])]
+        normalised_decomp = {**decomp, "modules": normalised_modules}
+        expected_scores = score_all_modules(normalised_decomp)
+
+        result = runner.invoke(
+            orch_group,
+            ["spec", "score-all", "--cwd", str(tmp_path)],
+        )
+        assert result.exit_code == 0, result.output
+        payload = _json.loads(result.output)
+        cli_scores = payload["scores"]
+
+        # CLI output must exactly match the library for every module
+        for mod_name, expected in expected_scores.items():
+            assert cli_scores[mod_name]["score"] == expected["score"], (
+                f"{mod_name}: CLI score {cli_scores[mod_name]['score']} "
+                f"!= library score {expected['score']}"
+            )
+
+        # Fixture modules have no fields → no comodel refs → cross-module bonus earned.
+        # The cross-module bonus (+10) is only awarded when all_module_names is non-empty,
+        # so this assertion would fail if score_all_modules were called with [] instead.
+        all_module_names = [m["name"] for m in normalised_modules]
+        assert len(all_module_names) > 1, "Need >1 module for cross-module scoring to trigger"
+        for mod_name in all_module_names:
+            assert cli_scores[mod_name]["cross_module_issues"] == [], (
+                f"{mod_name} unexpectedly has cross_module_issues: "
+                f"{cli_scores[mod_name]['cross_module_issues']}"
+            )

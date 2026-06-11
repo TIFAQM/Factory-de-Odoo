@@ -132,18 +132,17 @@ def spec_score_all_cmd(cwd: str, raw: bool) -> None:
     from amil_utils.orchestrator.spec_completeness import (
         get_discussion_batches,
         get_discussion_summary,
-        score_module,
+        score_all_modules,
     )
 
     # Decomposition modules store models as string names (e.g. ["hr.employee"]).
-    # score_module expects models as dicts with "fields" key — normalise before scoring.
+    # score_all_modules expects models as dicts with "fields" key — normalise before scoring.
     decomp = _load_decomposition(cwd)
-    scores = {
-        mod["name"]: score_module(_normalise_for_scoring(mod), [])
-        for mod in decomp.get("modules", [])
-    }
+    normalised_modules = [_normalise_for_scoring(m) for m in decomp.get("modules", [])]
+    normalised_decomp = {**decomp, "modules": normalised_modules}
+    scores = score_all_modules(normalised_decomp)
     _emit({
         "scores": scores,
-        "batches": get_discussion_batches(scores, decomp),
+        "batches": get_discussion_batches(scores, normalised_decomp),
         "summary": get_discussion_summary(scores),
     })
