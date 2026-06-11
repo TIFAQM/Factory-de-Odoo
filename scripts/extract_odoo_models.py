@@ -11,6 +11,14 @@ Usage:
         --source tools/odoo-source/19.0 \
         --out python/src/amil_utils/data/known_odoo_models.json \
         --modules-out python/src/amil_utils/data/standard_odoo_modules.json
+
+Known limitations:
+    - Single-pass _inherits resolution: grandparent delegation chains
+      (A _inherits B _inherits C) are not resolved; only direct parents
+      are merged.
+    - Namespace heuristic only consults the first dotted component of the
+      model name; models with unusual naming conventions may be assigned
+      to the wrong canonical module.
 """
 from __future__ import annotations
 
@@ -22,6 +30,9 @@ from pathlib import Path
 
 ABSTRACT_BASES = {"AbstractModel"}
 MODEL_BASES = {"Model", "TransientModel", "AbstractModel"}
+
+# Extend when new namespaces appear in future Odoo versions.
+_NS_TO_MODULE: dict[str, str] = {"res": "base", "ir": "base"}
 
 
 def _module_name(py_file: Path, root: Path) -> str:
@@ -99,7 +110,7 @@ def _iter_source_files(root: Path):
     def _filter(py_file: Path):
         rel_str = py_file.relative_to(root).as_posix()
         return not (
-            "/.git/" in str(py_file)
+            "/.git/" in rel_str
             or "/tests/" in rel_str
             or rel_str.startswith("tests/")
             or py_file.name.startswith("test_")
@@ -127,13 +138,49 @@ def _canonical_module(model_name: str, candidate: str) -> bool:
     'base' owns 'res.partner' via the res.* -> base special-case).
     """
     prefix = model_name.split(".")[0]
-    # Special mapping for Odoo's convention (res.* -> base, ir.* -> base)
-    _NS_TO_MODULE = {"res": "base", "ir": "base"}
     expected = _NS_TO_MODULE.get(prefix, prefix)
     return candidate == expected
 
 
-def extract_models(source_root: str | Path) -> dict:
+def _resolve_inherits(models: dict, inherits_map: dict[str, list[str]]) -> dict:
+    """Copy delegated model fields into inheriting models (one pass).
+
+    For each entry in *inherits_map*, pull all fields from the referenced
+    parent models into the inheriting model at lower priority (existing own
+    fields take precedence).
+
+    Returns the mutated *models* dict (modified in place and also returned).
+    """
+    for model_name, inh_list in inherits_map.items():
+        if model_name not in models:
+            continue
+        target = models[model_name]
+        for inh_model in inh_list:
+            if inh_model not in models:
+                continue
+            inh_fields = models[inh_model].get("fields", {})
+            # Existing fields take priority; delegated fields fill gaps
+            target["fields"] = {**inh_fields, **target["fields"]}
+        models[model_name] = target
+    return models
+
+
+def _build_meta(source: str, odoo_version: str, model_count: int) -> dict:
+    """Build the ``_meta`` block for known_odoo_models.json."""
+    return {
+        "odoo_version": odoo_version,
+        "schema_version": "1.0",
+        "model_count": model_count,
+        "description": (
+            f"Odoo {odoo_version} models extracted from source for comodel "
+            "validation and depends inference"
+        ),
+        "last_updated": datetime.date.today().isoformat(),
+        "source": f"{source} (AST extraction)",
+    }
+
+
+def extract_models(source_root: str | Path, odoo_version: str = "19.0") -> dict:
     """Walk the Odoo source tree; return the known_odoo_models.json structure."""
     root = Path(source_root)
     models: dict = {}
@@ -170,31 +217,11 @@ def extract_models(source_root: str | Path) -> dict:
                             existing_inh.append(inh)
                     inherits_map[name] = existing_inh
 
-    # Post-process: resolve _inherits — copy delegated model fields into the
-    # inheriting model (lower priority: only add fields not already present).
-    # One pass is sufficient since _inherits chains are rare and shallow.
-    for model_name, inh_list in inherits_map.items():
-        if model_name not in models:
-            continue
-        target = models[model_name]
-        for inh_model in inh_list:
-            if inh_model not in models:
-                continue
-            inh_fields = models[inh_model].get("fields", {})
-            # Existing fields take priority; delegated fields fill gaps
-            target["fields"] = {**inh_fields, **target["fields"]}
-        models[model_name] = target
+    # Post-process: resolve _inherits (single pass, see Known limitations in module docstring).
+    _resolve_inherits(models, inherits_map)
 
     return {
-        "_meta": {
-            "odoo_version": "19.0",
-            "schema_version": "1.0",
-            "model_count": len(models),
-            "description": ("Odoo 19.0 models extracted from source for comodel "
-                             "validation and depends inference"),
-            "last_updated": datetime.date.today().isoformat(),
-            "source": "tools/odoo-source/19.0 (AST extraction)",
-        },
+        "_meta": _build_meta(str(source_root), odoo_version, len(models)),
         "models": models,
     }
 
@@ -225,15 +252,17 @@ def main() -> None:
                         default="python/src/amil_utils/data/known_odoo_models.json")
     parser.add_argument("--modules-out",
                         default="python/src/amil_utils/data/standard_odoo_modules.json")
+    parser.add_argument("--version", default="19.0",
+                        help="Odoo version string written into _meta (default: 19.0)")
     args = parser.parse_args()
 
-    data = extract_models(args.source)
+    data = extract_models(args.source, odoo_version=args.version)
     Path(args.out).write_text(json.dumps(data, indent=1, sort_keys=True))
     print(f"models: {data['_meta']['model_count']} -> {args.out}")
 
     mods = extract_standard_modules(args.source)
     Path(args.modules_out).write_text(json.dumps(
-        {"_meta": {"odoo_version": "19.0", "module_count": len(mods)},
+        {"_meta": {"odoo_version": args.version, "module_count": len(mods)},
          "modules": mods}, indent=1, sort_keys=True))
     print(f"modules: {len(mods)} -> {args.modules_out}")
 

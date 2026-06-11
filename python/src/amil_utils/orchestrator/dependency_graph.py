@@ -69,6 +69,7 @@ def _load_external_module_names(odoo_version: str = "19.0") -> frozenset[str]:
                 # Also extract from the explicit "module" field
                 if isinstance(model_info, dict) and model_info.get("module"):
                     modules.add(model_info["module"])
+            # Safety net: core modules always treated as installable externals even if absent from the extracted JSON (pre-extraction bootstrap + belt-and-braces).
             modules.update({"base", "web", "mail", "account", "stock", "hr", "sale", "purchase", "project", "crm", "website", "portal", "board", "bus"})
             # Also include the source names of all historically renamed/merged modules
             # so they appear for older versions (before being renamed).
