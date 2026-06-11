@@ -244,7 +244,7 @@ Validate each file contains valid JSON:
 
 ```bash
 for f in module-boundaries.json oca-analysis.json dependency-map.json computation-chains.json; do
-  node -e "JSON.parse(require('fs').readFileSync('.planning/research/$f','utf8')); console.log('VALID: $f')" 2>/dev/null || echo "INVALID JSON: $f"
+  python3 -m json.tool ".planning/research/$f" >/dev/null 2>&1 && echo "VALID: $f" || echo "INVALID JSON: $f"
 done
 ```
 
@@ -256,20 +256,14 @@ If any file is missing or contains invalid JSON, report which agent failed and o
 
 Merge the 4 agent outputs into a unified decomposition, present it for human approval, initialize modules, and generate ROADMAP.md.
 
-**Library:** `$HOME/.claude/amil/bin/lib/decomposition.cjs` provides `mergeDecomposition`, `formatDecompositionTable`, `generateRoadmapMarkdown`.
+**CLI:** `amil-utils orch decomposition <merge|format|init-modules|roadmap>` provides the merge, human-approval table, module initialization, and ROADMAP generation steps.
 
 ### Step C.1: Merge agent outputs
 
 Run the 5-step merge to combine all 4 agent JSON files into `decomposition.json`:
 
 ```bash
-node -e "
-  const { mergeDecomposition } = require('$HOME/.claude/amil/bin/lib/decomposition.cjs');
-  const path = require('path');
-  const researchDir = path.join(process.cwd(), '.planning/research');
-  const result = mergeDecomposition(researchDir, process.cwd());
-  console.log('Merged ' + result.modules.length + ' modules into decomposition.json');
-"
+amil-utils orch decomposition merge --raw --cwd "$(pwd)"
 ```
 
 The 5-step merge process:
@@ -286,14 +280,10 @@ Result is written to `.planning/research/decomposition.json`.
 Format the decomposition using the locked structured text format:
 
 ```bash
-node -e "
-  const { formatDecompositionTable } = require('$HOME/.claude/amil/bin/lib/decomposition.cjs');
-  const decomp = JSON.parse(require('fs').readFileSync('.planning/research/decomposition.json', 'utf8'));
-  console.log(formatDecompositionTable(decomp));
-"
+amil-utils orch decomposition format --cwd "$(pwd)"
 ```
 
-This produces:
+This command prints plain text by design (for human approval). It produces:
 ```
 ERP MODULE DECOMPOSITION -- {N} modules across {M} tiers
 
@@ -322,45 +312,20 @@ Loop on "modify" until the human approves or chooses to regenerate.
 
 ### Step C.4: Initialize modules (on approval)
 
-For each module in the approved decomposition (in `generation_order`):
+Initialize all modules in the approved decomposition in a single command:
 
 ```bash
-node -e "
-  const decomp = JSON.parse(require('fs').readFileSync('.planning/research/decomposition.json', 'utf8'));
-  const modules = decomp.modules;
-  const order = decomp.generation_order;
-  const moduleMap = new Map(modules.map(m => [m.name, m]));
-  for (const name of order) {
-    const mod = moduleMap.get(name);
-    if (!mod) continue;
-    const allDeps = [...mod.base_depends, ...mod.custom_depends];
-    console.log('INIT: ' + name + ' tier=' + mod.tier + ' depends=' + JSON.stringify(allDeps));
-  }
-"
+amil-utils orch decomposition init-modules --raw --cwd "$(pwd)"
 ```
 
-Then for each module:
-
-```bash
-amil-utils orch module-status init {module_name} {tier} '{depends_json}' --cwd "$(pwd)"
-```
-
-This creates `module_status.json` entries and artifact directories in the TARGET project.
+This reads the approved `decomposition.json`, initializes `module_status.json` entries in `generation_order`, and creates artifact directories in the TARGET project. JSON output lists `initialized` modules.
 
 ### Step C.5: Generate ROADMAP.md
 
 Generate the flat ROADMAP.md in the TARGET project's `.planning/` directory:
 
 ```bash
-node -e "
-  const { generateRoadmapMarkdown } = require('$HOME/.claude/amil/bin/lib/decomposition.cjs');
-  const fs = require('fs');
-  const decomp = JSON.parse(fs.readFileSync('.planning/research/decomposition.json', 'utf8'));
-  const md = generateRoadmapMarkdown(decomp);
-  const header = '# ERP Module Roadmap\n\nGenerated: ' + new Date().toISOString().split('T')[0] + '\n\n';
-  fs.writeFileSync('.planning/ROADMAP.md', header + md);
-  console.log('ROADMAP.md written to .planning/ROADMAP.md');
-"
+amil-utils orch decomposition roadmap --raw --cwd "$(pwd)"
 ```
 
 **IMPORTANT:** This writes to the TARGET project's `.planning/ROADMAP.md`, NOT the amil tool repo.
