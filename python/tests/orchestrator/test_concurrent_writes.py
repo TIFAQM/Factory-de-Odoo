@@ -2,6 +2,8 @@
 
 Verifies that atomic writes via UUID-suffixed temp files prevent corruption
 when multiple threads write simultaneously to registry and module status files.
+With file-lock serialization (state_lock), all writers are fully serialized
+so no-lost-updates is guaranteed — not just no corruption.
 """
 from __future__ import annotations
 
@@ -20,6 +22,7 @@ from amil_utils.orchestrator.module_status import (
 from amil_utils.orchestrator.registry import (
     _atomic_write_json as reg_atomic_write_json,
     read_registry_file,
+    update_from_spec,
     update_registry,
 )
 
@@ -132,12 +135,11 @@ class TestConcurrentModuleStatus:
     def test_concurrent_module_init(self, tmp_path: Path) -> None:
         """3 threads each init a different module. All 3 must appear in final state.
 
-        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
-        (file remains valid JSON, no partial writes). Under last-writer-wins
-        semantics, some operations may be lost -- the retry below recovers
-        these to verify final state. The atomic write correctness (UUID temp
-        files + replace()) is validated separately in test_registry.py and
-        test_module_status.py.
+        With file-lock serialization (state_lock), no-lost-updates is guaranteed —
+        all concurrent writers are serialized and every init survives. The retry
+        below is kept for historical compatibility but should never be needed.
+        The atomic write correctness (UUID temp files + replace()) is validated
+        separately in test_registry.py and test_module_status.py.
         """
         _seed_module_status(tmp_path)
         barrier = threading.Barrier(3)
@@ -191,12 +193,11 @@ class TestConcurrentModuleStatus:
 
         All 3 must be 'spec_approved' in the final state.
 
-        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
-        (file remains valid JSON, no partial writes). Under last-writer-wins
-        semantics, some operations may be lost -- the retry below recovers
-        these to verify final state. The atomic write correctness (UUID temp
-        files + replace()) is validated separately in test_registry.py and
-        test_module_status.py.
+        With file-lock serialization (state_lock), no-lost-updates is guaranteed —
+        all transitions are serialized and every one survives. The retry below is
+        kept for historical compatibility but should never be needed. The atomic
+        write correctness (UUID temp files + replace()) is validated separately in
+        test_registry.py and test_module_status.py.
         """
         module_names = ["sale_order", "purchase_order", "stock_move"]
         initial_modules = {
@@ -258,12 +259,11 @@ class TestConcurrentRegistryUpdates:
 
         Both modules must appear in the final registry.
 
-        NOTE: This test verifies no DATA CORRUPTION occurs under concurrency
-        (file remains valid JSON, no partial writes). Under last-writer-wins
-        semantics, some operations may be lost -- the retry below recovers
-        these to verify final state. The atomic write correctness (UUID temp
-        files + replace()) is validated separately in test_registry.py and
-        test_module_status.py.
+        With file-lock serialization (state_lock), no-lost-updates is guaranteed —
+        both writers are serialized and every update survives. The retry below is
+        kept for historical compatibility but should never be needed. The atomic
+        write correctness (UUID temp files + replace()) is validated separately in
+        test_registry.py and test_module_status.py.
         """
         _seed_registry(tmp_path)
 
@@ -332,3 +332,54 @@ class TestConcurrentRegistryUpdates:
         contributing = final_registry["_meta"]["modules_contributing"]
         assert "fleet_vehicle" in contributing
         assert "fleet_driver" in contributing
+
+
+def test_concurrent_update_from_spec_no_lost_updates(tmp_path: Path) -> None:
+    """N threads each registering a distinct module must ALL survive."""
+    (tmp_path / ".planning").mkdir()
+    n = 8
+
+    def make_spec(i: int) -> dict:
+        return {
+            "module_name": f"mod_{i}",
+            "models": [
+                {
+                    "name": f"uni.model.{i}",
+                    "fields": [{"name": "name", "type": "Char"}],
+                }
+            ],
+        }
+
+    threads = [
+        threading.Thread(target=update_from_spec, args=(tmp_path, make_spec(i)))
+        for i in range(n)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    registry = read_registry_file(tmp_path)
+    assert len(registry["models"]) == n, sorted(registry["models"])
+
+
+def test_concurrent_module_status_init_no_lost_updates(tmp_path: Path) -> None:
+    """N threads each initializing a distinct module must ALL survive."""
+    _make_planning(tmp_path)
+    n = 8
+    errors: list[Exception] = []
+
+    def init_worker(i: int) -> None:
+        try:
+            module_status_init(tmp_path, f"mod_{i}", f"tier_{i}")
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=init_worker, args=(i,)) for i in range(n)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, f"Workers raised: {errors}"
+    data = read_status_file(tmp_path)
+    assert len(data["modules"]) == n, sorted(data["modules"])

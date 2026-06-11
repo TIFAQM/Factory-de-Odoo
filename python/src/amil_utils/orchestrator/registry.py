@@ -16,6 +16,7 @@ from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 
+from amil_utils.orchestrator.file_lock import state_lock
 from amil_utils.orchestrator.module_status import read_status_file
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -73,25 +74,13 @@ def _empty_registry() -> dict:
 # ── Public API ───────────────────────────────────────────────────────────────
 
 
-def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
-    """Remove all models contributed by a module from the registry.
-
-    Used during backward transitions to clean stale spec data.
-    Returns the updated registry.
-    """
-    if not module_name:
-        raise ValueError("module_name is required for registry removal")
-    cwd = Path(cwd)
-    registry = read_registry_file(cwd)
-
-    # Build new models dict excluding entries owned by the module
+def _apply_remove_module(registry: dict, module_name: str) -> dict:
+    """Pure transform: return a new registry with module_name stripped out."""
     new_models = {
         key: model
         for key, model in registry["models"].items()
         if model.get("module") != module_name
     }
-
-    # Clean up contributing lists in remaining models (remove module_name)
     cleaned_models = {}
     for key, model in new_models.items():
         contributing = model.get("contributing", [])
@@ -102,14 +91,11 @@ def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
             }
         else:
             cleaned_models[key] = {**model}
-
-    # Clean up modules_contributing in _meta
     meta_contributing = [
         m for m in registry["_meta"].get("modules_contributing", [])
         if m != module_name
     ]
-
-    new_registry = {
+    return {
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -119,7 +105,20 @@ def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
         "models": cleaned_models,
     }
 
-    _atomic_write_json(_registry_path(cwd), new_registry)
+
+def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
+    """Remove all models contributed by a module from the registry.
+
+    Used during backward transitions to clean stale spec data.
+    Returns the updated registry.
+    """
+    if not module_name:
+        raise ValueError("module_name is required for registry removal")
+    cwd = Path(cwd)
+    with state_lock(_registry_path(cwd)):
+        registry = read_registry_file(cwd)
+        new_registry = _apply_remove_module(registry, module_name)
+        _atomic_write_json(_registry_path(cwd), new_registry)
     return new_registry
 
 
@@ -152,26 +151,17 @@ def read_model_from_registry(cwd: str | Path, model_name: str) -> dict | None:
     return registry["models"].get(model_name)
 
 
-def update_registry(cwd: str | Path, manifest_path: str) -> dict:
-    """Update registry from a manifest file. Returns the new registry state."""
-    cwd = Path(cwd)
-    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-    registry = read_registry_file(cwd)
-
+def _apply_manifest(registry: dict, manifest: dict) -> dict:
+    """Pure transform: merge manifest models into registry, return new registry."""
     module_name = manifest.get("module", "unknown")
     manifest_models = manifest.get("models", {})
-
-    # Build new models map (immutable)
     new_models = {**registry["models"]}
     for key, model in manifest_models.items():
         new_models[key] = {**model}
-
-    # Build new modules_contributing (deduplicated)
     contributing = list(registry["_meta"]["modules_contributing"])
     if module_name not in contributing:
         contributing = [*contributing, module_name]
-
-    new_registry = {
+    return {
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -181,7 +171,15 @@ def update_registry(cwd: str | Path, manifest_path: str) -> dict:
         "models": new_models,
     }
 
-    _atomic_write_json(_registry_path(cwd), new_registry)
+
+def update_registry(cwd: str | Path, manifest_path: str) -> dict:
+    """Update registry from a manifest file. Returns the new registry state."""
+    cwd = Path(cwd)
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    with state_lock(_registry_path(cwd)):
+        registry = read_registry_file(cwd)
+        new_registry = _apply_manifest(registry, manifest)
+        _atomic_write_json(_registry_path(cwd), new_registry)
     return new_registry
 
 
@@ -373,24 +371,42 @@ def spec_to_manifest(spec: dict) -> dict:
     return {"module": module_name, "models": models}
 
 
-def update_from_spec(cwd: str | Path, spec: dict) -> dict:
-    """Update registry from a spec.json object. Returns the new registry state."""
-    cwd = Path(cwd)
-    manifest = spec_to_manifest(spec)
-    registry = read_registry_file(cwd)
+def _build_security_groups(module_name: str, spec: dict) -> dict:
+    """F7: Build security-group XML-ID map from spec roles."""
+    result: dict = {}
+    for role in (spec.get("security", {}).get("roles") or []):
+        if isinstance(role, str):
+            result[role] = f"{module_name}.group_{role}"
+        elif isinstance(role, dict):
+            role_name = role.get("name", "")
+            result[role_name] = role.get("xml_id", f"{module_name}.group_{role_name}")
+    return result
 
+
+def _build_view_xml_ids(module_name: str, spec: dict) -> list[str]:
+    """F8: Build view XML-ID list from spec models."""
+    ids: list[str] = []
+    for model in spec.get("models", []):
+        model_var = model["name"].replace(".", "_")
+        ids.extend([
+            f"{module_name}.view_{model_var}_form",
+            f"{module_name}.view_{model_var}_list",
+            f"{module_name}.view_{model_var}_search",
+        ])
+    return ids
+
+
+def _apply_spec(registry: dict, manifest: dict, spec: dict) -> dict:
+    """Pure transform: merge spec/manifest into registry; return new registry."""
     module_name = manifest.get("module", "unknown")
     manifest_models = manifest.get("models", {})
-
     new_models = {**registry["models"]}
     for key, model in manifest_models.items():
         new_models[key] = {**model}
-
     contributing = list(registry["_meta"]["modules_contributing"])
     if module_name not in contributing:
         contributing = [*contributing, module_name]
-
-    new_registry = {
+    new_registry: dict = {
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -399,36 +415,27 @@ def update_from_spec(cwd: str | Path, spec: dict) -> dict:
         },
         "models": new_models,
     }
-
-    # F7: Track security group XML IDs
-    security = spec.get("security", {})
-    security_groups = {}
-    for role in (security.get("roles") or []):
-        if isinstance(role, str):
-            security_groups[role] = f"{module_name}.group_{role}"
-        elif isinstance(role, dict):
-            role_name = role.get("name", "")
-            security_groups[role_name] = role.get("xml_id", f"{module_name}.group_{role_name}")
+    security_groups = _build_security_groups(module_name, spec)
     if security_groups:
         new_registry["security_groups"] = {
             **new_registry.get("security_groups", {}),
             module_name: security_groups,
         }
-
-    # F8: Track view XML IDs for cross-module inheritance
-    view_xml_ids = []
-    for model in spec.get("models", []):
-        model_var = model["name"].replace(".", "_")
-        view_xml_ids.extend([
-            f"{module_name}.view_{model_var}_form",
-            f"{module_name}.view_{model_var}_list",
-            f"{module_name}.view_{model_var}_search",
-        ])
+    view_xml_ids = _build_view_xml_ids(module_name, spec)
     if view_xml_ids:
         new_registry["view_xml_ids"] = {
             **new_registry.get("view_xml_ids", {}),
             module_name: view_xml_ids,
         }
+    return new_registry
 
-    _atomic_write_json(_registry_path(cwd), new_registry)
+
+def update_from_spec(cwd: str | Path, spec: dict) -> dict:
+    """Update registry from a spec.json object. Returns the new registry state."""
+    cwd = Path(cwd)
+    manifest = spec_to_manifest(spec)
+    with state_lock(_registry_path(cwd)):
+        registry = read_registry_file(cwd)
+        new_registry = _apply_spec(registry, manifest, spec)
+        _atomic_write_json(_registry_path(cwd), new_registry)
     return new_registry

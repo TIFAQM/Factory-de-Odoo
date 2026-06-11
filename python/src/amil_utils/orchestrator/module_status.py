@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from amil_utils.orchestrator.file_lock import state_lock
+
 logger = logging.getLogger(__name__)
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -112,27 +114,25 @@ def module_status_init(
 ) -> dict:
     """Initialize a new module with status 'planned'."""
     cwd = Path(cwd)
-    data = read_status_file(cwd)
+    with state_lock(_status_file_path(cwd)):
+        data = read_status_file(cwd)
+        if module_name in data["modules"]:
+            raise ValueError(f'Module "{module_name}" already exists')
+        now = _now_iso()
+        new_modules = {
+            **data["modules"],
+            module_name: {
+                "status": "planned",
+                "tier": tier,
+                "depends": depends or [],
+                "updated": now,
+                "artifacts_dir": f".planning/modules/{module_name}/",
+            },
+        }
+        new_data = {**data, "modules": new_modules}
+        written = _write_status_file(cwd, new_data)
 
-    if module_name in data["modules"]:
-        raise ValueError(f'Module "{module_name}" already exists')
-
-    now = _now_iso()
-    new_modules = {
-        **data["modules"],
-        module_name: {
-            "status": "planned",
-            "tier": tier,
-            "depends": depends or [],
-            "updated": now,
-            "artifacts_dir": f".planning/modules/{module_name}/",
-        },
-    }
-
-    new_data = {**data, "modules": new_modules}
-    written = _write_status_file(cwd, new_data)
-
-    # Create artifact directory with CONTEXT.md placeholder
+    # Create artifact directory with CONTEXT.md placeholder (outside lock)
     artifacts_dir = cwd / ".planning" / "modules" / module_name
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     context_path = artifacts_dir / "CONTEXT.md"
@@ -148,42 +148,43 @@ def module_status_transition(
 ) -> dict:
     """Transition module status with validation."""
     cwd = Path(cwd)
-    data = read_status_file(cwd)
-    mod = data["modules"].get(module_name)
-    current_status = mod["status"] if mod else "planned"
+    with state_lock(_status_file_path(cwd)):
+        data = read_status_file(cwd)
+        mod = data["modules"].get(module_name)
+        current_status = mod["status"] if mod else "planned"
 
-    allowed = VALID_TRANSITIONS.get(current_status, [])
-    if new_status not in allowed:
-        allowed_str = ", ".join(allowed) if allowed else "none"
-        raise ValueError(
-            f'Invalid transition: {module_name} cannot go from '
-            f'"{current_status}" to "{new_status}". Allowed: {allowed_str}'
-        )
+        allowed = VALID_TRANSITIONS.get(current_status, [])
+        if new_status not in allowed:
+            allowed_str = ", ".join(allowed) if allowed else "none"
+            raise ValueError(
+                f'Invalid transition: {module_name} cannot go from '
+                f'"{current_status}" to "{new_status}". Allowed: {allowed_str}'
+            )
 
-    # Backward transition cleanup
-    if (current_status, new_status) in _BACKWARD_TRANSITIONS:
-        logger.warning(
-            "Module '%s' transitioning backward: %s → %s",
-            module_name, current_status, new_status,
-        )
-        if current_status == "spec_approved" and new_status == "planned":
-            from amil_utils.orchestrator.registry import remove_module_from_registry
-            remove_module_from_registry(cwd, module_name)
-        elif current_status == "generated" and new_status == "spec_approved":
-            # No cleanup needed: generated files remain on disk and will be
-            # overwritten during re-generation. Registry entries stay valid
-            # since the spec hasn't changed (only regeneration is needed).
-            pass
+        # Backward transition cleanup (acquires registry lock — safe ordering)
+        if (current_status, new_status) in _BACKWARD_TRANSITIONS:
+            logger.warning(
+                "Module '%s' transitioning backward: %s → %s",
+                module_name, current_status, new_status,
+            )
+            if current_status == "spec_approved" and new_status == "planned":
+                from amil_utils.orchestrator.registry import remove_module_from_registry
+                remove_module_from_registry(cwd, module_name)
+            elif current_status == "generated" and new_status == "spec_approved":
+                # No cleanup needed: generated files remain on disk and will be
+                # overwritten during re-generation. Registry entries stay valid
+                # since the spec hasn't changed (only regeneration is needed).
+                pass
 
-    now = _now_iso()
-    updated_module = {
-        **(mod or {"tier": None, "depends": []}),
-        "status": new_status,
-        "updated": now,
-    }
-    new_modules = {**data["modules"], module_name: updated_module}
-    new_data = {**data, "modules": new_modules}
-    return _write_status_file(cwd, new_data)
+        now = _now_iso()
+        updated_module = {
+            **(mod or {"tier": None, "depends": []}),
+            "status": new_status,
+            "updated": now,
+        }
+        new_modules = {**data["modules"], module_name: updated_module}
+        new_data = {**data, "modules": new_modules}
+        return _write_status_file(cwd, new_data)
 
 
 def get_generation_queue(cwd: str | Path) -> list[str]:
