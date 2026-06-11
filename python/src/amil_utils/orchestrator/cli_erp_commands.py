@@ -41,12 +41,22 @@ def _load_decomposition(cwd: str) -> dict:
 
 
 @decomposition_grp.command("format")
-@_common
-def decomposition_format_cmd(cwd: str, raw: bool) -> None:
-    """Print the human-approval decomposition table (plain text)."""
+@click.option("--cwd", default=".", type=click.Path(exists=True),
+              help="Project root directory")
+def decomposition_format_cmd(cwd: str) -> None:
+    """Print the human-approval decomposition table.
+
+    NOTE: intentionally plain text (not JSON) — this output is shown
+    verbatim to a human for decomposition approval.
+    """
     from amil_utils.orchestrator.decomposition import format_decomposition_table
 
-    click.echo(format_decomposition_table(_load_decomposition(cwd)))
+    try:
+        decomp = _load_decomposition(cwd)
+    except (OSError, json.JSONDecodeError) as exc:
+        click.echo(f"ERROR: decomposition.json not readable: {exc}", err=True)
+        raise SystemExit(1)
+    click.echo(format_decomposition_table(decomp))
 
 
 @decomposition_grp.command("init-modules")
@@ -55,7 +65,11 @@ def decomposition_init_modules_cmd(cwd: str, raw: bool) -> None:
     """Initialize module_status.json entries for every module in generation order."""
     from amil_utils.orchestrator.module_status import module_status_init
 
-    decomp = _load_decomposition(cwd)
+    try:
+        decomp = _load_decomposition(cwd)
+    except (OSError, json.JSONDecodeError) as exc:
+        _emit({"error": f"decomposition.json not readable: {exc}"})
+        return
     module_map = {m["name"]: m for m in decomp.get("modules", [])}
     initialized: list[str] = []
     for name in decomp.get("generation_order", list(module_map)):
@@ -76,7 +90,11 @@ def decomposition_roadmap_cmd(cwd: str, raw: bool) -> None:
     from amil_utils.orchestrator.commands import current_timestamp
     from amil_utils.orchestrator.decomposition import generate_roadmap_markdown
 
-    decomp = _load_decomposition(cwd)
+    try:
+        decomp = _load_decomposition(cwd)
+    except (OSError, json.JSONDecodeError) as exc:
+        _emit({"error": f"decomposition.json not readable: {exc}"})
+        return
     body = generate_roadmap_markdown(decomp)
     # current_timestamp() returns {"timestamp": "<ISO string>"} — take first 10 chars
     date = current_timestamp()["timestamp"][:10]

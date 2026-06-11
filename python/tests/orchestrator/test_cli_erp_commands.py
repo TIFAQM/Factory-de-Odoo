@@ -141,6 +141,18 @@ class TestDecompositionFormat:
         assert "hr_core" in result.output
         assert "TIER" in result.output or "tier" in result.output.lower()
 
+    def test_format_missing_decomposition_exits_1_with_error_on_stderr(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        """format with no decomposition.json must exit 1 with ERROR on stderr."""
+        result = runner.invoke(
+            orch_group,
+            ["decomposition", "format", "--cwd", str(tmp_path)],
+        )
+        assert result.exit_code == 1
+        # CliRunner mixes stderr into output by default; check combined output
+        assert "ERROR" in result.output
+
 
 # ─── decomposition roadmap ────────────────────────────────────────────────────
 
@@ -167,11 +179,35 @@ class TestDecompositionRoadmap:
         assert "hr_leave" in content
         assert "hr_payroll" in content
 
+    def test_roadmap_missing_decomposition_exits_0_with_error_json(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        """roadmap with no decomposition.json must exit 0 with JSON error payload."""
+        result = runner.invoke(
+            orch_group,
+            ["decomposition", "roadmap", "--cwd", str(tmp_path)],
+        )
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert "error" in payload
+
 
 # ─── decomposition init-modules ───────────────────────────────────────────────
 
 
 class TestDecompositionInitModules:
+    def test_init_modules_missing_decomposition_exits_0_with_error_json(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        """init-modules with no decomposition.json must exit 0 with JSON error payload."""
+        result = runner.invoke(
+            orch_group,
+            ["decomposition", "init-modules", "--cwd", str(tmp_path)],
+        )
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert "error" in payload
+
     def test_init_modules_creates_entries_in_order(
         self, runner: CliRunner, tmp_path: Path
     ) -> None:
