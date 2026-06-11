@@ -417,3 +417,67 @@ class TestSpecScoreAll:
                 f"{mod_name} unexpectedly has cross_module_issues: "
                 f"{cli_scores[mod_name]['cross_module_issues']}"
             )
+
+
+# ─── registry tiered-injection + update-from-spec ─────────────────────────────
+
+
+def _seed_registry(tmp_path: Path) -> None:
+    planning = tmp_path / ".planning"
+    planning.mkdir(exist_ok=True)
+    registry = {
+        "_meta": {
+            "version": 1,
+            "last_updated": "2026-06-12T00:00:00+00:00",
+            "modules_contributing": ["uni_core"],
+            "odoo_version": "19.0",
+        },
+        "models": {
+            "uni.department": {
+                "name": "uni.department",
+                "module": "uni_core",
+                "fields": {"name": {"name": "name", "type": "Char"}},
+            },
+        },
+    }
+    (planning / "model_registry.json").write_text(json.dumps(registry))
+
+
+def test_registry_tiered_injection_cli(tmp_path: Path) -> None:
+    _seed_registry(tmp_path)
+    status = {
+        "_meta": {"version": 1},
+        "modules": {
+            "uni_core": {"status": "generated", "tier": "foundation", "depends": []},
+            "uni_fee": {"status": "planned", "tier": "core", "depends": ["uni_core"]},
+        },
+        "tiers": {},
+    }
+    (tmp_path / ".planning" / "module_status.json").write_text(json.dumps(status))
+    runner = CliRunner()
+    result = runner.invoke(orch_group, [
+        "registry", "tiered-injection", "uni_fee", "--cwd", str(tmp_path), "--raw",
+    ])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert "models" in payload
+
+
+def test_registry_update_from_spec_cli(tmp_path: Path) -> None:
+    _seed_registry(tmp_path)
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(json.dumps({
+        "module_name": "uni_fee",
+        "models": [{"name": "uni.fee.challan", "fields": [
+            {"name": "amount", "type": "Float"},
+        ]}],
+    }))
+    runner = CliRunner()
+    result = runner.invoke(orch_group, [
+        "registry", "update-from-spec", str(spec_path), "--cwd", str(tmp_path), "--raw",
+    ])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["model_count"] >= 2
+    registry = json.loads((tmp_path / ".planning" / "model_registry.json").read_text())
+    assert "uni.fee.challan" in registry["models"]
