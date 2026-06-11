@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Admission seat quota categories per PRD WF-02/WF-03",
+    "source": "university_workflow_diagrams.docx WF-02 step 05, WF-03 step 03",
+    "last_updated": "2026-06-12"
+  },
+  "categories": [
+    {"code": "open_merit", "label": "Open Merit",        "fill_order": 1},
+    {"code": "sports",     "label": "Sports",            "fill_order": 2},
+    {"code": "disabled",   "label": "Disabled (2%)",     "fill_order": 3},
+    {"code": "minority",   "label": "Minorities",        "fill_order": 4},
+    {"code": "provincial", "label": "Provincial/Domicile", "fill_order": 5,
+     "provinces": ["Punjab", "Sindh", "KPK", "Balochistan", "AJK", "GB"]}
+  ],
+  "unfilled_quota_rule": "transfer remaining quota seats to open merit",
+  "tie_breakers": ["matric_percent", "date_of_birth_older", "submission_timestamp"]
+}

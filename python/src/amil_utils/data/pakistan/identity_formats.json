@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "description": "Pakistani identity number formats and validation regex",
+    "source": "NADRA CNIC format; FBR NTN/STRN formats; aligned with preprocessors/pakistan_hec.py validation patterns",
+    "last_updated": "2026-06-12"
+  },
+  "formats": {
+    "cnic": {
+      "label": "CNIC",
+      "regex": "^[0-9]{5}-[0-9]{7}-[0-9]$",
+      "placeholder": "XXXXX-XXXXXXX-X",
+      "example": "35202-1234567-1",
+      "note": "Canonical dashed form; pakistan_hec.py preprocessor accepts any 13-digit input and normalizes to this format"
+    },
+    "ntn": {
+      "label": "National Tax Number",
+      "regex": "^[0-9]{7}$|^[0-9]{13}$",
+      "placeholder": "NNNNNNN or 13-digit CNIC-based",
+      "example": "1234567"
+    },
+    "strn": {
+      "label": "Sales Tax Registration Number",
+      "regex": "^[0-9]{2}-[0-9]{2}-[0-9]{4}-[0-9]{3}-[0-9]{2}$",
+      "example": "12-34-5678-901-23"
+    },
+    "phone_pk": {
+      "label": "Pakistani Mobile",
+      "regex": "^(\\+92|0)?3[0-9]{2}-?[0-9]{7}$",
+      "example": "+923001234567",
+      "note": "Prefix optional to match pakistan_hec.py fallback pattern ^(\\+92|0)?3\\d{9}$; preprocessor strips separators before matching"
+    }
+  }
+}
