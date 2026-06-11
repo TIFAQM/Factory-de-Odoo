@@ -200,9 +200,9 @@ class TestLoadBaseModels:
         assert "mail.thread" in models
 
     def test_contains_many_models(self) -> None:
-        """Should load all 203 models from known_odoo_models.json, not just 20."""
+        """Should load 600+ models from AST-extracted known_odoo_models.json."""
         models = _load_base_models()
-        assert len(models) >= 200
+        assert len(models) >= 600
 
     def test_contains_sale_stock_project_models(self) -> None:
         """Models that were missing from the hardcoded set."""

@@ -1,0 +1,5222 @@
+{
+ "_meta": {
+  "module_count": 641,
+  "odoo_version": "19.0"
+ },
+ "modules": {
+  "account": {
+   "application": true,
+   "depends": [
+    "base_setup",
+    "onboarding",
+    "product",
+    "analytic",
+    "portal",
+    "digest"
+   ],
+   "summary": "Invoices & Payments"
+  },
+  "account_add_gln": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "This module adds the Global Location Number to the partner. Used on delivery addresses, it is used to identify stock locations and is mandatory on the UBL/CII eInvoices (but not only). The module is intended be merged with account, later on, in master"
+  },
+  "account_check_printing": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Check printing basic features"
+  },
+  "account_debit_note": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Debit Notes"
+  },
+  "account_edi": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Import/Export Invoices From XML/PDF"
+  },
+  "account_edi_proxy_client": {
+   "application": false,
+   "depends": [
+    "account",
+    "certificate"
+   ],
+   "summary": "Proxy features for account_edi"
+  },
+  "account_edi_ubl_cii": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Import/Export electronic invoices with UBL/CII"
+  },
+  "account_fleet": {
+   "application": false,
+   "depends": [
+    "fleet",
+    "account"
+   ],
+   "summary": "Manage accounting with fleets"
+  },
+  "account_payment": {
+   "application": false,
+   "depends": [
+    "account",
+    "payment"
+   ],
+   "summary": "Enable customers to pay invoices on the portal and post payments when transactions are processed."
+  },
+  "account_peppol": {
+   "application": false,
+   "depends": [
+    "account_edi_proxy_client",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "This module is used to send/receive documents with PEPPOL"
+  },
+  "account_peppol_advanced_fields": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Merged prematurly, not working correctly. Please don't use. Better solution coming soon."
+  },
+  "account_qr_code_emv": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "account_qr_code_emv"
+  },
+  "account_qr_code_sepa": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban"
+   ],
+   "summary": "Account SEPA QR Code"
+  },
+  "account_tax_python": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Use python code to define taxes"
+  },
+  "account_test": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Accounting Consistency Tests"
+  },
+  "account_update_tax_tags": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Allow updating tax grids on existing entries"
+  },
+  "analytic": {
+   "application": false,
+   "depends": [
+    "base",
+    "mail",
+    "uom"
+   ],
+   "summary": "Analytic Accounting"
+  },
+  "api_doc": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "API Documentation"
+  },
+  "attachment_indexation": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Attachments List and Document Indexation"
+  },
+  "auth_ldap": {
+   "application": false,
+   "depends": [
+    "base",
+    "base_setup"
+   ],
+   "summary": "Authentication via LDAP"
+  },
+  "auth_oauth": {
+   "application": false,
+   "depends": [
+    "base",
+    "web",
+    "base_setup",
+    "auth_signup"
+   ],
+   "summary": "OAuth2 Authentication"
+  },
+  "auth_passkey": {
+   "application": false,
+   "depends": [
+    "base_setup",
+    "web"
+   ],
+   "summary": "Log in with a Passkey"
+  },
+  "auth_passkey_portal": {
+   "application": false,
+   "depends": [
+    "auth_passkey",
+    "portal"
+   ],
+   "summary": "Passkeys for portal users"
+  },
+  "auth_password_policy": {
+   "application": false,
+   "depends": [
+    "base_setup",
+    "web"
+   ],
+   "summary": "Implement basic password policy configuration & check"
+  },
+  "auth_password_policy_portal": {
+   "application": false,
+   "depends": [
+    "auth_password_policy",
+    "portal"
+   ],
+   "summary": "Password Policy support for Signup"
+  },
+  "auth_password_policy_signup": {
+   "application": false,
+   "depends": [
+    "auth_password_policy",
+    "auth_signup"
+   ],
+   "summary": "Password Policy support for Signup"
+  },
+  "auth_signup": {
+   "application": false,
+   "depends": [
+    "base_setup",
+    "mail",
+    "web"
+   ],
+   "summary": "Signup"
+  },
+  "auth_timeout": {
+   "application": false,
+   "depends": [
+    "auth_totp",
+    "auth_totp_mail",
+    "auth_passkey",
+    "bus"
+   ],
+   "summary": "Ask for authentication after user inactivity"
+  },
+  "auth_totp": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Two-Factor Authentication (TOTP)"
+  },
+  "auth_totp_mail": {
+   "application": false,
+   "depends": [
+    "auth_totp",
+    "mail"
+   ],
+   "summary": "2FA Invite mail"
+  },
+  "auth_totp_portal": {
+   "application": false,
+   "depends": [
+    "portal",
+    "auth_totp"
+   ],
+   "summary": "TOTPortal"
+  },
+  "barcodes": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Scan and Parse Barcodes"
+  },
+  "barcodes_gs1_nomenclature": {
+   "application": false,
+   "depends": [
+    "barcodes",
+    "uom"
+   ],
+   "summary": "Parse barcodes according to the GS1-128 specifications"
+  },
+  "base": {
+   "application": false,
+   "depends": [],
+   "summary": "Base"
+  },
+  "base_address_extended": {
+   "application": false,
+   "depends": [
+    "base",
+    "contacts"
+   ],
+   "summary": "Add extra fields on addresses"
+  },
+  "base_automation": {
+   "application": false,
+   "depends": [
+    "base",
+    "digest",
+    "resource",
+    "mail",
+    "sms"
+   ],
+   "summary": "Automation Rules"
+  },
+  "base_geolocalize": {
+   "application": false,
+   "depends": [
+    "base_setup"
+   ],
+   "summary": "Partners Geolocation"
+  },
+  "base_iban": {
+   "application": false,
+   "depends": [
+    "account",
+    "web"
+   ],
+   "summary": "IBAN Bank Accounts"
+  },
+  "base_import": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Base import"
+  },
+  "base_import_module": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Base import module"
+  },
+  "base_install_request": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Base - Module Install Request"
+  },
+  "base_setup": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "Initial Setup Tools"
+  },
+  "base_sparse_field": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "Implementation of sparse fields."
+  },
+  "base_vat": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "VAT Number Validation"
+  },
+  "board": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard"
+   ],
+   "summary": "Build your own dashboards"
+  },
+  "bus": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "IM Bus"
+  },
+  "calendar": {
+   "application": true,
+   "depends": [
+    "base",
+    "mail"
+   ],
+   "summary": "Schedule employees' meetings"
+  },
+  "calendar_sms": {
+   "application": false,
+   "depends": [
+    "calendar",
+    "sms"
+   ],
+   "summary": "Send text messages as event reminders"
+  },
+  "certificate": {
+   "application": false,
+   "depends": [
+    "base_setup"
+   ],
+   "summary": "Manage certificate"
+  },
+  "cloud_storage": {
+   "application": false,
+   "depends": [
+    "base_setup",
+    "mail"
+   ],
+   "summary": "Store chatter attachments in the cloud"
+  },
+  "cloud_storage_azure": {
+   "application": false,
+   "depends": [
+    "cloud_storage"
+   ],
+   "summary": "Store chatter attachments in the Azure cloud"
+  },
+  "cloud_storage_google": {
+   "application": false,
+   "depends": [
+    "cloud_storage"
+   ],
+   "summary": "Store chatter attachments in the Google cloud"
+  },
+  "cloud_storage_migration": {
+   "application": false,
+   "depends": [
+    "cloud_storage"
+   ],
+   "summary": "Migrate local attachments to cloud storage"
+  },
+  "contacts": {
+   "application": true,
+   "depends": [
+    "base",
+    "mail"
+   ],
+   "summary": "Centralize your address book"
+  },
+  "crm": {
+   "application": true,
+   "depends": [
+    "base_setup",
+    "sales_team",
+    "mail",
+    "calendar",
+    "resource",
+    "utm",
+    "web_tour",
+    "contacts",
+    "digest",
+    "phone_validation"
+   ],
+   "summary": "Track leads and close opportunities"
+  },
+  "crm_iap_enrich": {
+   "application": false,
+   "depends": [
+    "iap_crm",
+    "iap_mail"
+   ],
+   "summary": "Enrich Leads/Opportunities using email address domain"
+  },
+  "crm_iap_mine": {
+   "application": false,
+   "depends": [
+    "iap_crm",
+    "iap_mail"
+   ],
+   "summary": "Generate Leads/Opportunities based on country, industries, size, etc."
+  },
+  "crm_livechat": {
+   "application": false,
+   "depends": [
+    "crm",
+    "im_livechat"
+   ],
+   "summary": "Create lead from livechat conversation"
+  },
+  "crm_mail_plugin": {
+   "application": false,
+   "depends": [
+    "crm",
+    "mail_plugin"
+   ],
+   "summary": "Turn emails received in your mailbox into leads and log their content as internal notes."
+  },
+  "crm_sms": {
+   "application": false,
+   "depends": [
+    "crm",
+    "sms"
+   ],
+   "summary": "Add SMS capabilities to CRM"
+  },
+  "data_recycle": {
+   "application": true,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Find old records and archive/delete them"
+  },
+  "delivery": {
+   "application": false,
+   "depends": [
+    "sale",
+    "payment_custom"
+   ],
+   "summary": "Delivery Costs"
+  },
+  "delivery_mondialrelay": {
+   "application": false,
+   "depends": [
+    "stock_delivery"
+   ],
+   "summary": "Let's choose a Point Relais\u00ae as shipping address"
+  },
+  "delivery_stock_picking_batch": {
+   "application": false,
+   "depends": [
+    "stock_delivery",
+    "stock_picking_batch"
+   ],
+   "summary": "Batch Transfer, Carrier"
+  },
+  "digest": {
+   "application": false,
+   "depends": [
+    "mail",
+    "portal",
+    "resource"
+   ],
+   "summary": "KPI Digests"
+  },
+  "event": {
+   "application": false,
+   "depends": [
+    "barcodes",
+    "base_setup",
+    "mail",
+    "phone_validation",
+    "portal",
+    "utm"
+   ],
+   "summary": "Trainings, Conferences, Meetings, Exhibitions, Registrations"
+  },
+  "event_booth": {
+   "application": false,
+   "depends": [
+    "event"
+   ],
+   "summary": "Manage event booths"
+  },
+  "event_booth_sale": {
+   "application": false,
+   "depends": [
+    "event_booth",
+    "event_sale"
+   ],
+   "summary": "Manage event booths sale"
+  },
+  "event_crm": {
+   "application": false,
+   "depends": [
+    "event",
+    "crm"
+   ],
+   "summary": "Event CRM"
+  },
+  "event_crm_sale": {
+   "application": false,
+   "depends": [
+    "event_crm",
+    "event_sale"
+   ],
+   "summary": "Event CRM Sale"
+  },
+  "event_product": {
+   "application": false,
+   "depends": [
+    "event",
+    "product",
+    "account"
+   ],
+   "summary": "Events Product"
+  },
+  "event_sale": {
+   "application": false,
+   "depends": [
+    "event_product",
+    "sale_management"
+   ],
+   "summary": "Events Sales"
+  },
+  "event_sms": {
+   "application": false,
+   "depends": [
+    "event",
+    "sms"
+   ],
+   "summary": "SMS on Events"
+  },
+  "fleet": {
+   "application": true,
+   "depends": [
+    "base",
+    "mail"
+   ],
+   "summary": "Manage your fleet and track car costs"
+  },
+  "gamification": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Gamification"
+  },
+  "gamification_sale_crm": {
+   "application": false,
+   "depends": [
+    "gamification",
+    "sale_crm"
+   ],
+   "summary": "CRM Gamification"
+  },
+  "google_account": {
+   "application": false,
+   "depends": [
+    "base_setup"
+   ],
+   "summary": "Google Users"
+  },
+  "google_address_autocomplete": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Assist with automatic completion & suggestions when filling address"
+  },
+  "google_calendar": {
+   "application": false,
+   "depends": [
+    "google_account",
+    "calendar"
+   ],
+   "summary": "Google Calendar"
+  },
+  "google_gmail": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Google Gmail"
+  },
+  "google_recaptcha": {
+   "application": false,
+   "depends": [
+    "base_setup"
+   ],
+   "summary": "Google reCAPTCHA integration"
+  },
+  "hr": {
+   "application": true,
+   "depends": [
+    "base_setup",
+    "digest",
+    "phone_validation",
+    "resource_mail",
+    "web"
+   ],
+   "summary": "Centralize employee information"
+  },
+  "hr_attendance": {
+   "application": true,
+   "depends": [
+    "hr",
+    "barcodes",
+    "base_geolocalize"
+   ],
+   "summary": "Track employee attendance"
+  },
+  "hr_calendar": {
+   "application": false,
+   "depends": [
+    "hr",
+    "calendar"
+   ],
+   "summary": "Display Working Hours in Calendar"
+  },
+  "hr_expense": {
+   "application": true,
+   "depends": [
+    "account",
+    "web_tour",
+    "hr"
+   ],
+   "summary": "Submit, validate and reinvoice employee expenses"
+  },
+  "hr_fleet": {
+   "application": false,
+   "depends": [
+    "hr",
+    "fleet"
+   ],
+   "summary": "Get history of driven cars by employees"
+  },
+  "hr_gamification": {
+   "application": false,
+   "depends": [
+    "gamification",
+    "hr"
+   ],
+   "summary": "HR Gamification"
+  },
+  "hr_holidays": {
+   "application": true,
+   "depends": [
+    "hr",
+    "calendar",
+    "resource"
+   ],
+   "summary": "Allocate time off and follow leave requests"
+  },
+  "hr_holidays_attendance": {
+   "application": false,
+   "depends": [
+    "hr_attendance",
+    "hr_holidays"
+   ],
+   "summary": "Attendance Holidays"
+  },
+  "hr_holidays_homeworking": {
+   "application": false,
+   "depends": [
+    "hr_holidays",
+    "hr_homeworking"
+   ],
+   "summary": "Manage holidays with remote work"
+  },
+  "hr_homeworking": {
+   "application": false,
+   "depends": [
+    "hr"
+   ],
+   "summary": "Remote Work"
+  },
+  "hr_homeworking_calendar": {
+   "application": false,
+   "depends": [
+    "hr_homeworking",
+    "calendar"
+   ],
+   "summary": "Remote Work with calendar"
+  },
+  "hr_hourly_cost": {
+   "application": false,
+   "depends": [
+    "hr"
+   ],
+   "summary": "Employee Hourly Wage"
+  },
+  "hr_livechat": {
+   "application": false,
+   "depends": [
+    "hr",
+    "im_livechat"
+   ],
+   "summary": "HR - Livechat"
+  },
+  "hr_maintenance": {
+   "application": false,
+   "depends": [
+    "hr",
+    "maintenance"
+   ],
+   "summary": "Equipment, Assets, Internal Hardware, Allocation Tracking"
+  },
+  "hr_org_chart": {
+   "application": false,
+   "depends": [
+    "hr",
+    "web_hierarchy"
+   ],
+   "summary": "HR Org Chart"
+  },
+  "hr_presence": {
+   "application": false,
+   "depends": [
+    "hr",
+    "hr_holidays",
+    "sms"
+   ],
+   "summary": "Employee Presence Control"
+  },
+  "hr_recruitment": {
+   "application": true,
+   "depends": [
+    "hr",
+    "calendar",
+    "utm",
+    "attachment_indexation",
+    "web_tour",
+    "digest"
+   ],
+   "summary": "Track your recruitment pipeline"
+  },
+  "hr_recruitment_skills": {
+   "application": false,
+   "depends": [
+    "hr_skills",
+    "hr_recruitment"
+   ],
+   "summary": "Manage skills of your employees"
+  },
+  "hr_recruitment_sms": {
+   "application": false,
+   "depends": [
+    "hr_recruitment",
+    "sms"
+   ],
+   "summary": "Mass mailing sms to job applicants"
+  },
+  "hr_recruitment_survey": {
+   "application": false,
+   "depends": [
+    "survey",
+    "hr_recruitment"
+   ],
+   "summary": "Surveys"
+  },
+  "hr_skills": {
+   "application": true,
+   "depends": [
+    "hr"
+   ],
+   "summary": "Manage skills, knowledge and resume of your employees"
+  },
+  "hr_skills_event": {
+   "application": false,
+   "depends": [
+    "hr_skills",
+    "event"
+   ],
+   "summary": "Link training events to resume of your employees"
+  },
+  "hr_skills_slides": {
+   "application": false,
+   "depends": [
+    "hr_skills",
+    "website_slides"
+   ],
+   "summary": "Add completed courses to resume of your employees"
+  },
+  "hr_skills_survey": {
+   "application": false,
+   "depends": [
+    "hr_skills",
+    "survey"
+   ],
+   "summary": "Add certification to resume of your employees"
+  },
+  "hr_timesheet": {
+   "application": false,
+   "depends": [
+    "hr",
+    "hr_hourly_cost",
+    "analytic",
+    "project",
+    "uom"
+   ],
+   "summary": "Track employee time on tasks"
+  },
+  "hr_timesheet_attendance": {
+   "application": false,
+   "depends": [
+    "hr_timesheet",
+    "hr_attendance"
+   ],
+   "summary": "Timesheets/attendances reporting"
+  },
+  "hr_work_entry": {
+   "application": false,
+   "depends": [
+    "hr"
+   ],
+   "summary": "Manage work entries"
+  },
+  "hr_work_entry_holidays": {
+   "application": false,
+   "depends": [
+    "hr_holidays",
+    "hr_work_entry"
+   ],
+   "summary": "Manage Time Off in Payslips"
+  },
+  "html_builder": {
+   "application": false,
+   "depends": [
+    "base",
+    "html_editor",
+    "mail"
+   ],
+   "summary": "Generic html builder"
+  },
+  "html_editor": {
+   "application": false,
+   "depends": [
+    "base",
+    "bus",
+    "web"
+   ],
+   "summary": "A Html Editor component and plugin system"
+  },
+  "http_routing": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Web Routing"
+  },
+  "iap": {
+   "application": false,
+   "depends": [
+    "web",
+    "base_setup"
+   ],
+   "summary": "Basic models and helpers to support In-App purchases."
+  },
+  "iap_crm": {
+   "application": false,
+   "depends": [
+    "crm",
+    "iap_mail"
+   ],
+   "summary": "Bridge between IAP and CRM"
+  },
+  "iap_mail": {
+   "application": false,
+   "depends": [
+    "iap",
+    "mail"
+   ],
+   "summary": "Bridge between IAP and mail"
+  },
+  "im_livechat": {
+   "application": true,
+   "depends": [
+    "mail",
+    "rating",
+    "digest",
+    "utm"
+   ],
+   "summary": "Chat with your website visitors"
+  },
+  "iot_base": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "IoT Base"
+  },
+  "iot_box_image": {
+   "application": false,
+   "depends": [],
+   "summary": "Build tools for the IoT Box image"
+  },
+  "iot_drivers": {
+   "application": false,
+   "depends": [],
+   "summary": "Connect the Web Client to Hardware Peripherals"
+  },
+  "l10n_account_edi_ubl_cii_tests": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii",
+    "l10n_fr_account",
+    "l10n_be",
+    "l10n_de",
+    "l10n_nl",
+    "l10n_au"
+   ],
+   "summary": "Testing the Import/Export invoices with UBL/CII"
+  },
+  "l10n_account_withholding_tax": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Withholding Tax on Payment"
+  },
+  "l10n_account_withholding_tax_pos": {
+   "application": false,
+   "depends": [
+    "l10n_account_withholding_tax",
+    "point_of_sale"
+   ],
+   "summary": "Withholding Tax on Payment - PoS"
+  },
+  "l10n_ae": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "United Arab Emirates - Accounting"
+  },
+  "l10n_ae_pos": {
+   "application": false,
+   "depends": [
+    "l10n_gcc_pos",
+    "l10n_ae"
+   ],
+   "summary": "United Arab Emirates - Point of Sale"
+  },
+  "l10n_anz_ubl_pint": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Australia & New Zealand - UBL PINT"
+  },
+  "l10n_ar": {
+   "application": false,
+   "depends": [
+    "l10n_latam_invoice_document",
+    "l10n_latam_base",
+    "account"
+   ],
+   "summary": "Argentina - Accounting"
+  },
+  "l10n_ar_pos": {
+   "application": false,
+   "depends": [
+    "l10n_ar",
+    "point_of_sale"
+   ],
+   "summary": "Argentinean - Point of Sale with AR Doc"
+  },
+  "l10n_ar_stock": {
+   "application": false,
+   "depends": [
+    "l10n_ar",
+    "stock_account"
+   ],
+   "summary": "Argentinean - Stock"
+  },
+  "l10n_ar_website_sale": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "l10n_ar"
+   ],
+   "summary": "Argentinean eCommerce"
+  },
+  "l10n_ar_withholding": {
+   "application": false,
+   "depends": [
+    "l10n_ar",
+    "l10n_latam_check"
+   ],
+   "summary": "Argentina - Payment Withholdings"
+  },
+  "l10n_at": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "base_iban",
+    "base_vat",
+    "l10n_din5008"
+   ],
+   "summary": "Austrian Standardized Charts & Tax"
+  },
+  "l10n_au": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Australia - Accounting"
+  },
+  "l10n_bd": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Bangladesh - Accounting"
+  },
+  "l10n_be": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "base_iban",
+    "base_vat"
+   ],
+   "summary": "Belgium - Accounting"
+  },
+  "l10n_be_pos_restaurant": {
+   "application": false,
+   "depends": [
+    "pos_restaurant",
+    "l10n_be"
+   ],
+   "summary": "Belgian POS Restaurant Localization"
+  },
+  "l10n_be_pos_sale": {
+   "application": false,
+   "depends": [
+    "pos_sale",
+    "l10n_be"
+   ],
+   "summary": "Link module between pos_sale and l10n_be"
+  },
+  "l10n_bf": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Burkina Faso - Accounting"
+  },
+  "l10n_bg": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Bulgaria - Accounting"
+  },
+  "l10n_bg_ledger": {
+   "application": false,
+   "depends": [
+    "l10n_bg"
+   ],
+   "summary": "Bulgaria - Report ledger"
+  },
+  "l10n_bh": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "Bahrain - Accounting"
+  },
+  "l10n_bj": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Benin - Accounting"
+  },
+  "l10n_bo": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Bolivia - Accounting"
+  },
+  "l10n_br": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_qr_code_emv",
+    "base_address_extended",
+    "l10n_latam_base",
+    "l10n_latam_invoice_document"
+   ],
+   "summary": "Brazilian - Accounting"
+  },
+  "l10n_br_sales": {
+   "application": false,
+   "depends": [
+    "l10n_br",
+    "sale"
+   ],
+   "summary": "Brazil - Sale"
+  },
+  "l10n_br_website_sale": {
+   "application": false,
+   "depends": [
+    "l10n_br",
+    "website_sale"
+   ],
+   "summary": "Brazil - Website Sale"
+  },
+  "l10n_ca": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban"
+   ],
+   "summary": "Canada - Accounting"
+  },
+  "l10n_cd": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Democratic Republic of the Congo - Accounting"
+  },
+  "l10n_cf": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Central African Republic - Accounting"
+  },
+  "l10n_cg": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Congo - Accounting"
+  },
+  "l10n_ch": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "base_iban",
+    "l10n_din5008"
+   ],
+   "summary": "Switzerland - Accounting"
+  },
+  "l10n_ch_pos": {
+   "application": false,
+   "depends": [
+    "l10n_ch",
+    "point_of_sale"
+   ],
+   "summary": "Swiss - Point of Sale"
+  },
+  "l10n_ci": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Ivory Coast - Accounting"
+  },
+  "l10n_cl": {
+   "application": false,
+   "depends": [
+    "contacts",
+    "base_vat",
+    "l10n_latam_base",
+    "l10n_latam_invoice_document",
+    "uom",
+    "account"
+   ],
+   "summary": "Chile - Accounting"
+  },
+  "l10n_cm": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Cameroon - Accounting"
+  },
+  "l10n_cn": {
+   "application": false,
+   "depends": [
+    "base",
+    "account"
+   ],
+   "summary": "China - Accounting"
+  },
+  "l10n_cn_city": {
+   "application": false,
+   "depends": [
+    "l10n_cn",
+    "base_address_extended"
+   ],
+   "summary": "China - City Data"
+  },
+  "l10n_co": {
+   "application": false,
+   "depends": [
+    "account_debit_note",
+    "l10n_latam_base",
+    "account"
+   ],
+   "summary": "Colombia - Accounting"
+  },
+  "l10n_co_pos": {
+   "application": false,
+   "depends": [
+    "l10n_co",
+    "point_of_sale"
+   ],
+   "summary": "Colombian - Point of Sale"
+  },
+  "l10n_cr": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Costa Rica - Accounting"
+  },
+  "l10n_cy": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "base_vat"
+   ],
+   "summary": "Cyprus - Accounting"
+  },
+  "l10n_cz": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "base_iban",
+    "base_vat"
+   ],
+   "summary": "Czech - Accounting"
+  },
+  "l10n_de": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "l10n_din5008",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Germany - Accounting"
+  },
+  "l10n_din5008": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "DIN 5008"
+  },
+  "l10n_din5008_expense": {
+   "application": false,
+   "depends": [
+    "l10n_din5008",
+    "hr_expense"
+   ],
+   "summary": "DIN 5008 - Expenses"
+  },
+  "l10n_din5008_purchase": {
+   "application": false,
+   "depends": [
+    "l10n_din5008",
+    "purchase"
+   ],
+   "summary": "DIN 5008 - Purchase"
+  },
+  "l10n_din5008_repair": {
+   "application": false,
+   "depends": [
+    "l10n_din5008",
+    "repair"
+   ],
+   "summary": "DIN 5008 - Repair"
+  },
+  "l10n_din5008_sale": {
+   "application": false,
+   "depends": [
+    "l10n_din5008",
+    "sale"
+   ],
+   "summary": "DIN 5008 - Sale"
+  },
+  "l10n_din5008_stock": {
+   "application": false,
+   "depends": [
+    "l10n_din5008",
+    "stock"
+   ],
+   "summary": "DIN 5008 - Stock"
+  },
+  "l10n_dk": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Denmark - Accounting"
+  },
+  "l10n_dk_fik": {
+   "application": false,
+   "depends": [
+    "l10n_dk"
+   ],
+   "summary": "Use FIK Number as Payment reference"
+  },
+  "l10n_dk_nemhandel": {
+   "application": false,
+   "depends": [
+    "account_edi_proxy_client",
+    "account_edi_ubl_cii",
+    "l10n_dk"
+   ],
+   "summary": "This module is used to send/receive documents with Nemhandel"
+  },
+  "l10n_dk_oioubl": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii",
+    "l10n_dk"
+   ],
+   "summary": "E-Invoicing, Offentlig Information Online Universal Business Language"
+  },
+  "l10n_do": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban"
+   ],
+   "summary": "Dominican Republic - Accounting"
+  },
+  "l10n_dz": {
+   "application": false,
+   "depends": [
+    "base_vat",
+    "account"
+   ],
+   "summary": "Algeria - Accounting"
+  },
+  "l10n_ec": {
+   "application": false,
+   "depends": [
+    "base",
+    "base_iban",
+    "account_debit_note",
+    "l10n_latam_invoice_document",
+    "l10n_latam_base",
+    "account"
+   ],
+   "summary": "Ecuadorian Accounting"
+  },
+  "l10n_ec_sale": {
+   "application": false,
+   "depends": [
+    "l10n_ec",
+    "sale"
+   ],
+   "summary": "Ecuador - Sale"
+  },
+  "l10n_ec_stock": {
+   "application": false,
+   "depends": [
+    "l10n_ec",
+    "stock"
+   ],
+   "summary": "Ecuador - Stock"
+  },
+  "l10n_ee": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Estonia - Accounting"
+  },
+  "l10n_eg": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Egypt - Accounting"
+  },
+  "l10n_eg_edi_eta": {
+   "application": false,
+   "depends": [
+    "account_edi",
+    "l10n_eg"
+   ],
+   "summary": "Egypt Tax Authority Invoice Integration"
+  },
+  "l10n_es": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Spain - Accounting (PGCE 2008)"
+  },
+  "l10n_es_edi_facturae": {
+   "application": false,
+   "depends": [
+    "certificate",
+    "l10n_es"
+   ],
+   "summary": "Spain - Facturae EDI"
+  },
+  "l10n_es_edi_sii": {
+   "application": false,
+   "depends": [
+    "certificate",
+    "l10n_es",
+    "account_edi"
+   ],
+   "summary": "Spain - SII EDI Suministro de Libros"
+  },
+  "l10n_es_edi_tbai": {
+   "application": false,
+   "depends": [
+    "l10n_es",
+    "certificate"
+   ],
+   "summary": "Spain - TicketBAI"
+  },
+  "l10n_es_edi_tbai_pos": {
+   "application": false,
+   "depends": [
+    "l10n_es_edi_tbai",
+    "point_of_sale"
+   ],
+   "summary": "Spain - Point of Sale + TicketBAI"
+  },
+  "l10n_es_edi_verifactu": {
+   "application": false,
+   "depends": [
+    "l10n_es"
+   ],
+   "summary": "Module for sending Spanish Veri*Factu XML to the AEAT"
+  },
+  "l10n_es_edi_verifactu_pos": {
+   "application": false,
+   "depends": [
+    "l10n_es_edi_verifactu",
+    "point_of_sale"
+   ],
+   "summary": "Add Veri*Factu support to Point of Sale"
+  },
+  "l10n_es_pos": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "l10n_es"
+   ],
+   "summary": "Spanish localization for Point of Sale"
+  },
+  "l10n_et": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Ethiopia - Accounting"
+  },
+  "l10n_eu_oss": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "EU One Stop Shop (OSS)"
+  },
+  "l10n_fi": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Finland - Accounting"
+  },
+  "l10n_fi_sale": {
+   "application": false,
+   "depends": [
+    "l10n_fi",
+    "sale"
+   ],
+   "summary": "Finland - Sale"
+  },
+  "l10n_fr": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "France - Localizations"
+  },
+  "l10n_fr_account": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii",
+    "l10n_fr"
+   ],
+   "summary": "France - Accounting"
+  },
+  "l10n_fr_facturx_chorus_pro": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii",
+    "l10n_fr_account"
+   ],
+   "summary": "France - BIS3 integration for Chorus Pro"
+  },
+  "l10n_fr_hr_holidays": {
+   "application": false,
+   "depends": [
+    "hr_holidays"
+   ],
+   "summary": "Management of leaves for part-time workers in France"
+  },
+  "l10n_fr_hr_work_entry_holidays": {
+   "application": false,
+   "depends": [
+    "l10n_fr_hr_holidays",
+    "hr_work_entry_holidays"
+   ],
+   "summary": "Management of leaves for part-time workers in France"
+  },
+  "l10n_fr_pos_cert": {
+   "application": false,
+   "depends": [
+    "l10n_fr_account",
+    "point_of_sale"
+   ],
+   "summary": "France - VAT Anti-Fraud Certification for Point of Sale (CGI 286 I-3 bis)"
+  },
+  "l10n_ga": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Gabon - Accounting"
+  },
+  "l10n_gcc_invoice": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Gulf Cooperation Council - Invoice"
+  },
+  "l10n_gcc_invoice_stock_account": {
+   "application": false,
+   "depends": [
+    "l10n_gcc_invoice",
+    "stock_account"
+   ],
+   "summary": "Gulf Cooperation Council WMS Accounting"
+  },
+  "l10n_gcc_pos": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "Gulf Cooperation Council - Point of Sale"
+  },
+  "l10n_gn": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Guinea - Accounting"
+  },
+  "l10n_gq": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Guinea Equatorial - Accounting"
+  },
+  "l10n_gr": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Greece - Accounting"
+  },
+  "l10n_gr_edi": {
+   "application": false,
+   "depends": [
+    "l10n_gr"
+   ],
+   "summary": "Connect to myDATA API implementation for Greece"
+  },
+  "l10n_gt": {
+   "application": false,
+   "depends": [
+    "base",
+    "account"
+   ],
+   "summary": "Guatemala - Accounting"
+  },
+  "l10n_gw": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Guinea-Bissau - Accounting"
+  },
+  "l10n_hk": {
+   "application": false,
+   "depends": [
+    "account_qr_code_emv",
+    "account"
+   ],
+   "summary": "Hong Kong - Accounting"
+  },
+  "l10n_hn": {
+   "application": false,
+   "depends": [
+    "base",
+    "account"
+   ],
+   "summary": "Honduras - Accounting"
+  },
+  "l10n_hr": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Croatia - Accounting (Euro)"
+  },
+  "l10n_hr_edi": {
+   "application": false,
+   "depends": [
+    "l10n_hr",
+    "account_edi_ubl_cii",
+    "account_peppol"
+   ],
+   "summary": "Croatia - e-invoicing"
+  },
+  "l10n_hr_kuna": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Croatia - Accounting (Kuna)"
+  },
+  "l10n_hu": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Hungary - Accounting"
+  },
+  "l10n_hu_edi": {
+   "application": false,
+   "depends": [
+    "account_debit_note",
+    "base_iban",
+    "l10n_hu"
+   ],
+   "summary": "Hungary - E-invoicing"
+  },
+  "l10n_id": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat"
+   ],
+   "summary": "Indonesian - Accounting"
+  },
+  "l10n_id_efaktur_coretax": {
+   "application": false,
+   "depends": [
+    "l10n_id"
+   ],
+   "summary": "Indonesia E-faktur (Coretax)"
+  },
+  "l10n_id_pos": {
+   "application": false,
+   "depends": [
+    "l10n_id",
+    "point_of_sale"
+   ],
+   "summary": "Indonesia - Point of Sale"
+  },
+  "l10n_ie": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Ireland - Accounting"
+  },
+  "l10n_il": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Israel - Accounting"
+  },
+  "l10n_in": {
+   "application": false,
+   "depends": [
+    "account_tax_python",
+    "base_vat",
+    "account_debit_note",
+    "account",
+    "iap"
+   ],
+   "summary": "Indian - Accounting"
+  },
+  "l10n_in_edi": {
+   "application": false,
+   "depends": [
+    "account_edi",
+    "l10n_in"
+   ],
+   "summary": "Indian - E-invoicing"
+  },
+  "l10n_in_ewaybill": {
+   "application": false,
+   "depends": [
+    "l10n_in"
+   ],
+   "summary": "Indian - E-waybill"
+  },
+  "l10n_in_ewaybill_irn": {
+   "application": false,
+   "depends": [
+    "l10n_in_ewaybill",
+    "l10n_in_edi"
+   ],
+   "summary": "Indian - E-waybill thru IRN"
+  },
+  "l10n_in_ewaybill_stock": {
+   "application": false,
+   "depends": [
+    "l10n_in_stock",
+    "l10n_in_ewaybill"
+   ],
+   "summary": "Indian - E-waybill Stock"
+  },
+  "l10n_in_hr_holidays": {
+   "application": false,
+   "depends": [
+    "hr_holidays"
+   ],
+   "summary": "Leave Management of Indian Localization"
+  },
+  "l10n_in_pos": {
+   "application": false,
+   "depends": [
+    "l10n_in",
+    "point_of_sale"
+   ],
+   "summary": "Indian - Point of Sale"
+  },
+  "l10n_in_purchase_stock": {
+   "application": false,
+   "depends": [
+    "l10n_in_stock",
+    "purchase_stock"
+   ],
+   "summary": "Get warehouse address if the bill is created from Purchase Order"
+  },
+  "l10n_in_sale": {
+   "application": false,
+   "depends": [
+    "l10n_in",
+    "sale"
+   ],
+   "summary": "Indian - Sale Report(GST)"
+  },
+  "l10n_in_sale_stock": {
+   "application": false,
+   "depends": [
+    "l10n_in_sale",
+    "l10n_in_stock",
+    "sale_stock"
+   ],
+   "summary": "Get warehouse address if the invoice is created from Sale Order"
+  },
+  "l10n_in_stock": {
+   "application": false,
+   "depends": [
+    "l10n_in",
+    "stock"
+   ],
+   "summary": "Indian - Stock Report(GST)"
+  },
+  "l10n_iq": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Iraq - Accounting"
+  },
+  "l10n_it": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Italy - Accounting"
+  },
+  "l10n_it_edi": {
+   "application": false,
+   "depends": [
+    "l10n_it",
+    "account_edi_proxy_client",
+    "account_debit_note"
+   ],
+   "summary": "Italy - E-invoicing"
+  },
+  "l10n_it_edi_doi": {
+   "application": false,
+   "depends": [
+    "l10n_it_edi",
+    "sale"
+   ],
+   "summary": "Italy - Declaration of Intent"
+  },
+  "l10n_it_edi_sale": {
+   "application": false,
+   "depends": [
+    "l10n_it_edi",
+    "sale"
+   ],
+   "summary": "Italy - Sale E-invoicing"
+  },
+  "l10n_it_stock_ddt": {
+   "application": false,
+   "depends": [
+    "l10n_it_edi",
+    "stock_delivery",
+    "stock_account"
+   ],
+   "summary": "Italy - Stock DDT"
+  },
+  "l10n_jo": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Jordan - Accounting"
+  },
+  "l10n_jo_edi": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii",
+    "l10n_jo"
+   ],
+   "summary": "Electronic Invoicing for Jordan UBL 2.1"
+  },
+  "l10n_jo_edi_pos": {
+   "application": false,
+   "depends": [
+    "l10n_jo_edi",
+    "pos_edi_ubl"
+   ],
+   "summary": "Jordan Accounting EDI for POS"
+  },
+  "l10n_jp": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Japan - Accounting"
+  },
+  "l10n_jp_ubl_pint": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Japan - UBL PINT"
+  },
+  "l10n_ke": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Kenya - Accounting"
+  },
+  "l10n_ke_edi_tremol": {
+   "application": false,
+   "depends": [
+    "l10n_ke"
+   ],
+   "summary": "Kenya Tremol Device EDI Integration"
+  },
+  "l10n_kh": {
+   "application": false,
+   "depends": [
+    "account_qr_code_emv",
+    "l10n_account_withholding_tax"
+   ],
+   "summary": "Cambodia - Accounting"
+  },
+  "l10n_km": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Comoros - Accounting"
+  },
+  "l10n_kr": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Republic of Korea - Accounting"
+  },
+  "l10n_kw": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "Kuwait - Accounting"
+  },
+  "l10n_kz": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Kazakhstan - Accounting"
+  },
+  "l10n_latam_base": {
+   "application": false,
+   "depends": [
+    "contacts",
+    "base_vat"
+   ],
+   "summary": "LATAM Identification Types"
+  },
+  "l10n_latam_check": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Checks Management"
+  },
+  "l10n_latam_invoice_document": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_debit_note"
+   ],
+   "summary": "LATAM Document Types"
+  },
+  "l10n_lb_account": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Lebanon - Accounting"
+  },
+  "l10n_lk": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_account_withholding_tax"
+   ],
+   "summary": "Provides accounting localizations for Sri Lanka."
+  },
+  "l10n_lt": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Lithuania - Accounting"
+  },
+  "l10n_lu": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Luxembourg - Accounting"
+  },
+  "l10n_lv": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Latvia - Accounting"
+  },
+  "l10n_ma": {
+   "application": false,
+   "depends": [
+    "base",
+    "account"
+   ],
+   "summary": "Morocco - Accounting"
+  },
+  "l10n_mc": {
+   "application": false,
+   "depends": [
+    "l10n_fr_account",
+    "account"
+   ],
+   "summary": "Monaco - Accounting"
+  },
+  "l10n_ml": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Mali - Accounting"
+  },
+  "l10n_mn": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Mongolia - Accounting"
+  },
+  "l10n_mr": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Mauritania - Accounting"
+  },
+  "l10n_mt": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Malta - Accounting"
+  },
+  "l10n_mt_pos": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Malta - Point of Sale"
+  },
+  "l10n_mu_account": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Mauritius - Accounting"
+  },
+  "l10n_mx": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Mexico - Accounting"
+  },
+  "l10n_my": {
+   "application": false,
+   "depends": [
+    "account",
+    "account_tax_python"
+   ],
+   "summary": "Malaysia - Accounting"
+  },
+  "l10n_my_edi": {
+   "application": false,
+   "depends": [
+    "l10n_my",
+    "l10n_my_ubl_pint",
+    "account_edi_proxy_client"
+   ],
+   "summary": "E-invoicing using MyInvois"
+  },
+  "l10n_my_edi_pos": {
+   "application": false,
+   "depends": [
+    "l10n_my_edi",
+    "point_of_sale"
+   ],
+   "summary": "Consolidated E-invoicing using MyInvois"
+  },
+  "l10n_my_ubl_pint": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Malaysia - UBL PINT"
+  },
+  "l10n_mz": {
+   "application": false,
+   "depends": [
+    "base",
+    "account"
+   ],
+   "summary": "Mozambique - Accounting"
+  },
+  "l10n_ne": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Niger - Accounting"
+  },
+  "l10n_ng": {
+   "application": false,
+   "depends": [
+    "base_vat",
+    "account"
+   ],
+   "summary": "Nigeria - Accounting"
+  },
+  "l10n_nl": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Netherlands - Accounting"
+  },
+  "l10n_no": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Norway - Accounting"
+  },
+  "l10n_nz": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "New Zealand - Accounting"
+  },
+  "l10n_om": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "Oman - Accounting"
+  },
+  "l10n_pa": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Panama - Accounting"
+  },
+  "l10n_pe": {
+   "application": false,
+   "depends": [
+    "base_vat",
+    "base_address_extended",
+    "l10n_latam_base",
+    "l10n_latam_invoice_document",
+    "account_debit_note",
+    "account"
+   ],
+   "summary": "Peru - Accounting"
+  },
+  "l10n_pe_pos": {
+   "application": false,
+   "depends": [
+    "l10n_pe",
+    "point_of_sale"
+   ],
+   "summary": "Peruvian - Point of Sale with Pe Doc"
+  },
+  "l10n_ph": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "l10n_account_withholding_tax"
+   ],
+   "summary": "This is the module to manage the accounting chart for The Philippines."
+  },
+  "l10n_pk": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Pakistan - Accounting"
+  },
+  "l10n_pl": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Poland - Accounting"
+  },
+  "l10n_pl_edi": {
+   "application": false,
+   "depends": [
+    "l10n_pl",
+    "certificate"
+   ],
+   "summary": "Support for FA(3) electronic invoices in Poland via KSeF"
+  },
+  "l10n_pt": {
+   "application": false,
+   "depends": [
+    "base",
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Portugal - Accounting"
+  },
+  "l10n_qa": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_gcc_invoice"
+   ],
+   "summary": "Qatar - Accounting"
+  },
+  "l10n_ro": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Romania - Accounting"
+  },
+  "l10n_ro_cpv_code": {
+   "application": false,
+   "depends": [
+    "l10n_ro_edi"
+   ],
+   "summary": "Romania - CPV Code"
+  },
+  "l10n_ro_edi": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii",
+    "l10n_ro"
+   ],
+   "summary": "E-Invoice implementation for Romania"
+  },
+  "l10n_ro_edi_stock": {
+   "application": false,
+   "depends": [
+    "stock_delivery",
+    "l10n_ro_edi",
+    "stock_picking_batch"
+   ],
+   "summary": "Romania - E-Transport"
+  },
+  "l10n_ro_edi_stock_batch": {
+   "application": false,
+   "depends": [
+    "l10n_ro_edi_stock",
+    "stock_picking_batch"
+   ],
+   "summary": "Romania - E-Transport Batch Pickings"
+  },
+  "l10n_rs": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "Serbia - Accounting"
+  },
+  "l10n_rs_edi": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii",
+    "l10n_rs"
+   ],
+   "summary": "E-Invoice implementation for Serbia"
+  },
+  "l10n_rw": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Rwanda - Accounting"
+  },
+  "l10n_sa": {
+   "application": false,
+   "depends": [
+    "l10n_gcc_invoice",
+    "account",
+    "account_debit_note"
+   ],
+   "summary": "Saudi Arabia - Accounting"
+  },
+  "l10n_sa_edi": {
+   "application": false,
+   "depends": [
+    "account_edi",
+    "account_edi_ubl_cii",
+    "l10n_sa",
+    "base_vat",
+    "certificate"
+   ],
+   "summary": "E-Invoicing, Universal Business Language"
+  },
+  "l10n_sa_edi_pos": {
+   "application": false,
+   "depends": [
+    "l10n_sa_pos",
+    "l10n_sa_edi"
+   ],
+   "summary": "ZATCA E-Invoicing, support for PoS"
+  },
+  "l10n_sa_pos": {
+   "application": false,
+   "depends": [
+    "l10n_gcc_pos",
+    "l10n_sa"
+   ],
+   "summary": "Saudi Arabia - Point of Sale"
+  },
+  "l10n_sa_withholding_tax": {
+   "application": false,
+   "depends": [
+    "l10n_account_withholding_tax",
+    "l10n_sa"
+   ],
+   "summary": "Saudi Arabia - Withholding Tax"
+  },
+  "l10n_se": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Sweden - Accounting"
+  },
+  "l10n_sg": {
+   "application": false,
+   "depends": [
+    "account_qr_code_emv",
+    "account"
+   ],
+   "summary": "Singapore - Accounting"
+  },
+  "l10n_sg_ubl_pint": {
+   "application": false,
+   "depends": [
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Singapore - UBL PINT"
+  },
+  "l10n_si": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Slovenian - Accounting"
+  },
+  "l10n_sk": {
+   "application": false,
+   "depends": [
+    "base_iban",
+    "base_vat",
+    "account"
+   ],
+   "summary": "Slovak - Accounting"
+  },
+  "l10n_sn": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "S\u00e9n\u00e9gal - Accounting"
+  },
+  "l10n_syscohada": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "OHADA - Accounting"
+  },
+  "l10n_td": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Tchad - Accounting"
+  },
+  "l10n_test_pos_qr_payment": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "account_qr_code_sepa",
+    "l10n_be",
+    "l10n_ch",
+    "l10n_hk",
+    "l10n_br"
+   ],
+   "summary": "POS QR Tests"
+  },
+  "l10n_tg": {
+   "application": false,
+   "depends": [
+    "l10n_syscohada",
+    "account"
+   ],
+   "summary": "Togo - Accounting"
+  },
+  "l10n_th": {
+   "application": false,
+   "depends": [
+    "account_qr_code_emv",
+    "account"
+   ],
+   "summary": "Thailand - Accounting"
+  },
+  "l10n_tn": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Tunisia - Accounting"
+  },
+  "l10n_tr": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "T\u00fcrkiye - Accounting"
+  },
+  "l10n_tr_nilvera": {
+   "application": false,
+   "depends": [
+    "l10n_tr"
+   ],
+   "summary": "T\u00fcrkiye - Nilvera"
+  },
+  "l10n_tr_nilvera_base_vat": {
+   "application": false,
+   "depends": [
+    "l10n_tr_nilvera",
+    "base_vat"
+   ],
+   "summary": "T\u00fcrkiye - Nilvera/Base VAT"
+  },
+  "l10n_tr_nilvera_edispatch": {
+   "application": false,
+   "depends": [
+    "l10n_tr_nilvera",
+    "stock"
+   ],
+   "summary": "T\u00fcrkiye - e-Irsaliye (e-Dispatch)"
+  },
+  "l10n_tr_nilvera_einvoice": {
+   "application": false,
+   "depends": [
+    "l10n_tr_nilvera",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "T\u00fcrkiye - Nilvera E-Invoice"
+  },
+  "l10n_tr_nilvera_einvoice_extended": {
+   "application": false,
+   "depends": [
+    "l10n_tr_nilvera_einvoice",
+    "contacts"
+   ],
+   "summary": "T\u00fcrkiye - Nilvera E-Invoice Extended"
+  },
+  "l10n_tw": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_address_extended"
+   ],
+   "summary": "Taiwan - Accounting"
+  },
+  "l10n_tw_edi_ecpay": {
+   "application": false,
+   "depends": [
+    "l10n_tw",
+    "base_vat"
+   ],
+   "summary": "E-invoicing using ECpay"
+  },
+  "l10n_tw_edi_ecpay_website_sale": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "l10n_tw_edi_ecpay"
+   ],
+   "summary": "ECpay E-invoice bridge module for Ecommerce"
+  },
+  "l10n_tz_account": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Tanzania - Accounting"
+  },
+  "l10n_ua": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Ukraine - Accounting"
+  },
+  "l10n_ug": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Uganda - Accounting"
+  },
+  "l10n_uk": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_iban",
+    "base_vat"
+   ],
+   "summary": "United Kingdom - Accounting"
+  },
+  "l10n_us": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "United States - Localizations"
+  },
+  "l10n_us_account": {
+   "application": false,
+   "depends": [
+    "l10n_us",
+    "account"
+   ],
+   "summary": "United States - Accounting"
+  },
+  "l10n_uy": {
+   "application": false,
+   "depends": [
+    "account",
+    "l10n_latam_invoice_document",
+    "l10n_latam_base"
+   ],
+   "summary": "Uruguay - Accounting"
+  },
+  "l10n_uy_pos": {
+   "application": false,
+   "depends": [
+    "l10n_uy",
+    "point_of_sale"
+   ],
+   "summary": "Uruguayan - Point of Sale"
+  },
+  "l10n_ve": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Venezuela - Accounting"
+  },
+  "l10n_vn": {
+   "application": false,
+   "depends": [
+    "account_qr_code_emv",
+    "base_iban",
+    "account"
+   ],
+   "summary": "Vietnam - Accounting"
+  },
+  "l10n_vn_edi_viettel": {
+   "application": false,
+   "depends": [
+    "l10n_vn"
+   ],
+   "summary": "E-invoicing using SInvoice by Viettel"
+  },
+  "l10n_za": {
+   "application": false,
+   "depends": [
+    "account",
+    "base_vat"
+   ],
+   "summary": "South Africa - Accounting"
+  },
+  "l10n_zm_account": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Zambia - Accounting"
+  },
+  "link_tracker": {
+   "application": false,
+   "depends": [
+    "utm",
+    "mail"
+   ],
+   "summary": "Link Tracker"
+  },
+  "loyalty": {
+   "application": false,
+   "depends": [
+    "product",
+    "portal",
+    "account"
+   ],
+   "summary": "Use discounts, gift card, eWallets and loyalty programs in different sales channels"
+  },
+  "lunch": {
+   "application": true,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Handle lunch orders of your employees"
+  },
+  "mail": {
+   "application": true,
+   "depends": [
+    "base",
+    "base_setup",
+    "bus",
+    "web_tour",
+    "html_editor"
+   ],
+   "summary": "Chat, mail gateway and private channels"
+  },
+  "mail_bot": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Add OdooBot in discussions"
+  },
+  "mail_bot_hr": {
+   "application": false,
+   "depends": [
+    "mail_bot",
+    "hr"
+   ],
+   "summary": "Bridge module between hr and mailbot."
+  },
+  "mail_group": {
+   "application": false,
+   "depends": [
+    "mail",
+    "portal"
+   ],
+   "summary": "Manage your mailing lists"
+  },
+  "mail_plugin": {
+   "application": false,
+   "depends": [
+    "web",
+    "contacts",
+    "iap"
+   ],
+   "summary": "Allows integration with mail plugins."
+  },
+  "maintenance": {
+   "application": true,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Track equipment and manage maintenance requests"
+  },
+  "marketing_card": {
+   "application": true,
+   "depends": [
+    "link_tracker",
+    "mass_mailing",
+    "website"
+   ],
+   "summary": "Generate dynamic shareable cards"
+  },
+  "mass_mailing": {
+   "application": true,
+   "depends": [
+    "contacts",
+    "mail",
+    "html_builder",
+    "utm",
+    "link_tracker",
+    "social_media",
+    "web_tour",
+    "digest"
+   ],
+   "summary": "Design, send and track emails"
+  },
+  "mass_mailing_crm": {
+   "application": false,
+   "depends": [
+    "crm",
+    "mass_mailing"
+   ],
+   "summary": "Add lead / opportunities UTM info on mass mailing"
+  },
+  "mass_mailing_crm_sms": {
+   "application": false,
+   "depends": [
+    "mass_mailing_crm",
+    "mass_mailing_sms"
+   ],
+   "summary": "Add lead / opportunities info on mass mailing sms"
+  },
+  "mass_mailing_event": {
+   "application": false,
+   "depends": [
+    "event",
+    "mass_mailing"
+   ],
+   "summary": "Mass mailing on attendees"
+  },
+  "mass_mailing_event_sms": {
+   "application": false,
+   "depends": [
+    "event",
+    "mass_mailing",
+    "mass_mailing_event",
+    "mass_mailing_sms",
+    "sms"
+   ],
+   "summary": "Event Attendees SMS Marketing"
+  },
+  "mass_mailing_event_track": {
+   "application": false,
+   "depends": [
+    "website_event_track",
+    "mass_mailing"
+   ],
+   "summary": "Mass mailing on track speakers"
+  },
+  "mass_mailing_event_track_sms": {
+   "application": false,
+   "depends": [
+    "mass_mailing",
+    "mass_mailing_sms",
+    "sms",
+    "website_event_track"
+   ],
+   "summary": "Track Speakers SMS Marketing"
+  },
+  "mass_mailing_sale": {
+   "application": false,
+   "depends": [
+    "sale",
+    "mass_mailing"
+   ],
+   "summary": "Add sale order UTM info on mass mailing"
+  },
+  "mass_mailing_sale_sms": {
+   "application": false,
+   "depends": [
+    "mass_mailing_sale",
+    "mass_mailing_sms"
+   ],
+   "summary": "Add sale order info on mass mailing sms"
+  },
+  "mass_mailing_slides": {
+   "application": false,
+   "depends": [
+    "website_slides",
+    "mass_mailing"
+   ],
+   "summary": "Mass mailing on course members"
+  },
+  "mass_mailing_sms": {
+   "application": true,
+   "depends": [
+    "portal",
+    "mass_mailing",
+    "sms"
+   ],
+   "summary": "Design, send and track SMS"
+  },
+  "mass_mailing_themes": {
+   "application": false,
+   "depends": [
+    "mass_mailing"
+   ],
+   "summary": "Design gorgeous mails"
+  },
+  "microsoft_account": {
+   "application": false,
+   "depends": [
+    "base_setup"
+   ],
+   "summary": "Microsoft Users"
+  },
+  "microsoft_calendar": {
+   "application": false,
+   "depends": [
+    "microsoft_account",
+    "calendar"
+   ],
+   "summary": "Outlook Calendar"
+  },
+  "microsoft_outlook": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Microsoft Outlook"
+  },
+  "mrp": {
+   "application": true,
+   "depends": [
+    "product",
+    "stock",
+    "resource"
+   ],
+   "summary": "Manufacturing Orders & BOMs"
+  },
+  "mrp_account": {
+   "application": false,
+   "depends": [
+    "mrp",
+    "stock_account"
+   ],
+   "summary": "Analytic accounting in Manufacturing"
+  },
+  "mrp_landed_costs": {
+   "application": false,
+   "depends": [
+    "stock_landed_costs",
+    "mrp"
+   ],
+   "summary": "Landed Costs on Manufacturing Order"
+  },
+  "mrp_product_expiry": {
+   "application": false,
+   "depends": [
+    "mrp",
+    "product_expiry"
+   ],
+   "summary": "Manufacturing Expiry"
+  },
+  "mrp_repair": {
+   "application": false,
+   "depends": [
+    "repair",
+    "mrp"
+   ],
+   "summary": "Mrp Repairs"
+  },
+  "mrp_subcontracting": {
+   "application": false,
+   "depends": [
+    "mrp"
+   ],
+   "summary": "Subcontract Productions"
+  },
+  "mrp_subcontracting_account": {
+   "application": false,
+   "depends": [
+    "mrp_subcontracting",
+    "mrp_account"
+   ],
+   "summary": "Subcontracting Management with Stock Valuation"
+  },
+  "mrp_subcontracting_dropshipping": {
+   "application": false,
+   "depends": [
+    "mrp_subcontracting",
+    "stock_dropshipping"
+   ],
+   "summary": "Dropship and Subcontracting Management"
+  },
+  "mrp_subcontracting_landed_costs": {
+   "application": false,
+   "depends": [
+    "stock_landed_costs",
+    "mrp_subcontracting"
+   ],
+   "summary": "Advanced views to manage landed cost for subcontracting orders"
+  },
+  "mrp_subcontracting_purchase": {
+   "application": false,
+   "depends": [
+    "mrp_subcontracting",
+    "purchase_mrp"
+   ],
+   "summary": "Purchase and Subcontracting Management"
+  },
+  "mrp_subcontracting_repair": {
+   "application": false,
+   "depends": [
+    "mrp_subcontracting",
+    "repair"
+   ],
+   "summary": "MRP Subcontracting Repair"
+  },
+  "onboarding": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Onboarding Toolbox"
+  },
+  "partner_autocomplete": {
+   "application": false,
+   "depends": [
+    "iap_mail"
+   ],
+   "summary": "Auto-complete partner companies' data"
+  },
+  "partnership": {
+   "application": false,
+   "depends": [
+    "crm",
+    "sale"
+   ],
+   "summary": "Partnership / Membership"
+  },
+  "payment": {
+   "application": false,
+   "depends": [
+    "onboarding",
+    "portal"
+   ],
+   "summary": "The payment engine used by payment provider modules."
+  },
+  "payment_adyen": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A Dutch payment provider covering Europe and the US."
+  },
+  "payment_aps": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An Amazon payment provider covering the MENA region."
+  },
+  "payment_asiapay": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An payment provider based in Hong Kong covering most Asian countries."
+  },
+  "payment_authorize": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An payment provider covering the US, Australia, and Canada."
+  },
+  "payment_buckaroo": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A Dutch payment provider covering several countries in Europe."
+  },
+  "payment_custom": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider for custom flows like wire transfers."
+  },
+  "payment_demo": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider for running fake payment flows for demo purposes."
+  },
+  "payment_dpo": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A Kenyan payment provider covering several African countries."
+  },
+  "payment_flutterwave": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A Nigerian payment provider covering several African countries."
+  },
+  "payment_iyzico": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering Turkey."
+  },
+  "payment_mercado_pago": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering several countries in Latin America."
+  },
+  "payment_mollie": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A Dutch payment provider covering several European countries."
+  },
+  "payment_nuvei": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering Latin America."
+  },
+  "payment_paymob": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An Egyptian payment provider for the Middle East."
+  },
+  "payment_paypal": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An American payment provider for online payments all over the world."
+  },
+  "payment_razorpay": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering India."
+  },
+  "payment_redsys": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering the Spanish market."
+  },
+  "payment_stripe": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "An Irish-American payment provider covering the US and many others."
+  },
+  "payment_toss_payments": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider covering the South Korea market"
+  },
+  "payment_worldline": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A French payment provider covering several European countries."
+  },
+  "payment_xendit": {
+   "application": false,
+   "depends": [
+    "payment"
+   ],
+   "summary": "A payment provider for Indonesian and the Philippines."
+  },
+  "phone_validation": {
+   "application": false,
+   "depends": [
+    "base",
+    "mail"
+   ],
+   "summary": "Validate and format phone numbers"
+  },
+  "point_of_sale": {
+   "application": true,
+   "depends": [
+    "resource",
+    "stock_account",
+    "barcodes",
+    "html_editor",
+    "digest",
+    "phone_validation",
+    "partner_autocomplete",
+    "iot_base",
+    "google_address_autocomplete"
+   ],
+   "summary": "Handle checkouts and payments for shops and restaurants."
+  },
+  "portal": {
+   "application": false,
+   "depends": [
+    "web",
+    "html_editor",
+    "http_routing",
+    "mail",
+    "auth_signup"
+   ],
+   "summary": "Customer Portal"
+  },
+  "portal_rating": {
+   "application": false,
+   "depends": [
+    "portal",
+    "rating"
+   ],
+   "summary": "Portal Rating"
+  },
+  "pos_account_tax_python": {
+   "application": false,
+   "depends": [
+    "account_tax_python",
+    "point_of_sale"
+   ],
+   "summary": "Allow custom taxes in POS"
+  },
+  "pos_adyen": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with an Adyen payment terminal"
+  },
+  "pos_discount": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Simple Discounts in the Point of Sale"
+  },
+  "pos_dpopay": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with DPO payment terminal."
+  },
+  "pos_edi_ubl": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "UBL in the Point of Sale"
+  },
+  "pos_event": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "event_product"
+   ],
+   "summary": "Link module between Point of Sale and Event"
+  },
+  "pos_event_sale": {
+   "application": false,
+   "depends": [
+    "pos_event",
+    "pos_sale"
+   ],
+   "summary": "Link module between pos_sale and pos_event"
+  },
+  "pos_glory_cash": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with a Glory automatic cash payment device"
+  },
+  "pos_hr": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "hr"
+   ],
+   "summary": "Link module between Point of Sale and HR"
+  },
+  "pos_hr_restaurant": {
+   "application": false,
+   "depends": [
+    "pos_hr",
+    "pos_restaurant"
+   ],
+   "summary": "Link module between pos_hr and pos_restaurant"
+  },
+  "pos_imin": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "iMin ePOS Printers in PoS"
+  },
+  "pos_loyalty": {
+   "application": false,
+   "depends": [
+    "loyalty",
+    "point_of_sale"
+   ],
+   "summary": "Use Coupons, Gift Cards and Loyalty programs in Point of Sale"
+  },
+  "pos_mercado_pago": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with the Mercado Pago Smart Point terminal"
+  },
+  "pos_mollie": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "payment_mollie"
+   ],
+   "summary": "Integrate your POS with a Mollie payment terminal"
+  },
+  "pos_mrp": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "mrp"
+   ],
+   "summary": "Link module between Point of Sale and Mrp"
+  },
+  "pos_online_payment": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "account_payment"
+   ],
+   "summary": "Point of Sale online payment"
+  },
+  "pos_online_payment_self_order": {
+   "application": false,
+   "depends": [
+    "pos_online_payment",
+    "pos_self_order"
+   ],
+   "summary": "Support online payment in self-order"
+  },
+  "pos_pine_labs": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with Pine Labs payment terminals"
+  },
+  "pos_qfpay": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with the QFPay terminal in Hong Kong"
+  },
+  "pos_razorpay": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with a Razorpay payment terminal"
+  },
+  "pos_repair": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "repair"
+   ],
+   "summary": "Link module between Point of Sale and Repair"
+  },
+  "pos_restaurant": {
+   "application": true,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Restaurant extensions for the Point of Sale"
+  },
+  "pos_restaurant_adyen": {
+   "application": false,
+   "depends": [
+    "pos_adyen",
+    "pos_restaurant",
+    "payment_adyen"
+   ],
+   "summary": "Adds American style tipping to Adyen"
+  },
+  "pos_restaurant_loyalty": {
+   "application": false,
+   "depends": [
+    "pos_restaurant",
+    "pos_loyalty"
+   ],
+   "summary": "Link module between pos_restaurant and pos_loyalty"
+  },
+  "pos_restaurant_stripe": {
+   "application": false,
+   "depends": [
+    "pos_stripe",
+    "pos_restaurant",
+    "payment_stripe"
+   ],
+   "summary": "Adds American style tipping to Stripe"
+  },
+  "pos_safaricom": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your POS with the Safaricom Payment Provider"
+  },
+  "pos_sale": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "sale_management"
+   ],
+   "summary": "Link module between Point of Sale and Sales"
+  },
+  "pos_sale_loyalty": {
+   "application": false,
+   "depends": [
+    "pos_sale",
+    "pos_loyalty"
+   ],
+   "summary": "Link module between pos_sale and pos_loyalty"
+  },
+  "pos_sale_margin": {
+   "application": false,
+   "depends": [
+    "pos_sale",
+    "sale_margin"
+   ],
+   "summary": "Link module between Point of Sale and Sales Margin"
+  },
+  "pos_self_order": {
+   "application": false,
+   "depends": [
+    "pos_restaurant",
+    "http_routing",
+    "link_tracker"
+   ],
+   "summary": "Addon for the POS App that allows customers to view the menu on their smartphone."
+  },
+  "pos_self_order_adyen": {
+   "application": false,
+   "depends": [
+    "pos_adyen",
+    "pos_self_order"
+   ],
+   "summary": "Addon for the Self Order App that allows customers to pay by Adyen."
+  },
+  "pos_self_order_pine_labs": {
+   "application": false,
+   "depends": [
+    "pos_pine_labs",
+    "pos_self_order"
+   ],
+   "summary": "An addon for the Self Order App (KIOSK) that allows customers to pay using the Pine Labs POS Terminal."
+  },
+  "pos_self_order_qfpay": {
+   "application": false,
+   "depends": [
+    "pos_qfpay",
+    "pos_self_order"
+   ],
+   "summary": "Addon for the Self Order App that allows customers to pay by QFPay."
+  },
+  "pos_self_order_razorpay": {
+   "application": false,
+   "depends": [
+    "pos_razorpay",
+    "pos_self_order"
+   ],
+   "summary": "Addon for the Self Order App that allows customers to pay by Razorpay POS Terminal."
+  },
+  "pos_self_order_sale": {
+   "application": false,
+   "depends": [
+    "pos_sale",
+    "pos_self_order"
+   ],
+   "summary": "POS Self Order Sale"
+  },
+  "pos_self_order_stripe": {
+   "application": false,
+   "depends": [
+    "pos_stripe",
+    "pos_self_order"
+   ],
+   "summary": "Addon for the Self Order App that allows customers to pay by Stripe."
+  },
+  "pos_sms": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "sms"
+   ],
+   "summary": "POS - SMS"
+  },
+  "pos_stripe": {
+   "application": false,
+   "depends": [
+    "point_of_sale",
+    "payment_stripe"
+   ],
+   "summary": "Integrate your POS with a Stripe payment terminal"
+  },
+  "pos_viva_com": {
+   "application": false,
+   "depends": [
+    "point_of_sale"
+   ],
+   "summary": "Integrate your PoS with a Viva.com payment terminal"
+  },
+  "privacy_lookup": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Privacy"
+  },
+  "product": {
+   "application": false,
+   "depends": [
+    "base",
+    "mail",
+    "uom"
+   ],
+   "summary": "Products & Pricelists"
+  },
+  "product_email_template": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Product Email Template"
+  },
+  "product_expiry": {
+   "application": false,
+   "depends": [
+    "stock"
+   ],
+   "summary": "Products Expiration Date"
+  },
+  "product_margin": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Margins by Products"
+  },
+  "product_matrix": {
+   "application": false,
+   "depends": [
+    "account"
+   ],
+   "summary": "Technical module: Matrix Implementation"
+  },
+  "project": {
+   "application": true,
+   "depends": [
+    "analytic",
+    "base_setup",
+    "mail",
+    "portal",
+    "rating",
+    "resource",
+    "web",
+    "web_tour",
+    "digest"
+   ],
+   "summary": "Organize and plan your projects"
+  },
+  "project_account": {
+   "application": false,
+   "depends": [
+    "account",
+    "project"
+   ],
+   "summary": "project profitability items computation"
+  },
+  "project_hr_expense": {
+   "application": false,
+   "depends": [
+    "project_account",
+    "hr_expense"
+   ],
+   "summary": "Project expenses"
+  },
+  "project_hr_skills": {
+   "application": false,
+   "depends": [
+    "project",
+    "hr_skills"
+   ],
+   "summary": "Project skills"
+  },
+  "project_mail_plugin": {
+   "application": false,
+   "depends": [
+    "project",
+    "mail_plugin"
+   ],
+   "summary": "Integrate your inbox with projects"
+  },
+  "project_mrp": {
+   "application": false,
+   "depends": [
+    "mrp",
+    "project"
+   ],
+   "summary": "Monitor MRP using project"
+  },
+  "project_mrp_account": {
+   "application": false,
+   "depends": [
+    "mrp_account",
+    "project_mrp"
+   ],
+   "summary": "Monitor MRP account using project"
+  },
+  "project_mrp_sale": {
+   "application": false,
+   "depends": [
+    "project_mrp",
+    "sale_mrp",
+    "sale_project"
+   ],
+   "summary": "Technical Bridge"
+  },
+  "project_mrp_stock_landed_costs": {
+   "application": false,
+   "depends": [
+    "project_mrp_account",
+    "mrp_landed_costs"
+   ],
+   "summary": "Technical Bridge"
+  },
+  "project_purchase": {
+   "application": false,
+   "depends": [
+    "purchase",
+    "project_account"
+   ],
+   "summary": "Monitor purchase in project"
+  },
+  "project_purchase_stock": {
+   "application": false,
+   "depends": [
+    "project_purchase",
+    "project_stock"
+   ],
+   "summary": "Project - Purchase - Stock"
+  },
+  "project_sale_expense": {
+   "application": false,
+   "depends": [
+    "sale_project",
+    "sale_expense",
+    "project_hr_expense"
+   ],
+   "summary": "Project - Sale - Expense"
+  },
+  "project_sms": {
+   "application": false,
+   "depends": [
+    "project",
+    "sms"
+   ],
+   "summary": "Send text messages when project/task stage move"
+  },
+  "project_stock": {
+   "application": false,
+   "depends": [
+    "stock",
+    "project"
+   ],
+   "summary": "Link Stock pickings to Project"
+  },
+  "project_stock_account": {
+   "application": false,
+   "depends": [
+    "stock_account",
+    "project_stock"
+   ],
+   "summary": "Handle analytics in Stock pickings with Project"
+  },
+  "project_stock_landed_costs": {
+   "application": false,
+   "depends": [
+    "project_stock_account",
+    "stock_landed_costs"
+   ],
+   "summary": "Technical Bridge"
+  },
+  "project_timesheet_holidays": {
+   "application": false,
+   "depends": [
+    "hr_timesheet",
+    "hr_holidays"
+   ],
+   "summary": "Schedule timesheet when on time off"
+  },
+  "project_todo": {
+   "application": true,
+   "depends": [
+    "project"
+   ],
+   "summary": "Organize your work with memos and to-do lists"
+  },
+  "purchase": {
+   "application": true,
+   "depends": [
+    "account"
+   ],
+   "summary": "Purchase orders, tenders and agreements"
+  },
+  "purchase_edi_ubl_bis3": {
+   "application": false,
+   "depends": [
+    "purchase",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Import/Export electronic orders with UBL"
+  },
+  "purchase_mrp": {
+   "application": false,
+   "depends": [
+    "mrp",
+    "purchase_stock"
+   ],
+   "summary": "Purchase and MRP Management"
+  },
+  "purchase_product_matrix": {
+   "application": false,
+   "depends": [
+    "purchase",
+    "product_matrix"
+   ],
+   "summary": "Add variants to your purchase orders through an Order Grid Entry."
+  },
+  "purchase_repair": {
+   "application": false,
+   "depends": [
+    "repair",
+    "purchase_stock"
+   ],
+   "summary": "Keep track of linked purchase and repair orders"
+  },
+  "purchase_requisition": {
+   "application": false,
+   "depends": [
+    "purchase"
+   ],
+   "summary": "Purchase Agreements"
+  },
+  "purchase_requisition_sale": {
+   "application": false,
+   "depends": [
+    "purchase_requisition",
+    "sale_purchase"
+   ],
+   "summary": "Purchase Requisition Sale"
+  },
+  "purchase_requisition_stock": {
+   "application": false,
+   "depends": [
+    "purchase_requisition",
+    "purchase_stock"
+   ],
+   "summary": "Purchase Requisition Stock"
+  },
+  "purchase_stock": {
+   "application": false,
+   "depends": [
+    "stock_account",
+    "purchase"
+   ],
+   "summary": "Purchase Orders, Receipts, Vendor Bills for Stock"
+  },
+  "rating": {
+   "application": false,
+   "depends": [
+    "mail"
+   ],
+   "summary": "Customer Rating"
+  },
+  "repair": {
+   "application": true,
+   "depends": [
+    "sale_stock",
+    "sale_management"
+   ],
+   "summary": "Repair damaged products"
+  },
+  "resource": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "Resource"
+  },
+  "resource_mail": {
+   "application": false,
+   "depends": [
+    "resource",
+    "mail"
+   ],
+   "summary": "Resource Mail"
+  },
+  "rpc": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "RPC endpoints"
+  },
+  "sale": {
+   "application": false,
+   "depends": [
+    "sales_team",
+    "account_payment",
+    "utm"
+   ],
+   "summary": "Sales internal machinery"
+  },
+  "sale_crm": {
+   "application": false,
+   "depends": [
+    "sale",
+    "crm"
+   ],
+   "summary": "Opportunity to Quotation"
+  },
+  "sale_edi_ubl": {
+   "application": false,
+   "depends": [
+    "sale",
+    "account_edi_ubl_cii"
+   ],
+   "summary": "Import electronic orders with UBL"
+  },
+  "sale_expense": {
+   "application": false,
+   "depends": [
+    "sale_management",
+    "hr_expense"
+   ],
+   "summary": "Quotation, Sales Orders, Delivery & Invoicing Control"
+  },
+  "sale_expense_margin": {
+   "application": false,
+   "depends": [
+    "sale_expense",
+    "sale_margin"
+   ],
+   "summary": "Sales Expense Margin"
+  },
+  "sale_gelato": {
+   "application": false,
+   "depends": [
+    "sale",
+    "delivery"
+   ],
+   "summary": "Place orders through Gelato's print-on-demand service"
+  },
+  "sale_gelato_stock": {
+   "application": false,
+   "depends": [
+    "sale_gelato",
+    "sale_stock"
+   ],
+   "summary": "Gelato/Stock bridge"
+  },
+  "sale_loyalty": {
+   "application": false,
+   "depends": [
+    "sale",
+    "loyalty"
+   ],
+   "summary": "Use discounts and loyalty programs in sales orders"
+  },
+  "sale_loyalty_delivery": {
+   "application": false,
+   "depends": [
+    "sale_loyalty",
+    "delivery"
+   ],
+   "summary": "Adds free shipping mechanism in sales orders"
+  },
+  "sale_management": {
+   "application": true,
+   "depends": [
+    "sale",
+    "digest"
+   ],
+   "summary": "From quotations to invoices"
+  },
+  "sale_margin": {
+   "application": false,
+   "depends": [
+    "sale_management"
+   ],
+   "summary": "Margins in Sales Orders"
+  },
+  "sale_mrp": {
+   "application": false,
+   "depends": [
+    "mrp",
+    "sale_stock"
+   ],
+   "summary": "Sales and MRP Management"
+  },
+  "sale_mrp_margin": {
+   "application": false,
+   "depends": [
+    "sale_mrp",
+    "sale_stock_margin"
+   ],
+   "summary": "Sale Mrp Margin"
+  },
+  "sale_pdf_quote_builder": {
+   "application": false,
+   "depends": [
+    "sale_management"
+   ],
+   "summary": "Sales PDF Quotation Builder"
+  },
+  "sale_product_matrix": {
+   "application": false,
+   "depends": [
+    "sale",
+    "product_matrix"
+   ],
+   "summary": "Add variants to Sales Order through a grid entry."
+  },
+  "sale_project": {
+   "application": false,
+   "depends": [
+    "sale_management",
+    "sale_service",
+    "project_account"
+   ],
+   "summary": "Task Generation from Sales Orders"
+  },
+  "sale_project_stock": {
+   "application": false,
+   "depends": [
+    "sale_project",
+    "sale_stock",
+    "project_stock_account"
+   ],
+   "summary": "Adds a full traceability of inventory operations on the profitability report."
+  },
+  "sale_project_stock_account": {
+   "application": false,
+   "depends": [
+    "sale_project",
+    "project_stock_account"
+   ],
+   "summary": "Technical Bridge"
+  },
+  "sale_purchase": {
+   "application": false,
+   "depends": [
+    "sale",
+    "purchase"
+   ],
+   "summary": "Sale based on service outsourcing."
+  },
+  "sale_purchase_project": {
+   "application": false,
+   "depends": [
+    "sale_purchase",
+    "project_purchase",
+    "sale_project"
+   ],
+   "summary": "Technical Bridge"
+  },
+  "sale_purchase_stock": {
+   "application": false,
+   "depends": [
+    "sale_stock",
+    "purchase_stock",
+    "sale_purchase"
+   ],
+   "summary": "SO/PO relation in case of MTO"
+  },
+  "sale_service": {
+   "application": false,
+   "depends": [
+    "sale_management"
+   ],
+   "summary": "Interaction between Sales and services apps (project and planning)"
+  },
+  "sale_sms": {
+   "application": false,
+   "depends": [
+    "sale",
+    "sms"
+   ],
+   "summary": "Ease SMS integration with sales capabilities"
+  },
+  "sale_stock": {
+   "application": false,
+   "depends": [
+    "sale",
+    "stock_account"
+   ],
+   "summary": "Quotation, Sales Orders, Delivery & Invoicing Control"
+  },
+  "sale_stock_margin": {
+   "application": false,
+   "depends": [
+    "sale_stock",
+    "sale_margin"
+   ],
+   "summary": "Sale Stock Margin"
+  },
+  "sale_stock_product_expiry": {
+   "application": false,
+   "depends": [
+    "sale_stock",
+    "product_expiry"
+   ],
+   "summary": "Sale Stock Product Expiry"
+  },
+  "sale_timesheet": {
+   "application": false,
+   "depends": [
+    "sale_project",
+    "hr_timesheet"
+   ],
+   "summary": "Sell based on timesheets"
+  },
+  "sale_timesheet_margin": {
+   "application": false,
+   "depends": [
+    "sale_margin",
+    "sale_timesheet"
+   ],
+   "summary": "Bridge module between Sales Margin and Sales Timesheet"
+  },
+  "sales_team": {
+   "application": false,
+   "depends": [
+    "base",
+    "mail"
+   ],
+   "summary": "Sales Teams"
+  },
+  "sms": {
+   "application": false,
+   "depends": [
+    "base",
+    "iap_mail",
+    "mail",
+    "phone_validation"
+   ],
+   "summary": "SMS Text Messaging"
+  },
+  "sms_twilio": {
+   "application": false,
+   "depends": [
+    "sms"
+   ],
+   "summary": "Send SMS messages using Twilio"
+  },
+  "snailmail": {
+   "application": false,
+   "depends": [
+    "iap_mail",
+    "mail"
+   ],
+   "summary": "Snail Mail"
+  },
+  "snailmail_account": {
+   "application": false,
+   "depends": [
+    "account",
+    "snailmail"
+   ],
+   "summary": "Snail Mail - Account"
+  },
+  "social_media": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "Social media connectors for company settings."
+  },
+  "spreadsheet": {
+   "application": false,
+   "depends": [
+    "bus",
+    "web",
+    "portal"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_account": {
+   "application": false,
+   "depends": [
+    "spreadsheet",
+    "account"
+   ],
+   "summary": "Spreadsheet Accounting formulas"
+  },
+  "spreadsheet_dashboard": {
+   "application": false,
+   "depends": [
+    "spreadsheet"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_account": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "account"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_event_sale": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "event_sale"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_hr_expense": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "sale_expense"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_hr_timesheet": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "hr_timesheet"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_im_livechat": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "im_livechat"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_pos_hr": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "pos_hr"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_pos_restaurant": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "pos_hr",
+    "pos_restaurant"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_sale": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "sale"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_sale_timesheet": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "sale_timesheet"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_stock_account": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "stock_account"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_website_sale": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "website_sale"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "spreadsheet_dashboard_website_sale_slides": {
+   "application": false,
+   "depends": [
+    "spreadsheet_dashboard",
+    "website_sale_slides"
+   ],
+   "summary": "Spreadsheet"
+  },
+  "stock": {
+   "application": true,
+   "depends": [
+    "product",
+    "barcodes_gs1_nomenclature",
+    "digest"
+   ],
+   "summary": "Manage your stock and logistics activities"
+  },
+  "stock_account": {
+   "application": false,
+   "depends": [
+    "stock",
+    "account"
+   ],
+   "summary": "Inventory, Logistic, Valuation, Accounting"
+  },
+  "stock_delivery": {
+   "application": false,
+   "depends": [
+    "sale_stock",
+    "delivery"
+   ],
+   "summary": "Delivery - Stock"
+  },
+  "stock_dropshipping": {
+   "application": false,
+   "depends": [
+    "sale_purchase_stock"
+   ],
+   "summary": "Drop Shipping"
+  },
+  "stock_fleet": {
+   "application": false,
+   "depends": [
+    "stock_picking_batch",
+    "fleet"
+   ],
+   "summary": "Stock Transport: Dispatch Management System"
+  },
+  "stock_landed_costs": {
+   "application": false,
+   "depends": [
+    "stock_account",
+    "purchase_stock"
+   ],
+   "summary": "Landed Costs"
+  },
+  "stock_maintenance": {
+   "application": false,
+   "depends": [
+    "stock",
+    "maintenance"
+   ],
+   "summary": "See lots used in maintenance"
+  },
+  "stock_picking_batch": {
+   "application": false,
+   "depends": [
+    "stock"
+   ],
+   "summary": "Warehouse Management: Batch Transfer"
+  },
+  "stock_sms": {
+   "application": false,
+   "depends": [
+    "stock",
+    "sms"
+   ],
+   "summary": "Send text messages when final stock move"
+  },
+  "survey": {
+   "application": true,
+   "depends": [
+    "auth_signup",
+    "http_routing",
+    "mail",
+    "web_tour",
+    "gamification"
+   ],
+   "summary": "Send your surveys or share them live."
+  },
+  "survey_crm": {
+   "application": false,
+   "depends": [
+    "survey",
+    "crm"
+   ],
+   "summary": "Generate leads from surveys"
+  },
+  "test_access_rights": {
+   "application": false,
+   "depends": [],
+   "summary": "test of access rights and rules"
+  },
+  "test_action_bindings": {
+   "application": false,
+   "depends": [],
+   "summary": "Test Action Bindings"
+  },
+  "test_assetsbundle": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-assetsbundle"
+  },
+  "test_auth_custom": {
+   "application": false,
+   "depends": [],
+   "summary": "Tests that custom auth works & is not impaired by CORS"
+  },
+  "test_base_automation": {
+   "application": false,
+   "depends": [
+    "base_automation"
+   ],
+   "summary": "Base Automation Tests: Ensure Flow Robustness"
+  },
+  "test_convert": {
+   "application": false,
+   "depends": [],
+   "summary": "test_convert"
+  },
+  "test_converter": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-field-converter"
+  },
+  "test_crm_full": {
+   "application": false,
+   "depends": [
+    "crm",
+    "crm_iap_enrich",
+    "crm_iap_mine",
+    "crm_sms",
+    "event_crm",
+    "sale_crm",
+    "website_crm",
+    "website_crm_iap_reveal",
+    "website_crm_partner_assign",
+    "website_crm_livechat"
+   ],
+   "summary": "Test Full Crm Flow"
+  },
+  "test_data_module": {
+   "application": false,
+   "depends": [],
+   "summary": "test module to test data only modules"
+  },
+  "test_data_module_install": {
+   "application": false,
+   "depends": [
+    "test_data_module"
+   ],
+   "summary": "test installation of data module"
+  },
+  "test_discuss_full": {
+   "application": false,
+   "depends": [
+    "calendar",
+    "crm",
+    "crm_livechat",
+    "hr_attendance",
+    "hr_fleet",
+    "hr_holidays",
+    "hr_homeworking",
+    "im_livechat",
+    "mail",
+    "mail_bot",
+    "project_todo",
+    "website_livechat",
+    "website_sale",
+    "website_slides"
+   ],
+   "summary": "Test of Discuss with all possible overrides installed."
+  },
+  "test_event_full": {
+   "application": false,
+   "depends": [
+    "event",
+    "event_booth",
+    "event_crm",
+    "event_crm_sale",
+    "event_sale",
+    "event_sms",
+    "payment_demo",
+    "website_event_booth_sale_exhibitor",
+    "website_event_exhibitor",
+    "website_event_sale",
+    "website_event_track",
+    "website_event_track_live",
+    "website_event_track_quiz"
+   ],
+   "summary": "Test Full Event Flow"
+  },
+  "test_html_field_history": {
+   "application": false,
+   "depends": [
+    "html_editor"
+   ],
+   "summary": "Test - html_field_history"
+  },
+  "test_http": {
+   "application": false,
+   "depends": [
+    "web",
+    "web_tour",
+    "mail",
+    "rpc"
+   ],
+   "summary": "Test HTTP"
+  },
+  "test_import_export": {
+   "application": false,
+   "depends": [
+    "web",
+    "base_import",
+    "website"
+   ],
+   "summary": "Base Import & Export Tests: Ensure Flow Robustness"
+  },
+  "test_inherit": {
+   "application": false,
+   "depends": [
+    "base",
+    "test_orm"
+   ],
+   "summary": "test-inherit"
+  },
+  "test_inherit_depends": {
+   "application": false,
+   "depends": [
+    "test_inherit",
+    "test_orm"
+   ],
+   "summary": "test-inherit-depends"
+  },
+  "test_inherits": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-inherits"
+  },
+  "test_inherits_depends": {
+   "application": false,
+   "depends": [
+    "test_inherits"
+   ],
+   "summary": "test-inherits-depends"
+  },
+  "test_install_auto": {
+   "application": false,
+   "depends": [
+    "test_install_base"
+   ],
+   "summary": "test_install_auto"
+  },
+  "test_install_base": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test_install_base"
+  },
+  "test_install_fail": {
+   "application": false,
+   "depends": [
+    "test_install_base"
+   ],
+   "summary": "test_install_fail"
+  },
+  "test_lint": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-lint"
+  },
+  "test_mail": {
+   "application": false,
+   "depends": [
+    "mail",
+    "test_orm"
+   ],
+   "summary": "Mail Tests: performances and tests specific to mail"
+  },
+  "test_mail_full": {
+   "application": false,
+   "depends": [
+    "mail",
+    "mail_bot",
+    "portal",
+    "rating",
+    "mass_mailing",
+    "mass_mailing_sms",
+    "phone_validation",
+    "sms",
+    "test_mail",
+    "test_mail_sms",
+    "test_mass_mailing"
+   ],
+   "summary": "Mail Tests: performances and tests specific to mail with all sub-modules"
+  },
+  "test_mail_sms": {
+   "application": false,
+   "depends": [
+    "mail",
+    "sms",
+    "sms_twilio",
+    "test_orm"
+   ],
+   "summary": "SMS Tests: performances and tests specific to SMS"
+  },
+  "test_main_flows": {
+   "application": false,
+   "depends": [
+    "web_tour",
+    "crm",
+    "sale_timesheet",
+    "purchase_stock",
+    "mrp",
+    "account"
+   ],
+   "summary": "Test Main Flow"
+  },
+  "test_mass_mailing": {
+   "application": false,
+   "depends": [
+    "mass_mailing",
+    "mass_mailing_sms",
+    "sms_twilio",
+    "test_mail",
+    "test_mail_sms"
+   ],
+   "summary": "Mass Mail Tests: feature and performance tests for mass mailing"
+  },
+  "test_mimetypes": {
+   "application": false,
+   "depends": [],
+   "summary": "test mimetypes-guessing"
+  },
+  "test_orm": {
+   "application": false,
+   "depends": [
+    "base",
+    "web",
+    "web_tour"
+   ],
+   "summary": "Test ORM"
+  },
+  "test_read_group": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "test of (formatted/web)_read_group"
+  },
+  "test_resource": {
+   "application": false,
+   "depends": [
+    "resource"
+   ],
+   "summary": "Test - Resource"
+  },
+  "test_rpc": {
+   "application": false,
+   "depends": [
+    "web",
+    "rpc"
+   ],
+   "summary": "Test RPC"
+  },
+  "test_sale_product_configurators": {
+   "application": false,
+   "depends": [
+    "event_sale",
+    "sale_management",
+    "sale_product_matrix"
+   ],
+   "summary": "Test Suite for Sale Product Configurator"
+  },
+  "test_sale_purchase_edi_ubl": {
+   "application": false,
+   "depends": [
+    "purchase_edi_ubl_bis3",
+    "sale_edi_ubl"
+   ],
+   "summary": "Sale & Purchase Order EDI Tests: Ensure Flow Robustness"
+  },
+  "test_search_panel": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "test_search_panel"
+  },
+  "test_spreadsheet": {
+   "application": false,
+   "depends": [
+    "spreadsheet"
+   ],
+   "summary": "Spreadsheet Test, mainly to test the mixin behavior"
+  },
+  "test_testing_utilities": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "Test testing utilities"
+  },
+  "test_translation_import": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-translation-import"
+  },
+  "test_uninstall": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "test-uninstall"
+  },
+  "test_website": {
+   "application": false,
+   "depends": [
+    "web_unsplash",
+    "website",
+    "theme_default"
+   ],
+   "summary": "Website Test, mainly for module install/uninstall tests"
+  },
+  "test_website_modules": {
+   "application": false,
+   "depends": [
+    "theme_default",
+    "website",
+    "website_blog",
+    "website_event_sale",
+    "website_slides",
+    "website_livechat",
+    "website_crm_iap_reveal",
+    "website_sale_comparison",
+    "website_sale_wishlist"
+   ],
+   "summary": "Website Modules Test"
+  },
+  "test_website_slides_full": {
+   "application": false,
+   "depends": [
+    "website_sale_slides",
+    "website_slides_forum",
+    "website_slides_survey"
+   ],
+   "summary": "Test Full eLearning Flow"
+  },
+  "theme_default": {
+   "application": false,
+   "depends": [
+    "website"
+   ],
+   "summary": "Default Theme"
+  },
+  "transifex": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "Add a link to edit a translation in Transifex"
+  },
+  "uom": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "Units of measure"
+  },
+  "utm": {
+   "application": false,
+   "depends": [
+    "base",
+    "web"
+   ],
+   "summary": "UTM Trackers"
+  },
+  "web": {
+   "application": false,
+   "depends": [
+    "base"
+   ],
+   "summary": "Web"
+  },
+  "web_hierarchy": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Web Hierarchy"
+  },
+  "web_tour": {
+   "application": false,
+   "depends": [
+    "web"
+   ],
+   "summary": "Tours"
+  },
+  "web_unsplash": {
+   "application": false,
+   "depends": [
+    "base_setup",
+    "html_editor"
+   ],
+   "summary": "Find free high-resolution images from Unsplash"
+  },
+  "website": {
+   "application": true,
+   "depends": [
+    "digest",
+    "web",
+    "html_editor",
+    "http_routing",
+    "portal",
+    "social_media",
+    "auth_signup",
+    "mail",
+    "google_recaptcha",
+    "utm",
+    "html_builder"
+   ],
+   "summary": "Enterprise website builder"
+  },
+  "website_blog": {
+   "application": false,
+   "depends": [
+    "website_mail",
+    "website_partner",
+    "html_builder"
+   ],
+   "summary": "Publish blog posts, announces, news"
+  },
+  "website_cf_turnstile": {
+   "application": false,
+   "depends": [
+    "website"
+   ],
+   "summary": "Cloudflare Turnstile"
+  },
+  "website_crm": {
+   "application": false,
+   "depends": [
+    "website",
+    "crm"
+   ],
+   "summary": "Generate leads from a contact form"
+  },
+  "website_crm_iap_reveal": {
+   "application": false,
+   "depends": [
+    "iap_crm",
+    "iap_mail",
+    "crm_iap_mine",
+    "website_crm"
+   ],
+   "summary": "Generate Leads/Opportunities from your website's traffic"
+  },
+  "website_crm_livechat": {
+   "application": false,
+   "depends": [
+    "website_crm",
+    "website_livechat"
+   ],
+   "summary": "View livechat sessions for leads"
+  },
+  "website_crm_partner_assign": {
+   "application": false,
+   "depends": [
+    "base_geolocalize",
+    "crm",
+    "account",
+    "partnership",
+    "website_partner",
+    "website_google_map",
+    "portal"
+   ],
+   "summary": "Publish your resellers/partners and forward leads to them"
+  },
+  "website_crm_sms": {
+   "application": false,
+   "depends": [
+    "website_sms",
+    "crm"
+   ],
+   "summary": "Allows to send sms to website visitor that have lead"
+  },
+  "website_customer": {
+   "application": false,
+   "depends": [
+    "website_crm_partner_assign",
+    "website_partner",
+    "website_google_map"
+   ],
+   "summary": "Publish your customer references"
+  },
+  "website_event": {
+   "application": true,
+   "depends": [
+    "event",
+    "website",
+    "website_partner",
+    "website_mail",
+    "html_builder"
+   ],
+   "summary": "Publish events, sell tickets"
+  },
+  "website_event_booth": {
+   "application": false,
+   "depends": [
+    "website_event",
+    "event_booth"
+   ],
+   "summary": "Events, display your booths on your website"
+  },
+  "website_event_booth_exhibitor": {
+   "application": false,
+   "depends": [
+    "website_event_exhibitor",
+    "website_event_booth"
+   ],
+   "summary": "Event Booths, automatically create a sponsor."
+  },
+  "website_event_booth_sale": {
+   "application": false,
+   "depends": [
+    "event_booth_sale",
+    "website_event_booth",
+    "website_sale"
+   ],
+   "summary": "Events, sell your booths online"
+  },
+  "website_event_booth_sale_exhibitor": {
+   "application": false,
+   "depends": [
+    "website_event_exhibitor",
+    "website_event_booth_sale"
+   ],
+   "summary": "Bridge module between website_event_booth_exhibitor and website_event_booth_sale."
+  },
+  "website_event_crm": {
+   "application": false,
+   "depends": [
+    "event_crm",
+    "website_event"
+   ],
+   "summary": "Website Events CRM"
+  },
+  "website_event_exhibitor": {
+   "application": false,
+   "depends": [
+    "website_event"
+   ],
+   "summary": "Event: manage sponsors and exhibitors"
+  },
+  "website_event_sale": {
+   "application": false,
+   "depends": [
+    "website_event",
+    "event_sale",
+    "website_sale"
+   ],
+   "summary": "Sell event tickets online"
+  },
+  "website_event_track": {
+   "application": false,
+   "depends": [
+    "website_event"
+   ],
+   "summary": "Sponsors, Tracks, Agenda, Event News"
+  },
+  "website_event_track_live": {
+   "application": false,
+   "depends": [
+    "website_event_track"
+   ],
+   "summary": "Support live tracks: streaming, participation, youtube"
+  },
+  "website_event_track_live_quiz": {
+   "application": false,
+   "depends": [
+    "website_event_track_live",
+    "website_event_track_quiz"
+   ],
+   "summary": "Bridge module to support quiz features during \"live\" tracks."
+  },
+  "website_event_track_quiz": {
+   "application": false,
+   "depends": [
+    "website_profile",
+    "website_event_track"
+   ],
+   "summary": "Quizzes on tracks"
+  },
+  "website_forum": {
+   "application": false,
+   "depends": [
+    "auth_signup",
+    "website_mail",
+    "website_profile"
+   ],
+   "summary": "Manage a forum with FAQ and Q&A"
+  },
+  "website_google_map": {
+   "application": false,
+   "depends": [
+    "base_geolocalize",
+    "website_partner"
+   ],
+   "summary": "Show your company address on Google Maps"
+  },
+  "website_hr_recruitment": {
+   "application": true,
+   "depends": [
+    "hr_recruitment",
+    "website_mail"
+   ],
+   "summary": "Manage your online hiring process"
+  },
+  "website_hr_recruitment_livechat": {
+   "application": false,
+   "depends": [
+    "website_hr_recruitment",
+    "im_livechat"
+   ],
+   "summary": "Chatbot for the HR Recruitment"
+  },
+  "website_links": {
+   "application": false,
+   "depends": [
+    "website",
+    "link_tracker"
+   ],
+   "summary": "Generate trackable & short URLs"
+  },
+  "website_livechat": {
+   "application": false,
+   "depends": [
+    "website",
+    "im_livechat"
+   ],
+   "summary": "Chat with your website visitors"
+  },
+  "website_mail": {
+   "application": false,
+   "depends": [
+    "website",
+    "mail"
+   ],
+   "summary": "Website Module for Mail"
+  },
+  "website_mail_group": {
+   "application": false,
+   "depends": [
+    "mail_group",
+    "website"
+   ],
+   "summary": "Add a website snippet for the mail groups."
+  },
+  "website_mass_mailing": {
+   "application": false,
+   "depends": [
+    "website",
+    "mass_mailing",
+    "google_recaptcha"
+   ],
+   "summary": "Attract visitors to subscribe to mailing lists"
+  },
+  "website_mass_mailing_sms": {
+   "application": false,
+   "depends": [
+    "website_mass_mailing",
+    "mass_mailing_sms"
+   ],
+   "summary": "Attract visitors to subscribe to mailing lists"
+  },
+  "website_partner": {
+   "application": false,
+   "depends": [
+    "website"
+   ],
+   "summary": "Partner module for website"
+  },
+  "website_payment": {
+   "application": false,
+   "depends": [
+    "website",
+    "account_payment",
+    "portal"
+   ],
+   "summary": "Payment integration with website"
+  },
+  "website_profile": {
+   "application": false,
+   "depends": [
+    "html_editor",
+    "website_partner",
+    "gamification"
+   ],
+   "summary": "Access the website profile of the users"
+  },
+  "website_project": {
+   "application": false,
+   "depends": [
+    "website",
+    "project"
+   ],
+   "summary": "Add a task suggestion form to your website"
+  },
+  "website_sale": {
+   "application": true,
+   "depends": [
+    "website",
+    "sale",
+    "website_payment",
+    "website_mail",
+    "portal_rating",
+    "digest",
+    "delivery",
+    "html_builder"
+   ],
+   "summary": "Sell your products online"
+  },
+  "website_sale_autocomplete": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "google_address_autocomplete"
+   ],
+   "summary": "Assist your users with automatic completion & suggestions when filling their address during checkout"
+  },
+  "website_sale_collect": {
+   "application": false,
+   "depends": [
+    "base_geolocalize",
+    "payment_custom",
+    "website_sale_stock"
+   ],
+   "summary": "Click & Collect"
+  },
+  "website_sale_collect_wishlist": {
+   "application": false,
+   "depends": [
+    "website_sale_wishlist",
+    "website_sale_collect"
+   ],
+   "summary": "Bridge module between Click & Collect and Wishlist"
+  },
+  "website_sale_comparison": {
+   "application": false,
+   "depends": [
+    "website_sale"
+   ],
+   "summary": "Allow shoppers to compare products based on their attributes"
+  },
+  "website_sale_comparison_wishlist": {
+   "application": false,
+   "depends": [
+    "website_sale_comparison",
+    "website_sale_wishlist"
+   ],
+   "summary": "Bridge module for Website sale comparison and wishlist"
+  },
+  "website_sale_gelato": {
+   "application": false,
+   "depends": [
+    "sale_gelato",
+    "website_sale"
+   ],
+   "summary": "eCommerce/Gelato bridge"
+  },
+  "website_sale_loyalty": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "website_links",
+    "sale_loyalty"
+   ],
+   "summary": "Use coupon, promotion, gift cards and loyalty programs in your eCommerce store"
+  },
+  "website_sale_mass_mailing": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "website_mass_mailing"
+   ],
+   "summary": "Let new customers sign up for a newsletter during checkout"
+  },
+  "website_sale_mondialrelay": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "delivery_mondialrelay"
+   ],
+   "summary": "Let's choose Point Relais\u00ae on your ecommerce"
+  },
+  "website_sale_mrp": {
+   "application": false,
+   "depends": [
+    "website_sale_stock",
+    "sale_mrp"
+   ],
+   "summary": "Manage Kit product inventory & availability"
+  },
+  "website_sale_slides": {
+   "application": false,
+   "depends": [
+    "website_slides",
+    "website_sale"
+   ],
+   "summary": "Sell your courses online"
+  },
+  "website_sale_stock": {
+   "application": false,
+   "depends": [
+    "website_sale",
+    "sale_stock",
+    "stock_delivery"
+   ],
+   "summary": "Manage product inventory & availability"
+  },
+  "website_sale_stock_wishlist": {
+   "application": false,
+   "depends": [
+    "website_sale_stock",
+    "website_sale_wishlist"
+   ],
+   "summary": "Notify the user when a product is back in stock"
+  },
+  "website_sale_wishlist": {
+   "application": false,
+   "depends": [
+    "website_sale"
+   ],
+   "summary": "Allow shoppers to enlist products"
+  },
+  "website_slides": {
+   "application": true,
+   "depends": [
+    "portal_rating",
+    "website",
+    "website_mail",
+    "website_profile"
+   ],
+   "summary": "Manage and publish an eLearning platform"
+  },
+  "website_slides_forum": {
+   "application": false,
+   "depends": [
+    "website_slides",
+    "website_forum"
+   ],
+   "summary": "Allows to link forum on a course"
+  },
+  "website_slides_survey": {
+   "application": false,
+   "depends": [
+    "website_slides",
+    "survey"
+   ],
+   "summary": "Add certification capabilities to your courses"
+  },
+  "website_sms": {
+   "application": false,
+   "depends": [
+    "website",
+    "sms"
+   ],
+   "summary": "Allows to send sms to website visitor"
+  },
+  "website_timesheet": {
+   "application": false,
+   "depends": [
+    "website",
+    "hr_timesheet"
+   ],
+   "summary": "Allow hiding timesheet information in the portal"
+  }
+ }
+}

@@ -1700,7 +1700,14 @@ class TestE17ExtensionXpathValidation:
         assert len(e17_errors) == 0
 
     def test_known_models_common_views(self) -> None:
-        """known_odoo_models.json has common_views for frequently extended models."""
+        """known_odoo_models.json contains all frequently-extended models with fields.
+
+        Note: common_views was present in the hand-curated JSON but is not part
+        of the AST-extracted schema (view XML IDs aren't in Python model files).
+        This test now verifies the models are present and have the required
+        schema fields (module, fields, is_mixin) — field coverage is validated
+        by the spot-check in test_e17_known_model_good_field.
+        """
         import json
 
         data_path = (
@@ -1710,20 +1717,18 @@ class TestE17ExtensionXpathValidation:
         data = json.loads(data_path.read_text(encoding="utf-8"))
         models = data["models"]
 
-        expected_models_with_views = [
+        expected_models = [
             "hr.employee", "res.partner", "sale.order",
             "purchase.order", "account.move", "product.template",
             "stock.picking", "crm.lead",
         ]
-        for model_name in expected_models_with_views:
+        for model_name in expected_models:
             assert model_name in models, f"Missing model: {model_name}"
-            assert "common_views" in models[model_name], (
-                f"Missing common_views for {model_name}"
-            )
-            views = models[model_name]["common_views"]
-            assert "form" in views, f"Missing form view for {model_name}"
-            assert "tree" in views, f"Missing tree view for {model_name}"
-            assert "search" in views, f"Missing search view for {model_name}"
+            m = models[model_name]
+            assert "module" in m, f"Missing 'module' for {model_name}"
+            assert "fields" in m, f"Missing 'fields' for {model_name}"
+            assert "is_mixin" in m, f"Missing 'is_mixin' for {model_name}"
+            assert isinstance(m["fields"], dict), f"'fields' not a dict for {model_name}"
 
 
 # ===========================================================================
