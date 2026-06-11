@@ -21,11 +21,16 @@ class LockTimeout(OSError):
 @contextlib.contextmanager
 def state_lock(
     target: str | Path,
-    timeout: float = 10.0,
+    timeout: float = 40.0,
     poll: float = 0.02,
     stale_after: float = 30.0,
 ) -> Iterator[None]:
-    """Acquire `<target>.lock` exclusively; break locks older than stale_after."""
+    """Acquire `<target>.lock` exclusively; break locks older than stale_after.
+
+    timeout must exceed stale_after for crash-orphaned locks to be broken
+    automatically; with defaults a crashed holder delays the next writer by
+    at most ~30s.
+    """
     lock_path = Path(f"{target}.lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     deadline = time.monotonic() + timeout
@@ -37,6 +42,10 @@ def state_lock(
         except FileExistsError:
             with contextlib.suppress(OSError):
                 if time.time() - lock_path.stat().st_mtime > stale_after:
+                    # Accepted race: two waiters may both see a stale lock and both
+                    # unlink/recreate (TOCTOU). Requires a crashed holder PLUS
+                    # sub-millisecond contention; worst case is one lost update after
+                    # a crash — file integrity is still guaranteed by atomic renames.
                     lock_path.unlink()
                     continue
             if time.monotonic() >= deadline:

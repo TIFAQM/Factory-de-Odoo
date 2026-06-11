@@ -95,7 +95,25 @@ def _apply_remove_module(registry: dict, module_name: str) -> dict:
         m for m in registry["_meta"].get("modules_contributing", [])
         if m != module_name
     ]
-    return {
+    # Carry over security_groups and view_xml_ids, removing the stripped module's entries
+    new_security_groups = {
+        k: v
+        for k, v in registry.get("security_groups", {}).items()
+        if k != module_name
+    }
+    new_view_xml_ids = {
+        k: v
+        for k, v in registry.get("view_xml_ids", {}).items()
+        if k != module_name
+    }
+    # Preserve any other unknown top-level keys
+    extra_keys = {
+        k: v
+        for k, v in registry.items()
+        if k not in ("_meta", "models", "security_groups", "view_xml_ids")
+    }
+    result: dict = {
+        **extra_keys,
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -104,6 +122,11 @@ def _apply_remove_module(registry: dict, module_name: str) -> dict:
         },
         "models": cleaned_models,
     }
+    if new_security_groups:
+        result["security_groups"] = new_security_groups
+    if new_view_xml_ids:
+        result["view_xml_ids"] = new_view_xml_ids
+    return result
 
 
 def remove_module_from_registry(cwd: str | Path, module_name: str) -> dict:
@@ -161,7 +184,14 @@ def _apply_manifest(registry: dict, manifest: dict) -> dict:
     contributing = list(registry["_meta"]["modules_contributing"])
     if module_name not in contributing:
         contributing = [*contributing, module_name]
-    return {
+    # Preserve any unknown top-level keys from the existing registry
+    extra_keys = {
+        k: v
+        for k, v in registry.items()
+        if k not in ("_meta", "models", "security_groups", "view_xml_ids")
+    }
+    result: dict = {
+        **extra_keys,
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -170,6 +200,12 @@ def _apply_manifest(registry: dict, manifest: dict) -> dict:
         },
         "models": new_models,
     }
+    # Carry over security_groups and view_xml_ids from the existing registry
+    if registry.get("security_groups"):
+        result["security_groups"] = dict(registry["security_groups"])
+    if registry.get("view_xml_ids"):
+        result["view_xml_ids"] = dict(registry["view_xml_ids"])
+    return result
 
 
 def update_registry(cwd: str | Path, manifest_path: str) -> dict:
@@ -192,12 +228,13 @@ def rollback_registry(cwd: str | Path) -> dict | None:
     if not bak_file.exists():
         return None
 
-    try:
-        bak_data = json.loads(bak_file.read_text(encoding="utf-8"))
-        shutil.copy2(str(bak_file), str(reg_path))
-        return bak_data
-    except (OSError, json.JSONDecodeError):
-        return None
+    with state_lock(_registry_path(cwd)):
+        try:
+            bak_data = json.loads(bak_file.read_text(encoding="utf-8"))
+            shutil.copy2(str(bak_file), str(reg_path))
+            return bak_data
+        except (OSError, json.JSONDecodeError):
+            return None
 
 
 def validate_registry(cwd: str | Path) -> dict:
@@ -406,7 +443,14 @@ def _apply_spec(registry: dict, manifest: dict, spec: dict) -> dict:
     contributing = list(registry["_meta"]["modules_contributing"])
     if module_name not in contributing:
         contributing = [*contributing, module_name]
+    # Preserve any unknown top-level keys from the existing registry
+    extra_keys = {
+        k: v
+        for k, v in registry.items()
+        if k not in ("_meta", "models", "security_groups", "view_xml_ids")
+    }
     new_registry: dict = {
+        **extra_keys,
         "_meta": {
             **registry["_meta"],
             "version": registry["_meta"]["version"] + 1,
@@ -415,18 +459,22 @@ def _apply_spec(registry: dict, manifest: dict, spec: dict) -> dict:
         },
         "models": new_models,
     }
+    # Start from the existing registry's security_groups/view_xml_ids so prior
+    # modules' entries are not lost on each update_from_spec call.
+    existing_security_groups = dict(registry.get("security_groups", {}))
     security_groups = _build_security_groups(module_name, spec)
     if security_groups:
-        new_registry["security_groups"] = {
-            **new_registry.get("security_groups", {}),
-            module_name: security_groups,
-        }
+        existing_security_groups[module_name] = security_groups
+    if existing_security_groups:
+        new_registry["security_groups"] = existing_security_groups
+
+    existing_view_xml_ids = dict(registry.get("view_xml_ids", {}))
     view_xml_ids = _build_view_xml_ids(module_name, spec)
     if view_xml_ids:
-        new_registry["view_xml_ids"] = {
-            **new_registry.get("view_xml_ids", {}),
-            module_name: view_xml_ids,
-        }
+        existing_view_xml_ids[module_name] = view_xml_ids
+    if existing_view_xml_ids:
+        new_registry["view_xml_ids"] = existing_view_xml_ids
+
     return new_registry
 
 

@@ -52,3 +52,16 @@ def test_stale_lock_is_broken(tmp_path: Path) -> None:
     os.utime(lock, (old, old))
     with state_lock(target, timeout=1.0, stale_after=30.0):
         pass  # should succeed by breaking the stale lock
+
+
+def test_default_timeout_survives_orphaned_lock(tmp_path: Path) -> None:
+    """Fix 1: default timeout (40s) > stale_after (30s), so a 120s-old orphaned
+    lock must be broken automatically with no explicit kwargs."""
+    import os
+    target = tmp_path / "registry.json"
+    lock = tmp_path / "registry.json.lock"
+    lock.write_text("orphaned-by-sigkill")
+    old = time.time() - 120  # 120s old — well past the 30s stale_after default
+    os.utime(lock, (old, old))
+    with state_lock(target):  # no kwargs — uses defaults timeout=40.0, stale_after=30.0
+        pass  # must succeed without LockTimeout

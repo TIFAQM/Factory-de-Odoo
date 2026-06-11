@@ -22,6 +22,7 @@ from amil_utils.orchestrator.module_status import (
 from amil_utils.orchestrator.registry import (
     _atomic_write_json as reg_atomic_write_json,
     read_registry_file,
+    rollback_registry,
     update_from_spec,
     update_registry,
 )
@@ -338,6 +339,7 @@ def test_concurrent_update_from_spec_no_lost_updates(tmp_path: Path) -> None:
     """N threads each registering a distinct module must ALL survive."""
     (tmp_path / ".planning").mkdir()
     n = 8
+    errors: list[Exception] = []
 
     def make_spec(i: int) -> dict:
         return {
@@ -350,16 +352,73 @@ def test_concurrent_update_from_spec_no_lost_updates(tmp_path: Path) -> None:
             ],
         }
 
+    def worker(i: int) -> None:
+        try:
+            update_from_spec(tmp_path, make_spec(i))
+        except Exception as exc:
+            errors.append(exc)
+
     threads = [
-        threading.Thread(target=update_from_spec, args=(tmp_path, make_spec(i)))
+        threading.Thread(target=worker, args=(i,))
         for i in range(n)
     ]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
+    assert errors == [], f"Workers raised: {errors}"
     registry = read_registry_file(tmp_path)
     assert len(registry["models"]) == n, sorted(registry["models"])
+
+
+def test_concurrent_update_and_rollback_registry(tmp_path: Path) -> None:
+    """Fix 2: 4 updater threads + 2 rollback threads must never crash or corrupt.
+
+    Final registry must be valid JSON with a 'models' dict and no leftover
+    .lock files.
+    """
+    _make_planning(tmp_path)
+    _seed_registry(tmp_path)
+
+    errors: list[Exception] = []
+
+    def updater(i: int) -> None:
+        try:
+            spec = {
+                "module_name": f"race_mod_{i}",
+                "models": [
+                    {"name": f"race.model.{i}", "fields": [{"name": "name", "type": "Char"}]},
+                ],
+            }
+            update_from_spec(tmp_path, spec)
+        except Exception as exc:
+            errors.append(exc)
+
+    def rollbacker() -> None:
+        try:
+            rollback_registry(tmp_path)
+        except Exception as exc:
+            errors.append(exc)
+
+    threads = [
+        *[threading.Thread(target=updater, args=(i,)) for i in range(4)],
+        *[threading.Thread(target=rollbacker) for _ in range(2)],
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert errors == [], f"Workers raised: {errors}"
+
+    # Registry must be valid JSON with a 'models' dict
+    registry = read_registry_file(tmp_path)
+    assert "models" in registry, "registry missing 'models' key"
+    assert isinstance(registry["models"], dict), "'models' must be a dict"
+
+    # No leftover .lock file
+    lock_path = tmp_path / ".planning" / "model_registry.json.lock"
+    assert not lock_path.exists(), f"Leftover lock file found: {lock_path}"
 
 
 def test_concurrent_module_status_init_no_lost_updates(tmp_path: Path) -> None:
