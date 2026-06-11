@@ -141,7 +141,7 @@ If file missing: report error -- agent did not write output.
 ## Batch Mode (--batch flag)
 
 When invoked with `--batch`:
-1. Score all `planned` modules using `spec-completeness.cjs:scoreAllModules()`
+1. Score all `planned` modules: `amil-utils orch spec score-all --raw --cwd "$(pwd)"` — returns `scores`, `batches` (grouped by discussion depth), and `summary`.
 2. Group by tier and discussion depth (full < 40, brief 40-69, none >= 70)
 3. Discuss 5 at a time (full) or 8 at a time (brief)
 4. Present gaps as focused questions instead of full question templates
