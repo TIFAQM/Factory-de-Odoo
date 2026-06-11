@@ -4,8 +4,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from amil_utils.orchestrator.spec_keys import REQUIRED_SPEC_KEYS, check_spec_keys
 
 
@@ -52,3 +50,11 @@ def test_missing_file_reported(tmp_path: Path) -> None:
     result = check_spec_keys(tmp_path / "nope.json")
     assert result["valid"] is False
     assert "error" in result
+
+
+def test_non_object_root_reported(tmp_path: Path) -> None:
+    p = tmp_path / "spec.json"
+    p.write_text(json.dumps([1, 2, 3]))
+    result = check_spec_keys(p)
+    assert result["valid"] is False
+    assert result["error"] == "spec root is not an object"

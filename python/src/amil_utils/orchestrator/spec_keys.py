@@ -34,7 +34,7 @@ def check_spec_keys(spec_path: str | Path, minimal: bool = False) -> dict:
     """Validate spec.json contains required top-level keys.
 
     Returns a dict: {valid, missing, key_count, module_name, model_count}
-    or {valid: False, error: str} on read/parse failure.
+    or {valid: False, missing: [], error: str} on read/parse/shape failure.
     """
     path = Path(spec_path)
     try:
