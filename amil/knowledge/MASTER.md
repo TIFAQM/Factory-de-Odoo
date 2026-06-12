@@ -206,6 +206,7 @@ When `odoo_version` is `"19.0"`, these additional rules apply (on top of 18.0 ch
 - `inventory.md` -- warehouse, stock moves, pickings (load when depends includes `stock`)
 - `owl.md` -- OWL JavaScript components (load when spec has dashboards/JS widgets)
 - `education.md` -- university/HEC domain: enrollment, GPA, attendance, merit, challans, affiliate colleges, OCA payroll (BPS/TTS), QEC/OBE (load when `localization == "pk"` or module name starts with `university_`/`uni_`)
+- `pakistan.md` -- Pakistan integrations & compliance: NADRA, 1-Link/RAAST webhooks, HEC PMIS, SMS, EOBI, FBR withholding, fiscal year, timezone (load alongside education.md when `localization == "pk"`)
 
 ---
 *Knowledge base for Odoo 17.0/18.0/19.0 -- loaded by all agents via @include*
