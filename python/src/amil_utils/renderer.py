@@ -115,6 +115,14 @@ def _artifacts_intact(manifest: "GenerationManifest", stage_name: str, module_di
 
 
 
+def _py_literal(value):
+    """Render a spec default as a Python literal: bools/numbers bare,
+    everything else double-quoted (template style)."""
+    if isinstance(value, bool) or isinstance(value, (int, float)):
+        return repr(value)
+    return f'"{value}"'
+
+
 def _template_fail(message: str) -> None:
     """Raise ValueError from a Jinja2 template guard expression.
 
@@ -138,6 +146,7 @@ def _register_filters(env: Environment) -> Environment:
     env.filters["to_python_var"] = _to_python_var
     env.filters["to_xml_id"] = _to_xml_id
     env.globals["fail"] = _template_fail
+    env.filters["pyval"] = _py_literal
     return env
 
 

@@ -56,7 +56,7 @@ class {{ model_name | to_class }}(models.Model):
         index=True,
 {% endif %}
 {% if field.default is defined %}
-        default="{{ field.default }}",
+        default={{ field.default | pyval }},
 {% endif %}
 {% if field.help is defined %}
         help="{{ field.help }}",
@@ -102,7 +102,7 @@ class {{ model_name | to_class }}(models.Model):
     {{ field.name }} = fields.Char(
         string="{{ field.string | default(field.name | replace('_', ' ') | title) }}",
         required=True,
-        default=_default_{{ field.name }},
+        default=lambda self: self._default_{{ field.name }}(),
         readonly=True,
         copy=False,
 {% if field.groups is defined and field.groups %}
@@ -159,7 +159,7 @@ class {{ model_name | to_class }}(models.Model):
         index=True,
 {% endif %}
 {% if field.default is defined %}
-        default="{{ field.default }}",
+        default={{ field.default | pyval }},
 {% endif %}
 {% if field.help is defined %}
         help="{{ field.help }}",
