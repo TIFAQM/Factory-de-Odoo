@@ -89,3 +89,27 @@ def test_model_imports_cleanly(tmp_path: Path) -> None:
     ns: dict = {}
     exec(stub, ns)  # noqa: S102 — controlled test stub
     exec(compile(src, "model.py", "exec"), ns)  # raises NameError pre-fix
+
+
+def test_constraint_attribute_underscore_prefixed(tmp_path: Path) -> None:
+    """Odoo 19 asserts SQL-object attribute names start with '_'."""
+    spec = {
+        **SPEC,
+        "module_name": "uni_constraint_check",
+        "models": [{
+            "name": "uni.constraint.check",
+            "description": "Constraint Check",
+            "fields": [
+                {"name": "name", "type": "Char", "required": True},
+            ],
+            "unique_together": [{"fields": ["name"],
+                                  "message": "Name must be unique."}],
+        }],
+    }
+    render_module(spec, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_constraint_check" / "models" /
+           "uni_constraint_check.py").read_text()
+    assert " = models.Constraint(" in src
+    import re
+    for m in re.finditer(r"^\s{4}(\w+) = models\.Constraint\(", src, re.M):
+        assert m.group(1).startswith("_"), m.group(1)

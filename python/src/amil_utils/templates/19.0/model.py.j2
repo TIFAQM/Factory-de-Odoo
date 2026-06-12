@@ -196,7 +196,7 @@ class {{ model_name | to_class }}(models.Model):
 {% if sql_constraints %}
 
 {% for constraint in sql_constraints %}
-    {{ constraint.name }} = models.Constraint(
+    {{ constraint.name if constraint.name.startswith('_') else '_' ~ constraint.name }} = models.Constraint(
         "{{ constraint.definition }}",
         "{{ constraint.message }}",
     )
