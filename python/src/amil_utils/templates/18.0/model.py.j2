@@ -286,6 +286,7 @@ class {{ model_name | to_class }}(models.Model):
                     "Cannot perform '{{ wa.label }}' from state '%s'.",
                     rec.{{ wa.state_field }}))
             rec.{{ wa.state_field }} = "{{ wa.to }}"
+        return True
 {% endfor %}
 {% endif %}
 {% if is_cacheable %}
