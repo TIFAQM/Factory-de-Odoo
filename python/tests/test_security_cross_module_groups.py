@@ -113,3 +113,27 @@ def test_explicit_empty_record_rules_disables_autodetect(tmp_path: Path) -> None
         content = rules.read_text()
         assert "department_id" not in content
         assert "rule_" not in content
+
+
+def test_boolean_dict_acl_normalized(tmp_path: Path) -> None:
+    """Agents produce {create/read/write/unlink: bool} ACLs — accept them."""
+    spec = {
+        **SPEC,
+        "module_name": "uni_boolacl_check",
+        "models": [{
+            "name": "uni.boolacl.check",
+            "description": "Bool ACL",
+            "fields": [{"name": "name", "type": "Char", "required": True}],
+            "record_rules": [],
+        }],
+        "security": {
+            "roles": ["officer", "manager"],
+            "defaults": {"officer": "cru", "manager": "crud"},
+            "acl": {"officer": {"create": True, "read": True,
+                                 "write": True, "unlink": False}},
+        },
+    }
+    render_module(spec, get_template_dir(), tmp_path)  # must not raise
+    csv = (tmp_path / "uni_boolacl_check" / "security" /
+           "ir.model.access.csv").read_text()
+    assert "officer" in csv

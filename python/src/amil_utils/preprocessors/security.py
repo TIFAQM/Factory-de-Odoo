@@ -34,6 +34,50 @@ def _parse_crud(crud_str: str) -> dict[str, int]:
     }
 
 
+def _normalize_crud_value(value):
+    """Accept {create,read,write,unlink: bool} dicts as CRUD strings.
+
+    Spec agents naturally produce the boolean-dict shape; normalize instead
+    of crashing with AttributeError deep in _parse_crud.
+    """
+    if isinstance(value, dict):
+        letters = [("c", "create"), ("r", "read"), ("u", "write"), ("d", "unlink")]
+        return "".join(l for l, k in letters if value.get(k))
+    return value
+
+
+def _normalize_security_cruds(security: dict[str, Any]) -> dict[str, Any]:
+    """Return a security block with all CRUD values normalized to strings."""
+    out = {**security}
+    if isinstance(out.get("defaults"), dict):
+        out["defaults"] = {k: _normalize_crud_value(v) for k, v in out["defaults"].items()}
+    _PERM_KEYS = {"create", "read", "write", "unlink"}
+    if isinstance(out.get("acl"), dict):
+        normalized_acl = {}
+        for mk, mv in out["acl"].items():
+            if isinstance(mv, dict) and set(mv) <= _PERM_KEYS:
+                # shallow agent shape {role: {perm: bool}} — collapse to string
+                normalized_acl[mk] = _normalize_crud_value(mv)
+            elif isinstance(mv, dict):
+                normalized_acl[mk] = {
+                    rk: _normalize_crud_value(rv) for rk, rv in mv.items()
+                }
+            else:
+                normalized_acl[mk] = mv
+        # if every value is now a plain CRUD string keyed by a ROLE name,
+        # it's role-level overrides, not per-model — fold into defaults
+        role_names = set(out.get("roles", []))
+        if normalized_acl and set(normalized_acl) <= role_names and all(
+            isinstance(v, str) for v in normalized_acl.values()
+        ):
+            merged = {**out.get("defaults", {}), **normalized_acl}
+            out["defaults"] = merged
+            out["acl"] = {}
+        else:
+            out["acl"] = normalized_acl
+    return out
+
+
 def _security_validate_spec(security: dict[str, Any]) -> None:
     """Validate that defaults keys exactly match roles array.
 
@@ -441,6 +485,7 @@ def _process_security_patterns(spec: dict[str, Any]) -> dict[str, Any]:
     module_name = spec["module_name"]
 
     # Validate
+    security = _normalize_security_cruds(security)
     _security_validate_spec(security)
 
     # Build roles
