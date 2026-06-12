@@ -148,7 +148,7 @@ def render_models(
             )
 
             # UI parity: stateful models get a pipeline kanban (stock-CRM style)
-            if model_ctx.get("has_workflow_actions") and model_ctx.get("state_field"):
+            if model_ctx.get("has_workflow_actions"):
                 created.append(render_template(
                     env, "kanban_state.xml.j2",
                     module_dir / "views" / f"{model_var}_kanban.xml",

@@ -148,3 +148,28 @@ def test_module_icon_png_written(tmp_path: Path) -> None:
     icon = mod / "static" / "description" / "icon.png"
     assert icon.exists()
     assert icon.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_nonstandard_state_model_gets_kanban(tmp_path: Path) -> None:
+    """payment_status machines (challans) must also get the pipeline kanban
+    — manifest and render stage must agree (live upgrade failure)."""
+    spec = _spec()
+    spec["models"][0]["fields"] = [
+        {"name": "name", "type": "Char", "required": True},
+        {"name": "payment_status", "type": "Selection",
+         "selection": [["unpaid", "Unpaid"], ["paid", "Paid"]],
+         "default": "unpaid"},
+    ]
+    spec["workflow"] = [{
+        "model": "uni.ui.application",
+        "states": ["unpaid", "paid"],
+        "transitions": [{"from": "unpaid", "to": "paid",
+                          "action": "action_pay"}],
+    }]
+    render_module(spec, get_template_dir(), tmp_path)
+    mod = tmp_path / "uni_ui_check"
+    kanban = mod / "views" / "uni_ui_application_kanban.xml"
+    assert kanban.exists()
+    assert 'default_group_by="payment_status"' in kanban.read_text()
+    manifest = (mod / "__manifest__.py").read_text()
+    assert "views/uni_ui_application_kanban.xml" in manifest

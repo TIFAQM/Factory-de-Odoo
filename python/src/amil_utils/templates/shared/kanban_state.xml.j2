@@ -6,8 +6,9 @@
         <field name="name">{{ model_name }}.view.kanban</field>
         <field name="model">{{ model_name }}</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="{{ state_field.name }}" class="o_kanban_small_column">
-                <field name="{{ state_field.name }}"/>
+{% set wf_state = workflow_actions[0].state_field %}
+            <kanban default_group_by="{{ wf_state }}" class="o_kanban_small_column">
+                <field name="{{ wf_state }}"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click p-2">
