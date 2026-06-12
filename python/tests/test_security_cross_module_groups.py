@@ -85,3 +85,31 @@ def test_bare_role_names_still_resolve_locally(tmp_path: Path) -> None:
     content = "".join(f.read_text() for f in security_files)
     assert "uni_fee.group_uni_fee_user" in content, (
         "bare role name should resolve to the local module group")
+
+
+def test_explicit_empty_record_rules_disables_autodetect(tmp_path: Path) -> None:
+    """record_rules: [] must suppress the department/ownership heuristics —
+    auto department rules reference user.department_id which does not exist
+    on res.users in CE (live-install failure on university_base)."""
+    spec = {
+        **SPEC,
+        "module_name": "uni_norules_check",
+        "models": [{
+            "name": "uni.norules.check",
+            "description": "No Rules Check",
+            "fields": [
+                {"name": "name", "type": "Char", "required": True},
+                {"name": "department_id", "type": "Many2one",
+                 "comodel_name": "university.department"},
+                {"name": "user_id", "type": "Many2one",
+                 "comodel_name": "res.users"},
+            ],
+            "record_rules": [],
+        }],
+    }
+    render_module(spec, get_template_dir(), tmp_path)
+    rules = tmp_path / "uni_norules_check" / "security" / "record_rules.xml"
+    if rules.exists():
+        content = rules.read_text()
+        assert "department_id" not in content
+        assert "rule_" not in content

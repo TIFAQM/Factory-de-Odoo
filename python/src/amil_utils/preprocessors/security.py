@@ -128,8 +128,11 @@ def _security_detect_record_rule_scopes(model: dict[str, Any]) -> list[str]:
     """
     rr = model.get("record_rules")
     if rr is not None:
+        # Explicit empty list = "no record rules" (disables auto-detection)
+        if not rr:
+            return []
         # If it's a list of strings, it's scope overrides
-        if rr and isinstance(rr[0], str):
+        if isinstance(rr[0], str):
             return list(rr)
         # If it's a list of dicts, those are custom rules (handled in template);
         # still auto-detect standard scopes
