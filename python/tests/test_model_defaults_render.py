@@ -130,3 +130,25 @@ def test_xml_comments_survive_double_dash_descriptions(tmp_path: Path) -> None:
     render_module(spec, get_template_dir(), tmp_path)
     for xf in (tmp_path / "uni_dashdash_check").rglob("*.xml"):
         ET.parse(xf)
+
+
+def test_nameless_model_imports_api(tmp_path: Path) -> None:
+    """Auto _compute_display_name (19.0 nameless models) emits @api.depends;
+    the import line must include api (NameError on live install otherwise)."""
+    spec = {
+        **SPEC,
+        "module_name": "uni_nameless_check",
+        "models": [{
+            "name": "uni.nameless.check",
+            "description": "Nameless",
+            "fields": [
+                {"name": "section", "type": "Char", "required": True},
+            ],
+        }],
+    }
+    render_module(spec, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_nameless_check" / "models" /
+           "uni_nameless_check.py").read_text()
+    if "@api.depends" in src:
+        first = src.splitlines()[0]
+        assert "api" in first, first

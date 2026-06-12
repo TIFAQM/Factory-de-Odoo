@@ -142,6 +142,10 @@ def _build_model_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[st
             ctx["display_name_pattern"] = auto_pattern
             ctx["display_name_depends"] = auto_depends
 
+    # display_name compute emits @api.depends — the import gate must know
+    if ctx.get("display_name_pattern"):
+        ctx["needs_api"] = True
+
     return ctx
 
 
