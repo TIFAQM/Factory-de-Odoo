@@ -78,3 +78,13 @@ def test_missing_comodel_fails_loudly_at_render_time(tmp_path: Path) -> None:
         # Preferred outcome: stage aborted, no file written
         test_files = [f for f in files if f.name.startswith("test_uni_m2o_check")]
         assert not test_files, "Stage should have been aborted for missing comodel_name"
+
+
+def test_m2o_recursively_satisfies_required_fields(tmp_path: Path) -> None:
+    """without_demo databases have no rows: the fallback create must fill
+    required fields (incl. nested Many2one) or 60% of generated tests error
+    in setUpClass (observed on university_base live install)."""
+    content = _render(tmp_path)
+    assert "_depth" in content
+    assert 'f.type == "many2one" and f.comodel_name != comodel' in content
+    assert 'fields_get([fname])[fname]["selection"]' in content

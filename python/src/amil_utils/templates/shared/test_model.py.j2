@@ -10,11 +10,12 @@ class Test{{ model_name | to_class }}(TransactionCase):
     """Test cases for the {{ model_description }} model."""
 
     @classmethod
-    def _m2o(cls, comodel):
+    def _m2o(cls, comodel, _depth=0):
         """Return a usable record id for a Many2one target.
 
         Searches for any existing record first (covers base/demo data),
-        then falls back to creating a minimal record.
+        then creates a minimal record, recursively satisfying required
+        fields (without_demo databases have no rows to find).
         """
         Model = cls.env[comodel]
         existing = Model.search([], limit=1, order="id asc")
@@ -23,6 +24,28 @@ class Test{{ model_name | to_class }}(TransactionCase):
         vals = {}
         if "name" in Model._fields:
             vals["name"] = "Test %s" % comodel
+        if _depth < 3:
+            for fname, f in Model._fields.items():
+                if not f.required or f.compute or fname in vals:
+                    continue
+                if f.default is not None and f.type != "many2one":
+                    continue
+                if f.type == "char" or f.type == "text":
+                    vals[fname] = "Test %s" % fname
+                elif f.type in ("integer", "float", "monetary"):
+                    vals[fname] = 1
+                elif f.type == "date":
+                    vals[fname] = fields.Date.today()
+                elif f.type == "datetime":
+                    vals[fname] = fields.Datetime.now()
+                elif f.type == "boolean":
+                    vals[fname] = True
+                elif f.type == "selection":
+                    options = Model.fields_get([fname])[fname]["selection"]
+                    if options:
+                        vals[fname] = options[0][0]
+                elif f.type == "many2one" and f.comodel_name != comodel:
+                    vals[fname] = cls._m2o(f.comodel_name, _depth + 1)
         return Model.create(vals).id
 
     @classmethod
