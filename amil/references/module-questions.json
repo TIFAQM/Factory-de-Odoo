@@ -4,42 +4,65 @@
       {
         "id": "core_institution_hierarchy",
         "question": "Is this a single-campus or multi-campus institution? Multi-campus typically requires a campus model linked to the institution.",
-        "options": ["single_campus", "multi_campus"],
+        "options": [
+          "single_campus",
+          "multi_campus"
+        ],
         "default": "single_campus",
         "context": "Multi-campus adds uni.campus model with Many2one to uni.institution and affects module partitioning via multi_company"
       },
       {
         "id": "core_academic_year",
         "question": "How is your academic calendar structured? This defines the time-based hierarchy for enrollment, fees, and exams.",
-        "options": ["year_semester", "year_trimester", "year_quarter", "custom_terms"],
+        "options": [
+          "year_semester",
+          "year_trimester",
+          "year_quarter",
+          "custom_terms"
+        ],
         "default": "year_semester",
         "context": "Academic year/term models are referenced by nearly every other module (fee periods, exam schedules, enrollment windows)"
       },
       {
         "id": "core_department_org",
         "question": "How are departments organized? Flat list or hierarchical (faculty -> department -> sub-department)?",
-        "options": ["flat", "hierarchical"],
+        "options": [
+          "flat",
+          "hierarchical"
+        ],
         "default": "flat",
         "context": "Hierarchical uses parent_id self-referential Many2one on uni.department with child_ids One2many"
       },
       {
         "id": "core_program_structure",
         "question": "What is the academic program structure? Program -> Course, or Program -> Semester -> Course, or deeper nesting?",
-        "options": ["program_course", "program_semester_course", "program_year_semester_course"],
+        "options": [
+          "program_course",
+          "program_semester_course",
+          "program_year_semester_course"
+        ],
         "default": "program_semester_course",
         "context": "Deeper nesting requires intermediate models but gives finer control over prerequisites and credit distribution"
       },
       {
         "id": "core_code_generation",
         "question": "Should entity codes (student IDs, program codes, course codes) be auto-generated via ir.sequence or manually entered?",
-        "options": ["auto_sequence", "manual", "hybrid"],
+        "options": [
+          "auto_sequence",
+          "manual",
+          "hybrid"
+        ],
         "default": "auto_sequence",
         "context": "Auto-generation uses ir.sequence with configurable prefixes and padding; hybrid allows override of auto-generated values"
       },
       {
         "id": "core_multi_company",
         "question": "If multi-campus, should each campus be a separate Odoo company (res.company) for financial isolation?",
-        "options": ["yes", "no", "not_applicable"],
+        "options": [
+          "yes",
+          "no",
+          "not_applicable"
+        ],
         "default": "not_applicable",
         "context": "Separate companies enable per-campus accounting and security rules but add complexity to cross-campus reporting"
       },
@@ -53,14 +76,21 @@
       {
         "id": "core_menu_hierarchy",
         "question": "Should each module have its own top-level menu, or should all modules nest under a single 'University' root menu?",
-        "options": ["single_root", "per_module_root"],
+        "options": [
+          "single_root",
+          "per_module_root"
+        ],
         "default": "single_root",
         "context": "Single root keeps navigation clean; per-module root is standard Odoo pattern but creates many top-level entries"
       },
       {
         "id": "core_sequence_numbering",
         "question": "What numbering format for sequences? e.g., STU/2024/00001 or plain numeric 00001?",
-        "options": ["prefixed_year", "prefixed_no_year", "plain_numeric"],
+        "options": [
+          "prefixed_year",
+          "prefixed_no_year",
+          "plain_numeric"
+        ],
         "default": "prefixed_year",
         "context": "Prefixed with year resets annually via ir.sequence date_range; configure prefix per entity in core settings"
       },
@@ -83,63 +113,99 @@
       {
         "id": "student_enrollment_states",
         "question": "What enrollment lifecycle states do you need? Standard: applied -> admitted -> enrolled -> graduated -> withdrawn.",
-        "options": ["standard_5", "extended_with_deferred", "custom"],
+        "options": [
+          "standard_5",
+          "extended_with_deferred",
+          "custom"
+        ],
         "default": "standard_5",
         "context": "States drive workflow transitions via Odoo's state field with statusbar_widget; custom states need explicit transition rules"
       },
       {
         "id": "student_academic_holds",
         "question": "What types of academic holds should block enrollment or results? Common: financial, disciplinary, academic probation.",
-        "options": ["financial_only", "financial_disciplinary", "financial_disciplinary_academic", "custom"],
+        "options": [
+          "financial_only",
+          "financial_disciplinary",
+          "financial_disciplinary_academic",
+          "custom"
+        ],
         "default": "financial_disciplinary_academic",
         "context": "Holds are typically a separate model with Many2one to student and type selection field; checked in enrollment constraints"
       },
       {
         "id": "student_documents",
         "question": "What student documents need management? Upload types, verification workflow, and storage approach.",
-        "options": ["basic_upload", "upload_with_verification", "upload_verify_expire"],
+        "options": [
+          "basic_upload",
+          "upload_with_verification",
+          "upload_verify_expire"
+        ],
         "default": "upload_with_verification",
         "context": "Documents use ir.attachment with a wrapper model for metadata (type, verification_status, expiry_date)"
       },
       {
         "id": "student_id_generation",
         "question": "How should student IDs be generated? Auto-sequence, year-based prefix, or program-based prefix?",
-        "options": ["auto_sequence", "year_prefix", "program_prefix", "campus_year_prefix"],
+        "options": [
+          "auto_sequence",
+          "year_prefix",
+          "program_prefix",
+          "campus_year_prefix"
+        ],
         "default": "year_prefix",
         "context": "Uses ir.sequence with date_range for year-based; program-based needs dynamic prefix from program code"
       },
       {
         "id": "student_guardian_tracking",
         "question": "Do you need guardian/parent tracking linked to students? This enables parent portal and emergency contacts.",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Guardian is a separate model (or res.partner category) with Many2many to student; enables portal access and notification routing"
       },
       {
         "id": "student_photo_biometric",
         "question": "Do you need student photograph storage and/or biometric integration for attendance?",
-        "options": ["photo_only", "photo_biometric", "none"],
+        "options": [
+          "photo_only",
+          "photo_biometric",
+          "none"
+        ],
         "default": "photo_only",
         "context": "Photos stored as Binary field with image widget; biometric needs external device integration via API"
       },
       {
         "id": "student_transfer",
         "question": "How should inter-program or inter-campus transfers be handled?",
-        "options": ["simple_reassign", "transfer_request_workflow", "not_needed"],
+        "options": [
+          "simple_reassign",
+          "transfer_request_workflow",
+          "not_needed"
+        ],
         "default": "transfer_request_workflow",
         "context": "Transfer workflow creates a request record with approval chain; updates enrollment and recalculates fee obligations"
       },
       {
         "id": "student_alumni",
         "question": "Do you need alumni tracking after graduation? Includes employment status, contact updates, and alumni events.",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "no",
         "context": "Alumni is typically a graduated student state with additional fields; can be a separate model or state extension"
       },
       {
         "id": "student_batch_section",
         "question": "How are students grouped for academic operations? Batch (intake year), section (class division), or both?",
-        "options": ["batch_only", "section_only", "batch_and_section"],
+        "options": [
+          "batch_only",
+          "section_only",
+          "batch_and_section"
+        ],
         "default": "batch_and_section",
         "context": "Batch groups by intake year; sections divide within a batch for timetabling and capacity management"
       },
@@ -162,63 +228,101 @@
       {
         "id": "fee_field_type",
         "question": "Will fee amounts use Odoo's monetary field (currency-aware) or plain float?",
-        "options": ["monetary", "float"],
+        "options": [
+          "monetary",
+          "float"
+        ],
         "default": "monetary",
         "context": "Monetary fields auto-handle currency conversion and rounding; requires currency_id field on the model"
       },
       {
         "id": "fee_penalty_method",
         "question": "How should late payment penalties be calculated?",
-        "options": ["fixed_amount", "percentage", "tiered"],
+        "options": [
+          "fixed_amount",
+          "percentage",
+          "tiered"
+        ],
         "default": "percentage",
         "context": "Tiered allows different rates for different overdue periods (e.g., 5% first month, 10% after)"
       },
       {
         "id": "fee_payment_channels",
         "question": "What payment channels should be supported?",
-        "options": ["manual_only", "manual_bank", "manual_bank_gateway"],
+        "options": [
+          "manual_only",
+          "manual_bank",
+          "manual_bank_gateway"
+        ],
         "default": "manual_bank",
         "context": "Gateway integration uses Odoo's payment.provider framework; bank uses account.journal reconciliation"
       },
       {
         "id": "fee_installment_plans",
         "question": "Do you need configurable installment plans for fee payments?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Installments create scheduled payment lines linked to the fee structure; each installment generates a separate invoice"
       },
       {
         "id": "fee_per_program",
         "question": "Should fee structures be defined per program, per department, or globally?",
-        "options": ["per_program", "per_department", "global", "hierarchical"],
+        "options": [
+          "per_program",
+          "per_department",
+          "global",
+          "hierarchical"
+        ],
         "default": "per_program",
         "context": "Per-program links fee.structure to uni.program via Many2one; hierarchical allows override at lower levels"
       },
       {
         "id": "fee_scholarship",
         "question": "How should scholarships and fee concessions be handled?",
-        "options": ["percentage_discount", "fixed_discount", "both", "separate_model"],
+        "options": [
+          "percentage_discount",
+          "fixed_discount",
+          "both",
+          "separate_model"
+        ],
         "default": "separate_model",
         "context": "Separate scholarship model allows tracking, approval workflow, and reporting independent of fee calculation"
       },
       {
         "id": "fee_refund_policy",
         "question": "What refund policy applies when students withdraw? Time-based sliding scale or fixed rules?",
-        "options": ["full_refund", "sliding_scale", "no_refund", "configurable"],
+        "options": [
+          "full_refund",
+          "sliding_scale",
+          "no_refund",
+          "configurable"
+        ],
         "default": "sliding_scale",
         "context": "Sliding scale uses date ranges (100% first week, 75% first month, etc.); creates credit note via account.move reversal"
       },
       {
         "id": "fee_invoice_integration",
         "question": "Should fee invoices integrate with Odoo accounting (account.move) for full journal entries?",
-        "options": ["yes_full", "yes_simplified", "no_standalone"],
+        "options": [
+          "yes_full",
+          "yes_simplified",
+          "no_standalone"
+        ],
         "default": "yes_full",
         "context": "Full integration creates account.move records with proper debit/credit; simplified only tracks payment status"
       },
       {
         "id": "fee_receipt_printing",
         "question": "Do you need printable fee receipts? QWeb PDF or plain text?",
-        "options": ["qweb_pdf", "plain_text", "both", "not_needed"],
+        "options": [
+          "qweb_pdf",
+          "plain_text",
+          "both",
+          "not_needed"
+        ],
         "default": "qweb_pdf",
         "context": "QWeb PDF uses ir.actions.report with custom template; supports letterhead, signatures, and QR codes"
       },
@@ -228,6 +332,38 @@
         "options": null,
         "default": null,
         "context": "Fee components are selection field values or a separate model; each component can have different calculation rules"
+      },
+      {
+        "id": "fee_challan_copies",
+        "question": "How many challan copies should print?",
+        "options": [
+          "two",
+          "three",
+          "four"
+        ],
+        "default": "three",
+        "context": "Standard Pakistani bank challan: Bank Copy + University Copy + Student Copy (template_style pk_challan); some banks require a fourth ledger copy"
+      },
+      {
+        "id": "fee_collecting_banks",
+        "question": "Which collecting banks does the university use?",
+        "options": [
+          "single_bank",
+          "multiple_banks"
+        ],
+        "default": "multiple_banks",
+        "context": "HBL/NBP/MCB/UBL/Meezan are common; multiple banks need per-bank challan account details and per-bank reconciliation"
+      },
+      {
+        "id": "fee_payment_confirmation",
+        "question": "How are bank payments confirmed in the system?",
+        "options": [
+          "manual_entry",
+          "settlement_file_import",
+          "raast_webhook"
+        ],
+        "default": "raast_webhook",
+        "context": "1-Link/RAAST webhook confirmation with signature verification and daily reconciliation (see knowledge/pakistan.md); settlement import is the fallback"
       }
     ],
     "context_hints": [
@@ -241,28 +377,48 @@
       {
         "id": "exam_grading_scale",
         "question": "What grading system will be used? GPA (4.0/5.0), percentage, letter grades, or multiple scales?",
-        "options": ["gpa_4", "gpa_5", "percentage", "letter_grades", "multiple_scales"],
+        "options": [
+          "gpa_4",
+          "gpa_5",
+          "percentage",
+          "letter_grades",
+          "multiple_scales"
+        ],
         "default": "gpa_4",
         "context": "Multiple scales allow different programs to use different systems; requires a grading.scale model with conversion tables"
       },
       {
         "id": "exam_makeup_policy",
         "question": "What is the policy for makeup and re-examination? Automatic eligibility or approval-based?",
-        "options": ["automatic_on_fail", "approval_based", "not_allowed", "configurable"],
+        "options": [
+          "automatic_on_fail",
+          "approval_based",
+          "not_allowed",
+          "configurable"
+        ],
         "default": "approval_based",
         "context": "Approval-based creates a re-exam request with workflow; automatic checks grade threshold and auto-enrolls"
       },
       {
         "id": "exam_grade_computation",
         "question": "How are final grades computed? Weighted average of components, simple average, or best-of-N?",
-        "options": ["weighted_average", "simple_average", "best_of_n", "custom_formula"],
+        "options": [
+          "weighted_average",
+          "simple_average",
+          "best_of_n",
+          "custom_formula"
+        ],
         "default": "weighted_average",
         "context": "Weighted average uses exam.component model with weight field; computed fields aggregate component marks"
       },
       {
         "id": "exam_result_publishing",
         "question": "What is the result publishing workflow? Draft -> verified -> published, or simpler?",
-        "options": ["draft_verified_published", "draft_published", "immediate"],
+        "options": [
+          "draft_verified_published",
+          "draft_published",
+          "immediate"
+        ],
         "default": "draft_verified_published",
         "context": "Three-stage workflow allows double-checking before portal visibility; uses state field with group-based transitions"
       },
@@ -276,37 +432,108 @@
       {
         "id": "exam_seating_plan",
         "question": "Do you need automated seating plan generation for exams?",
-        "options": ["yes_automated", "manual_only", "not_needed"],
+        "options": [
+          "yes_automated",
+          "manual_only",
+          "not_needed"
+        ],
         "default": "manual_only",
         "context": "Automated seating uses room capacity and student count with randomization; complex constraint satisfaction problem"
       },
       {
         "id": "exam_datesheet",
         "question": "Do you need date sheet (exam schedule) management with conflict detection?",
-        "options": ["yes_with_conflicts", "yes_simple", "not_needed"],
+        "options": [
+          "yes_with_conflicts",
+          "yes_simple",
+          "not_needed"
+        ],
         "default": "yes_with_conflicts",
         "context": "Conflict detection checks student course overlap to prevent same-day exams; uses SQL query on enrollment data"
       },
       {
         "id": "exam_hall_ticket",
         "question": "Do you need hall ticket (admit card) generation for exams?",
-        "options": ["yes_qweb", "yes_simple", "not_needed"],
+        "options": [
+          "yes_qweb",
+          "yes_simple",
+          "not_needed"
+        ],
         "default": "yes_qweb",
         "context": "QWeb report with student photo, seat number, exam schedule; requires attendance/fee clearance checks"
       },
       {
         "id": "exam_external_examiner",
         "question": "Do you need external examiner support for result moderation?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "no",
         "context": "External examiner adds a review step in result publishing; examiner is a res.partner with specific portal access"
       },
       {
         "id": "exam_mark_entry",
         "question": "How should marks be entered? Single entry, double-blind (two independent entries), or import from file?",
-        "options": ["single_entry", "double_blind", "file_import", "all_methods"],
+        "options": [
+          "single_entry",
+          "double_blind",
+          "file_import",
+          "all_methods"
+        ],
         "default": "single_entry",
         "context": "Double-blind requires two independent mark entries with discrepancy resolution; prevents data entry errors"
+      },
+      {
+        "id": "exam_grading_scale",
+        "question": "Confirm the HEC grading scale (A=4.00 at 85%+, passing CGPA 2.00).",
+        "options": [
+          "hec_4_scale_confirmed",
+          "custom_scale"
+        ],
+        "default": "hec_4_scale_confirmed",
+        "context": "Bands seeded from data/pakistan/hec_grading.json as university.grade.scale records; custom scales must still map to a 4.00 CGPA for HEC reporting"
+      },
+      {
+        "id": "exam_ufm_workflow",
+        "question": "Include an Unfair Means (UFM) case workflow?",
+        "options": [
+          "yes",
+          "no"
+        ],
+        "default": "yes",
+        "context": "PRD M05: UFM registration by Controller/Exam Officer, discipline-committee verdict, result withholding while a case is open"
+      },
+      {
+        "id": "exam_rechecking",
+        "question": "Re-checking applications: fee + response window?",
+        "options": [
+          "fee_15_working_days",
+          "fee_30_days",
+          "no_rechecking"
+        ],
+        "default": "fee_15_working_days",
+        "context": "PRD WF-06: re-checking application with fee challan, response within 15 working days, corrected marks trigger CGPA recalculation and gazette corrigendum"
+      },
+      {
+        "id": "exam_gazette_approval",
+        "question": "Result gazette approval chain?",
+        "options": [
+          "controller_then_vc",
+          "controller_only"
+        ],
+        "default": "controller_then_vc",
+        "context": "PRD security rule: Controller (R04) prepares, VC (R01) gives final approval before publication; dual authorization per HEC policy"
+      },
+      {
+        "id": "exam_attendance_bar",
+        "question": "Bar students below 75% attendance from the course exam?",
+        "options": [
+          "yes_75_percent",
+          "no_bar"
+        ],
+        "default": "yes_75_percent",
+        "context": "PRD WF-05: course-specific bar below 75% unless leave approved; eligibility list generated for the Controller"
       }
     ],
     "context_hints": [
@@ -320,56 +547,88 @@
       {
         "id": "faculty_workload_tracking",
         "question": "How should faculty workload be tracked? Credit hours taught, contact hours, or both?",
-        "options": ["credit_hours", "contact_hours", "both"],
+        "options": [
+          "credit_hours",
+          "contact_hours",
+          "both"
+        ],
         "default": "credit_hours",
         "context": "Credit hours link to course credits; contact hours track actual classroom time; both enables workload vs allocation comparison"
       },
       {
         "id": "faculty_leave_integration",
         "question": "Should faculty leave integrate with Odoo HR leave management (hr.leave)?",
-        "options": ["yes_full", "yes_simplified", "standalone"],
+        "options": [
+          "yes_full",
+          "yes_simplified",
+          "standalone"
+        ],
         "default": "yes_full",
         "context": "Full integration inherits hr.leave allocation and approval workflow; simplified only tracks academic-relevant absences"
       },
       {
         "id": "faculty_evaluation",
         "question": "What performance evaluation method is needed? Student feedback, peer review, self-assessment, or combined?",
-        "options": ["student_feedback", "peer_review", "self_assessment", "combined", "not_needed"],
+        "options": [
+          "student_feedback",
+          "peer_review",
+          "self_assessment",
+          "combined",
+          "not_needed"
+        ],
         "default": "student_feedback",
         "context": "Student feedback uses a survey model linked to course+faculty; results aggregate per semester for review"
       },
       {
         "id": "faculty_designation",
         "question": "What is the designation hierarchy? Lecturer -> Assistant Prof -> Associate Prof -> Professor, or custom?",
-        "options": ["standard_4_tier", "custom"],
+        "options": [
+          "standard_4_tier",
+          "custom"
+        ],
         "default": "standard_4_tier",
         "context": "Designations are selection field values or a separate model; affects pay scale and workload norms"
       },
       {
         "id": "faculty_specialization",
         "question": "Do you need to track faculty specialization areas for course allocation matching?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Specializations are Many2many tags on faculty; used by timetable module for course-faculty matching"
       },
       {
         "id": "faculty_research_profile",
         "question": "Do you need a research profile section? Publications, grants, supervisions?",
-        "options": ["yes_full", "publications_only", "not_needed"],
+        "options": [
+          "yes_full",
+          "publications_only",
+          "not_needed"
+        ],
         "default": "not_needed",
         "context": "Research profile adds One2many lines for publications and grants; useful for university ranking data"
       },
       {
         "id": "faculty_teaching_assignment",
         "question": "How are teaching assignments managed? Direct assignment by HOD or preference-based allocation?",
-        "options": ["direct_assignment", "preference_based", "both"],
+        "options": [
+          "direct_assignment",
+          "preference_based",
+          "both"
+        ],
         "default": "direct_assignment",
         "context": "Preference-based creates a preference submission workflow before timetable generation"
       },
       {
         "id": "faculty_course_allocation",
         "question": "How are courses allocated to faculty? Per semester manually, or auto-matched based on specialization?",
-        "options": ["manual_per_semester", "auto_matched", "hybrid"],
+        "options": [
+          "manual_per_semester",
+          "auto_matched",
+          "hybrid"
+        ],
         "default": "manual_per_semester",
         "context": "Auto-matching uses specialization tags and workload limits; hybrid allows manual override of auto suggestions"
       },
@@ -383,7 +642,11 @@
       {
         "id": "faculty_contract_type",
         "question": "What contract types exist? Permanent, visiting, adjunct, part-time?",
-        "options": ["permanent_visiting", "permanent_visiting_adjunct", "all_types"],
+        "options": [
+          "permanent_visiting",
+          "permanent_visiting_adjunct",
+          "all_types"
+        ],
         "default": "permanent_visiting",
         "context": "Contract types affect workload norms, leave entitlements, and payroll calculations; selection field on hr.contract"
       }
@@ -399,70 +662,109 @@
       {
         "id": "hr_payroll_integration",
         "question": "Should payroll integrate with Odoo's hr.payroll module for salary computation?",
-        "options": ["yes_full", "yes_basic", "standalone"],
+        "options": [
+          "yes_full",
+          "yes_basic",
+          "standalone"
+        ],
         "default": "yes_full",
         "context": "Full integration uses hr.payslip with salary rules; basic only tracks net pay; standalone builds custom payroll"
       },
       {
         "id": "hr_contract_types",
         "question": "What employee contract types are needed? Permanent, contractual, daily wage, visiting faculty?",
-        "options": ["permanent_contractual", "all_types", "custom"],
+        "options": [
+          "permanent_contractual",
+          "all_types",
+          "custom"
+        ],
         "default": "permanent_contractual",
         "context": "Contract types drive payroll rules, leave allocations, and benefit eligibility via hr.contract.type"
       },
       {
         "id": "hr_attendance_method",
         "question": "How is employee attendance tracked? Biometric device, manual entry, or both?",
-        "options": ["biometric", "manual", "both"],
+        "options": [
+          "biometric",
+          "manual",
+          "both"
+        ],
         "default": "both",
         "context": "Biometric needs device API integration (ZKTeco, etc.); manual uses hr.attendance check-in/out; both allows fallback"
       },
       {
         "id": "hr_overtime_policy",
         "question": "How should overtime be calculated and compensated? Flat rate, multiplier-based, or comp-off?",
-        "options": ["flat_rate", "multiplier", "comp_off", "not_applicable"],
+        "options": [
+          "flat_rate",
+          "multiplier",
+          "comp_off",
+          "not_applicable"
+        ],
         "default": "multiplier",
         "context": "Multiplier uses work hours beyond threshold with configurable rate (1.5x, 2x); feeds into payroll salary rules"
       },
       {
         "id": "hr_department_payslip",
         "question": "Do you need department-wise payslip batching and approval?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Department batching uses hr.payslip.run with department filter; enables HOD approval before finance processing"
       },
       {
         "id": "hr_loan_advance",
         "question": "Do you need employee loan and salary advance management?",
-        "options": ["yes_with_deduction", "advance_only", "not_needed"],
+        "options": [
+          "yes_with_deduction",
+          "advance_only",
+          "not_needed"
+        ],
         "default": "yes_with_deduction",
         "context": "Loan model with installment schedule; auto-deducts from payslip via salary rule; tracks outstanding balance"
       },
       {
         "id": "hr_employee_documents",
         "question": "What employee document types need management? Contracts, certificates, ID copies, experience letters?",
-        "options": ["basic", "comprehensive", "not_needed"],
+        "options": [
+          "basic",
+          "comprehensive",
+          "not_needed"
+        ],
         "default": "basic",
         "context": "Document types with expiry tracking and renewal reminders; uses ir.attachment with wrapper model"
       },
       {
         "id": "hr_probation",
         "question": "Do you need probation period tracking with confirmation workflow?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Probation adds date fields on hr.contract and a scheduled action for reminder; confirmation changes contract state"
       },
       {
         "id": "hr_appraisal_cycles",
         "question": "Do you need periodic performance appraisal cycles? Annual, biannual, or custom?",
-        "options": ["annual", "biannual", "custom", "not_needed"],
+        "options": [
+          "annual",
+          "biannual",
+          "custom",
+          "not_needed"
+        ],
         "default": "annual",
         "context": "Appraisal cycles use hr.appraisal model or custom; can include self-assessment, manager review, and goal tracking"
       },
       {
         "id": "hr_leave_encashment",
         "question": "Do you need leave encashment (converting unused leave to pay)?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "no",
         "context": "Leave encashment creates a payroll input from leave balance; needs encashment policy rules per leave type"
       }
@@ -478,70 +780,109 @@
       {
         "id": "timetable_conflict_resolution",
         "question": "How should scheduling conflicts be handled? Hard constraints (must avoid) or soft preferences (try to avoid)?",
-        "options": ["hard_only", "hard_and_soft", "manual_override"],
+        "options": [
+          "hard_only",
+          "hard_and_soft",
+          "manual_override"
+        ],
         "default": "hard_and_soft",
         "context": "Hard constraints: no room/faculty/student double-booking; soft: minimize gaps, prefer morning slots, etc."
       },
       {
         "id": "timetable_room_allocation",
         "question": "How should rooms be allocated to classes? Manual assignment or auto-allocation based on capacity?",
-        "options": ["manual", "auto_by_capacity", "auto_by_type_capacity"],
+        "options": [
+          "manual",
+          "auto_by_capacity",
+          "auto_by_type_capacity"
+        ],
         "default": "manual",
         "context": "Auto-allocation matches class size to room capacity; type-based also considers lab vs lecture vs seminar rooms"
       },
       {
         "id": "timetable_recurring_pattern",
         "question": "What is the recurring pattern for classes? Weekly, bi-weekly, or custom patterns?",
-        "options": ["weekly", "bi_weekly", "custom"],
+        "options": [
+          "weekly",
+          "bi_weekly",
+          "custom"
+        ],
         "default": "weekly",
         "context": "Weekly is simplest (Mon-Sat slots); bi-weekly alternates weeks; custom needs a pattern definition model"
       },
       {
         "id": "timetable_slot_granularity",
         "question": "What is the time slot granularity? 30 minutes, 1 hour, or configurable?",
-        "options": ["30min", "1hr", "configurable"],
+        "options": [
+          "30min",
+          "1hr",
+          "configurable"
+        ],
         "default": "1hr",
         "context": "Granularity defines the minimum schedulable unit; configurable adds complexity but handles labs (2-3 hour blocks)"
       },
       {
         "id": "timetable_faculty_availability",
         "question": "Do you need faculty availability/preference input before timetable generation?",
-        "options": ["yes_availability", "yes_preference", "both", "not_needed"],
+        "options": [
+          "yes_availability",
+          "yes_preference",
+          "both",
+          "not_needed"
+        ],
         "default": "yes_availability",
         "context": "Availability blocks time slots; preferences are soft constraints with weight; both gives best results but more input"
       },
       {
         "id": "timetable_room_types",
         "question": "What room types need differentiation? Lecture hall, lab, seminar room, auditorium?",
-        "options": ["lecture_lab", "lecture_lab_seminar", "all_types"],
+        "options": [
+          "lecture_lab",
+          "lecture_lab_seminar",
+          "all_types"
+        ],
         "default": "lecture_lab",
         "context": "Room types constrain which courses can be scheduled where; labs need specific equipment tracking"
       },
       {
         "id": "timetable_substitution",
         "question": "How should faculty substitution be handled when a teacher is absent?",
-        "options": ["manual_assignment", "auto_suggest", "not_needed"],
+        "options": [
+          "manual_assignment",
+          "auto_suggest",
+          "not_needed"
+        ],
         "default": "manual_assignment",
         "context": "Auto-suggest finds available faculty with matching specialization; manual requires HOD to assign"
       },
       {
         "id": "timetable_publication",
         "question": "How should timetables be published? Portal view, PDF export, or both?",
-        "options": ["portal_only", "pdf_only", "both"],
+        "options": [
+          "portal_only",
+          "pdf_only",
+          "both"
+        ],
         "default": "both",
         "context": "Portal view uses website controllers with role-based filtering; PDF uses QWeb report for printable version"
       },
       {
         "id": "timetable_clash_detection_scope",
         "question": "What entities should clash detection cover? Room + faculty, or room + faculty + student groups?",
-        "options": ["room_faculty", "room_faculty_student"],
+        "options": [
+          "room_faculty",
+          "room_faculty_student"
+        ],
         "default": "room_faculty_student",
         "context": "Student group clash detection prevents scheduling two mandatory courses at the same time for the same batch/section"
       },
       {
         "id": "timetable_template_support",
         "question": "Do you need timetable templates that can be reused across semesters?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Templates save time on recurring schedules; duplicate and adjust rather than rebuild each semester"
       }
@@ -557,14 +898,23 @@
       {
         "id": "notification_channels",
         "question": "What notification channels should be supported?",
-        "options": ["email_only", "email_sms", "email_sms_whatsapp", "email_sms_push"],
+        "options": [
+          "email_only",
+          "email_sms",
+          "email_sms_whatsapp",
+          "email_sms_push"
+        ],
         "default": "email_sms",
         "context": "Email uses mail.mail; SMS uses sms.sms; WhatsApp needs whatsapp module; push needs mobile app integration"
       },
       {
         "id": "notification_template_engine",
         "question": "What template engine for notification content? QWeb (Odoo native), Jinja2, or plain text?",
-        "options": ["qweb", "jinja2", "plain_text"],
+        "options": [
+          "qweb",
+          "jinja2",
+          "plain_text"
+        ],
         "default": "qweb",
         "context": "QWeb integrates with Odoo's mail.template system and supports dynamic content with record data"
       },
@@ -578,49 +928,79 @@
       {
         "id": "notification_delivery_tracking",
         "question": "Do you need delivery status tracking (sent, delivered, failed, read)?",
-        "options": ["yes_full", "sent_failed_only", "not_needed"],
+        "options": [
+          "yes_full",
+          "sent_failed_only",
+          "not_needed"
+        ],
         "default": "sent_failed_only",
         "context": "Full tracking needs webhook callbacks from email/SMS providers; sent/failed uses Odoo's built-in mail state"
       },
       {
         "id": "notification_bulk_sending",
         "question": "Do you need bulk notification sending? e.g., fee reminders to all students with outstanding balances.",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Bulk sending uses queue-based processing to avoid timeout; ir.cron with batch size limits"
       },
       {
         "id": "notification_scheduling",
         "question": "Should notifications be sent immediately or support scheduling?",
-        "options": ["immediate", "queued", "scheduled", "all_modes"],
+        "options": [
+          "immediate",
+          "queued",
+          "scheduled",
+          "all_modes"
+        ],
         "default": "queued",
         "context": "Queued uses mail.mail queue processed by cron; scheduled adds a send_date field with future delivery"
       },
       {
         "id": "notification_recipient_resolution",
         "question": "How should recipients be resolved? Direct (student), indirect (student's guardian), or role-based (all HODs)?",
-        "options": ["direct_only", "direct_indirect", "role_based", "all_methods"],
+        "options": [
+          "direct_only",
+          "direct_indirect",
+          "role_based",
+          "all_methods"
+        ],
         "default": "direct_indirect",
         "context": "Indirect resolution follows relationships (student -> guardian); role-based queries security groups"
       },
       {
         "id": "notification_opt_out",
         "question": "Do you need opt-out/preference management per channel?",
-        "options": ["yes_per_channel", "yes_global", "not_needed"],
+        "options": [
+          "yes_per_channel",
+          "yes_global",
+          "not_needed"
+        ],
         "default": "yes_per_channel",
         "context": "Per-channel opt-out uses a preference model with channel flags; respects GDPR/privacy requirements"
       },
       {
         "id": "notification_retry_policy",
         "question": "What retry policy for failed notifications? Immediate retry, exponential backoff, or no retry?",
-        "options": ["immediate_retry", "exponential_backoff", "no_retry"],
+        "options": [
+          "immediate_retry",
+          "exponential_backoff",
+          "no_retry"
+        ],
         "default": "exponential_backoff",
         "context": "Exponential backoff prevents provider rate limiting; configurable max retries and base delay"
       },
       {
         "id": "notification_log_retention",
         "question": "How long should notification logs be retained? 30 days, 90 days, 1 year, or indefinite?",
-        "options": ["30_days", "90_days", "1_year", "indefinite"],
+        "options": [
+          "30_days",
+          "90_days",
+          "1_year",
+          "indefinite"
+        ],
         "default": "90_days",
         "context": "Log retention affects database size; use ir.cron to purge old records; consider regulatory requirements"
       }
@@ -636,7 +1016,12 @@
       {
         "id": "portal_role_access",
         "question": "What portal roles are needed? Student, faculty, parent/guardian, admin, or all?",
-        "options": ["student_only", "student_faculty", "student_faculty_parent", "all_roles"],
+        "options": [
+          "student_only",
+          "student_faculty",
+          "student_faculty_parent",
+          "all_roles"
+        ],
         "default": "student_faculty",
         "context": "Each role needs its own portal.mixin integration, menu items, and access rules via res.groups"
       },
@@ -650,14 +1035,22 @@
       {
         "id": "portal_document_upload",
         "question": "Should portal users be able to upload documents? What types and size limits?",
-        "options": ["yes_with_limits", "yes_unrestricted", "no"],
+        "options": [
+          "yes_with_limits",
+          "yes_unrestricted",
+          "no"
+        ],
         "default": "yes_with_limits",
         "context": "Document upload uses ir.attachment with file type and size validation; needs virus scanning consideration"
       },
       {
         "id": "portal_mobile_responsive",
         "question": "Is mobile responsiveness a requirement for the portal?",
-        "options": ["yes_required", "nice_to_have", "desktop_only"],
+        "options": [
+          "yes_required",
+          "nice_to_have",
+          "desktop_only"
+        ],
         "default": "yes_required",
         "context": "Odoo's portal is Bootstrap-based and responsive by default; custom templates need responsive testing"
       },
@@ -671,35 +1064,57 @@
       {
         "id": "portal_sso_integration",
         "question": "Do you need Single Sign-On (SSO) integration? LDAP, OAuth2, SAML?",
-        "options": ["ldap", "oauth2", "saml", "none"],
+        "options": [
+          "ldap",
+          "oauth2",
+          "saml",
+          "none"
+        ],
         "default": "none",
         "context": "LDAP uses auth_ldap module; OAuth2/SAML need auth_oauth or custom provider; affects user provisioning"
       },
       {
         "id": "portal_session_timeout",
         "question": "What session timeout is appropriate for portal users?",
-        "options": ["30min", "1hr", "4hr", "8hr"],
+        "options": [
+          "30min",
+          "1hr",
+          "4hr",
+          "8hr"
+        ],
         "default": "1hr",
         "context": "Session timeout configured via ir.config_parameter; shorter for security, longer for user convenience"
       },
       {
         "id": "portal_password_policy",
         "question": "What password policy should apply to portal users? Minimum length, complexity, expiry?",
-        "options": ["basic", "moderate", "strict"],
+        "options": [
+          "basic",
+          "moderate",
+          "strict"
+        ],
         "default": "moderate",
         "context": "Basic: 8+ chars; moderate: 8+ with mixed case and numbers; strict: 12+ with special chars and 90-day expiry"
       },
       {
         "id": "portal_announcements",
         "question": "Do you need an announcement/notice board on the portal?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "yes",
         "context": "Announcements model with publish/unpublish dates, target audience (role-based), and priority levels"
       },
       {
         "id": "portal_feedback",
         "question": "Do you need a feedback/grievance submission module on the portal?",
-        "options": ["yes_feedback", "yes_grievance", "both", "not_needed"],
+        "options": [
+          "yes_feedback",
+          "yes_grievance",
+          "both",
+          "not_needed"
+        ],
         "default": "yes_feedback",
         "context": "Feedback creates a record with category, description, and status tracking; grievance adds escalation workflow"
       }
@@ -729,7 +1144,11 @@
       {
         "id": "generic_security_groups",
         "question": "What security groups and access levels are needed? Manager, user, read-only?",
-        "options": ["manager_user", "manager_user_readonly", "custom"],
+        "options": [
+          "manager_user",
+          "manager_user_readonly",
+          "custom"
+        ],
         "default": "manager_user",
         "context": "Groups defined in security/ir.model.access.csv and XML record rules; use implied_ids for group hierarchy"
       },
@@ -743,14 +1162,22 @@
       {
         "id": "generic_reporting",
         "question": "What reports are needed? List views, pivot tables, graph views, PDF reports?",
-        "options": ["list_only", "list_pivot", "list_pivot_graph", "full_with_pdf"],
+        "options": [
+          "list_only",
+          "list_pivot",
+          "list_pivot_graph",
+          "full_with_pdf"
+        ],
         "default": "list_pivot",
         "context": "Pivot and graph views use Odoo's built-in BI; PDF reports use QWeb templates with ir.actions.report"
       },
       {
         "id": "generic_portal_exposure",
         "question": "Should any data from this module be exposed on the portal? Which models and what access level?",
-        "options": ["yes", "no"],
+        "options": [
+          "yes",
+          "no"
+        ],
         "default": "no",
         "context": "Portal exposure requires portal.mixin inheritance, controllers, and access rules for portal users"
       },
@@ -764,7 +1191,11 @@
       {
         "id": "generic_data_migration",
         "question": "Will you need to import/migrate existing data? What format and volume?",
-        "options": ["csv_import", "api_migration", "none"],
+        "options": [
+          "csv_import",
+          "api_migration",
+          "none"
+        ],
         "default": "none",
         "context": "CSV import uses Odoo's built-in import; API migration needs custom scripts; large volumes need batching"
       }
@@ -773,6 +1204,180 @@
       "Generic template is for modules that do not match any known type prefix",
       "Ask follow-up questions based on the decomposition.json entry for this module",
       "Check dependencies to understand integration scope"
+    ]
+  },
+  "affiliate": {
+    "questions": [
+      {
+        "id": "affiliate_lifecycle_states",
+        "question": "Which affiliation lifecycle states does the university use?",
+        "options": [
+          "provisional_regular_expired",
+          "provisional_regular_suspended_cancelled_expired"
+        ],
+        "default": "provisional_regular_suspended_cancelled_expired",
+        "context": "PRD M29A: applications move provisional->regular; suspension (Registrar) and cancellation (VC only) are separate from natural expiry"
+      },
+      {
+        "id": "affiliate_program_approval",
+        "question": "Is program approval per-college (each college approved for specific programs) or blanket?",
+        "options": [
+          "per_college_per_program",
+          "blanket"
+        ],
+        "default": "per_college_per_program",
+        "context": "Per-college approval requires a college<->program junction with its own approval workflow and seat caps"
+      },
+      {
+        "id": "affiliate_exam_window",
+        "question": "Should exam-form submission windows be enforced system-side for affiliated colleges?",
+        "options": [
+          "hard_enforced",
+          "soft_warning"
+        ],
+        "default": "hard_enforced",
+        "context": "PRD constraint: R24 (College Admin) can submit exam forms only during the window opened by the Controller (R04); hard enforcement uses @api.constrains against session open/close datetimes"
+      },
+      {
+        "id": "affiliate_inspection_workflow",
+        "question": "Does college inspection need a structured workflow (schedule -> visit -> deficiency notice -> improvement plan)?",
+        "options": [
+          "full_workflow",
+          "checklist_only"
+        ],
+        "default": "full_workflow",
+        "context": "PRD M29E: inspection management with faculty qualification verification, infrastructure assessment, deficiency reporting and improvement tracking"
+      },
+      {
+        "id": "affiliate_roll_numbers",
+        "question": "Who issues roll numbers to affiliated-college students?",
+        "options": [
+          "mother_university",
+          "college_with_prefix"
+        ],
+        "default": "mother_university",
+        "context": "PRD M29B: roll numbers issued by the mother university (Registrar/system); colleges only register students"
+      },
+      {
+        "id": "affiliate_result_visibility",
+        "question": "When can affiliated colleges see results?",
+        "options": [
+          "after_official_publication",
+          "live"
+        ],
+        "default": "after_official_publication",
+        "context": "PRD constraint: R24 views results only after official publication by Controller (R04); enforce with a record rule on the published flag"
+      },
+      {
+        "id": "affiliate_fee_heads",
+        "question": "Which affiliate fee heads apply?",
+        "options": [
+          "affiliation_exam_only",
+          "affiliation_exam_development_fines"
+        ],
+        "default": "affiliation_exam_development_fines",
+        "context": "PRD M29F: affiliation fee, exam fee, development fund and fine/penalty management with college-wise financial reporting"
+      }
+    ]
+  },
+  "payroll_pk": {
+    "questions": [
+      {
+        "id": "payroll_scales",
+        "question": "Which pay-scale systems does the university run?",
+        "options": [
+          "bps_only",
+          "tts_only",
+          "bps_and_tts"
+        ],
+        "default": "bps_and_tts",
+        "context": "Public universities typically run BPS (staff, grades 1-22) plus HEC TTS (faculty: Assistant/Associate/Professor, lump-sum). Reference data: data/pakistan/bps_scales.json, tts_scales.json"
+      },
+      {
+        "id": "payroll_engine",
+        "question": "Confirm payroll engine: OCA payroll (Community) — Enterprise hr_payroll is not available.",
+        "options": [
+          "oca_payroll_confirmed"
+        ],
+        "default": "oca_payroll_confirmed",
+        "context": "LOCKED ARCHITECTURE DECISION: depends [\"payroll\", \"payroll_account\"] from OCA/payroll; amil-utils check-edition flags hr_payroll as an error. Single-option question shown for explicit human acknowledgment"
+      },
+      {
+        "id": "payroll_deductions",
+        "question": "Which statutory deductions apply?",
+        "options": [
+          "tax_eobi_gpf",
+          "tax_eobi_gpf_benevolent_insurance"
+        ],
+        "default": "tax_eobi_gpf_benevolent_insurance",
+        "context": "Income tax (FBR slabs), EOBI (5%/1% on minimum wage), GP Fund (fixed per BPS, not TTS), Benevolent Fund and Group Insurance per provincial rules. Rates: data/pakistan/payroll_deductions.json"
+      },
+      {
+        "id": "payroll_bank_transfer",
+        "question": "Which bank transfer file format does the treasurer need?",
+        "options": [
+          "hbl",
+          "nbp",
+          "mcb",
+          "generic_csv"
+        ],
+        "default": "generic_csv",
+        "context": "Salary disbursement batch files differ per bank; generic CSV covers manual upload portals"
+      },
+      {
+        "id": "payroll_arrears",
+        "question": "Do you need arrears and annual-increment processing?",
+        "options": [
+          "yes",
+          "no"
+        ],
+        "default": "yes",
+        "context": "Annual increments move employees one stage within their BPS scale (Dec 1); arrears arise from backdated notifications"
+      }
+    ]
+  },
+  "taxation": {
+    "questions": [
+      {
+        "id": "tax_withholding_scope",
+        "question": "Which withholding streams must the system compute?",
+        "options": [
+          "salaries_only",
+          "salaries_suppliers",
+          "salaries_suppliers_contractors"
+        ],
+        "default": "salaries_suppliers",
+        "context": "Salaried withholding uses FY slabs (data/pakistan/payroll_deductions.json); supplier/contractor withholding applies different FBR sections at invoice time"
+      },
+      {
+        "id": "tax_ntn_vendors",
+        "question": "Capture and validate NTN on vendor records?",
+        "options": [
+          "required",
+          "optional"
+        ],
+        "default": "required",
+        "context": "NTN format 7-digit or 13-digit CNIC-based (data/pakistan/identity_formats.json); filer/non-filer status changes withholding rates"
+      },
+      {
+        "id": "tax_fiscal_year",
+        "question": "Confirm July-June fiscal year configuration.",
+        "options": [
+          "july_june_confirmed"
+        ],
+        "default": "july_june_confirmed",
+        "context": "Pakistani public-sector FY runs 1 July - 30 June; account.fiscal.year records and budget spans must follow it (see knowledge/pakistan.md)"
+      },
+      {
+        "id": "tax_certificates",
+        "question": "Generate annual withholding tax certificates for employees?",
+        "options": [
+          "yes",
+          "no"
+        ],
+        "default": "yes",
+        "context": "Year-end employer withholding statement per employee, derived from the same slab records used in payroll"
+      }
     ]
   }
 }
