@@ -113,3 +113,20 @@ def test_constraint_attribute_underscore_prefixed(tmp_path: Path) -> None:
     import re
     for m in re.finditer(r"^\s{4}(\w+) = models\.Constraint\(", src, re.M):
         assert m.group(1).startswith("_"), m.group(1)
+
+
+def test_xml_comments_survive_double_dash_descriptions(tmp_path: Path) -> None:
+    """'--' in a model description must not break XML comments (menu/demo)."""
+    import xml.etree.ElementTree as ET
+    spec = {
+        **SPEC,
+        "module_name": "uni_dashdash_check",
+        "models": [{
+            "name": "uni.dashdash.check",
+            "description": "A challan -- never a manual mark-paid button",
+            "fields": [{"name": "name", "type": "Char", "required": True}],
+        }],
+    }
+    render_module(spec, get_template_dir(), tmp_path)
+    for xf in (tmp_path / "uni_dashdash_check").rglob("*.xml"):
+        ET.parse(xf)

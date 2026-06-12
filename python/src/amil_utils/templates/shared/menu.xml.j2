@@ -19,7 +19,7 @@
               sequence="10"/>
 
 {% for model in models %}
-    <!-- {{ model.description | default(model.name) }} Menu Item -->
+    <!-- {{ (model.description | default(model.name)) | replace('--', '—') }} Menu Item -->
     <menuitem id="menu_{{ model.name | to_xml_id }}"
               name="{{ model.description | default(model.name) }}"
               parent="menu_{{ module_name }}_main"

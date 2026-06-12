@@ -3,7 +3,7 @@
 <odoo noupdate="1">
 
 {% for model in models %}
-    <!-- Demo records for {{ model.description | default(model.name) }} -->
+    <!-- Demo records for {{ (model.description | default(model.name)) | replace('--', '—') }} -->
 {% for i in range(3) %}
 {% set record_num = loop.index %}
 {% set record_idx = loop.index0 %}
