@@ -153,7 +153,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         user = self.env["res.users"].create({
             "name": "Test Module User",
             "login": "test_user_{{ model_var }}@example.com",
-            "groups_id": [(6, 0, [self.env.ref("{{ module_name }}.{{ security_roles[0].xml_id if (security_roles is defined and security_roles) else "group_" ~ module_name ~ "_user" }}").id])],
+            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("{{ module_name }}.{{ security_roles[0].xml_id if (security_roles is defined and security_roles) else "group_" ~ module_name ~ "_user" }}").id])],
         })
         record = self.env["{{ model_name }}"].with_user(user).create({
 {% for field in required_fields %}
@@ -193,7 +193,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         user = self.env["res.users"].create({
             "name": "No Group User",
             "login": "no_group_{{ model_var }}@example.com",
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("base.group_user").id])],
         })
         with self.assertRaises(AccessError):
             self.env["{{ model_name }}"].with_user(user).create({

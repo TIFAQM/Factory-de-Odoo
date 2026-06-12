@@ -88,6 +88,7 @@ def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str
             None,
         ),
         "composite_indexes": model.get("composite_indexes", []),
+        "security_roles": spec.get("security_roles", []),
         "expected_examples": model.get("expected_examples", []),
         "check_company_auto": model.get("check_company_auto", False),
     }
