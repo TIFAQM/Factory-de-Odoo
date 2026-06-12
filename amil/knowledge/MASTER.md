@@ -200,5 +200,12 @@ When `odoo_version` is `"19.0"`, these additional rules apply (on top of 18.0 ch
 - Enterprise module registry at `data/enterprise_modules.json` (31 modules)
 - OCA Community alternatives suggested where available
 
+### Domain Knowledge Files (load when the spec touches the domain)
+
+- `accounting.md` -- invoicing, journals, payments (load when depends includes `account`)
+- `inventory.md` -- warehouse, stock moves, pickings (load when depends includes `stock`)
+- `owl.md` -- OWL JavaScript components (load when spec has dashboards/JS widgets)
+- `education.md` -- university/HEC domain: enrollment, GPA, attendance, merit, challans, affiliate colleges, OCA payroll (BPS/TTS), QEC/OBE (load when `localization == "pk"` or module name starts with `university_`/`uni_`)
+
 ---
 *Knowledge base for Odoo 17.0/18.0/19.0 -- loaded by all agents via @include*
