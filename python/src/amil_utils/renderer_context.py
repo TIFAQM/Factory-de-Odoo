@@ -77,6 +77,21 @@ def _build_workflow_actions(spec: dict[str, Any], model: dict[str, Any]) -> dict
         if src and src not in entry["froms"]:
             entry["froms"].append(src)
     actions = [a for a in by_action.values() if a["froms"]]
+    # Resolve which field holds the state machine: prefer a field literally
+    # named "state"; otherwise the Selection field whose options cover the
+    # workflow's states (e.g. fee.challan uses payment_status).
+    state_field_name = "state"
+    field_names = {f.get("name") for f in model.get("fields", [])}
+    if "state" not in field_names and mw:
+        wf_states = set(mw.get("states") or [])
+        for f in model.get("fields", []):
+            if f.get("type") == "Selection":
+                options = {s[0] for s in (f.get("selection") or []) if s}
+                if wf_states and wf_states <= options:
+                    state_field_name = f["name"]
+                    break
+    for a in actions:
+        a["state_field"] = state_field_name
     return {
         "workflow_actions": actions,
         "has_workflow_actions": bool(actions),

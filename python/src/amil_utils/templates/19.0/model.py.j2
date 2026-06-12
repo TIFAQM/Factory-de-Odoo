@@ -284,10 +284,11 @@ class {{ model_name | to_class }}(models.Model):
                 "You are not allowed to perform '{{ wa.label }}'."))
 {% endif %}
         for rec in self:
-            if rec.state not in ({{ wa.froms | map("tojson") | join(", ") }},):
+            if rec.{{ wa.state_field }} not in ({{ wa.froms | map("tojson") | join(", ") }},):
                 raise UserError(self.env._(
-                    "Cannot perform '{{ wa.label }}' from state '%s'.", rec.state))
-            rec.state = "{{ wa.to }}"
+                    "Cannot perform '{{ wa.label }}' from state '%s'.",
+                    rec.{{ wa.state_field }}))
+            rec.{{ wa.state_field }} = "{{ wa.to }}"
 {% endfor %}
 {% endif %}
 {% if is_cacheable %}

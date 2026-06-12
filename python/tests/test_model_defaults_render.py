@@ -256,3 +256,38 @@ def test_private_workflow_actions_get_no_buttons(tmp_path: Path) -> None:
     view = (tmp_path / "uni_wf_priv" / "views" / "uni_wf_priv_views.xml").read_text()
     assert "def _cron_expire(self):" in src          # method still generated
     assert '<button name="_cron_expire"' not in view  # but no button
+
+
+def test_workflow_resolves_nonstandard_state_field(tmp_path: Path) -> None:
+    """fee.challan-style machines live on payment_status, not state."""
+    spec = {
+        **SPEC,
+        "module_name": "uni_wf_paystate",
+        "models": [{
+            "name": "uni.wf.paystate",
+            "description": "Pay state",
+            "fields": [
+                {"name": "name", "type": "Char", "required": True},
+                {"name": "payment_status", "type": "Selection",
+                 "selection": [["unpaid", "Unpaid"], ["paid", "Paid"],
+                                ["refunded", "Refunded"]],
+                 "default": "unpaid"},
+            ],
+            "record_rules": [],
+        }],
+        "workflow": [{
+            "model": "uni.wf.paystate",
+            "states": ["unpaid", "paid", "refunded"],
+            "transitions": [
+                {"from": "paid", "to": "refunded", "action": "action_refund"},
+            ],
+        }],
+    }
+    render_module(spec, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_wf_paystate" / "models" /
+           "uni_wf_paystate.py").read_text()
+    assert 'rec.payment_status = "refunded"' in src
+    assert "rec.state" not in src
+    view = (tmp_path / "uni_wf_paystate" / "views" /
+            "uni_wf_paystate_views.xml").read_text()
+    assert 'invisible="payment_status not in' in view

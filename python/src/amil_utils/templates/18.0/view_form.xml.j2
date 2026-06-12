@@ -15,7 +15,7 @@
 {% for wa in workflow_actions | default([]) if wa.button %}
                     <button name="{{ wa.name }}" type="object"
                             string="{{ wa.label }}"
-                            invisible="state not in [{{ wa.froms | map("tojson") | join(", ") | replace('\"', "'") }}]"
+                            invisible="{{ wa.state_field }} not in [{{ wa.froms | map("tojson") | join(", ") | replace('\"', "'") }}]"
 {% if wa.group %}
                             groups="{{ wa.group }}"
 {% endif %}
