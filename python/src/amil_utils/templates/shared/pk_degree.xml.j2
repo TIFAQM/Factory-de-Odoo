@@ -1,0 +1,61 @@
+{# pk_degree.xml.j2 -- degree certificate with QR verification
+   Spec keys on report: student_name_field (req), serial_field (req),
+   program_field, cgpa_field, session_field,
+   verify_url_param (ir.config_parameter key holding the public
+   degree-verification base URL; the QR encodes url + serial). #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_{{ report.xml_id }}">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page" style="border: 4px double #1a1a4e; padding: 32px; text-align: center;">
+                    <h1 style="letter-spacing: 2px;">{{ module_title }}</h1>
+                    <p class="text-muted">Chartered by the Government — Recognized by the
+                        Higher Education Commission of Pakistan</p>
+
+                    <h3 style="margin-top: 24px;">This is to certify that</h3>
+                    <h2 style="border-bottom: 1px solid #1a1a4e; display: inline-block; padding: 0 24px;">
+                        <span t-field="doc.{{ report.student_name_field }}"/>
+                    </h2>
+
+                    <p style="max-width: 80%; margin: 16px auto;">
+                        having fulfilled all requirements prescribed by the University
+{% if report.get('program_field') %}
+                        has been awarded the degree of
+                        <strong><span t-field="doc.{{ report.program_field }}"/></strong>
+{% endif %}
+{% if report.get('cgpa_field') %}
+                        with a CGPA of
+                        <strong><span t-field="doc.{{ report.cgpa_field }}"/></strong> / 4.00
+{% endif %}
+{% if report.get('session_field') %}
+                        (Session <span t-field="doc.{{ report.session_field }}"/>)
+{% endif %}
+                        together with all the rights and privileges pertaining thereto.
+                    </p>
+
+                    <div class="row" style="margin-top: 48px;">
+                        <div class="col-4 text-center">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;">
+                                Controller of Examinations
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <img t-att-src="'/report/barcode/?barcode_type=QR&amp;value=%s&amp;width=120&amp;height=120' % (env['ir.config_parameter'].sudo().get_param('{{ report.verify_url_param | default('university.degree_verify_url') }}', '') + str(doc.{{ report.serial_field }}))"
+                                 alt="QR verification code" style="max-height: 120px;"/>
+                            <div><small>Scan the QR code to verify this degree online</small></div>
+                            <div><small>Serial: <span t-field="doc.{{ report.serial_field }}"/></small></div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;">
+                                Vice Chancellor
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

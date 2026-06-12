@@ -537,6 +537,14 @@ def render_cron(
         return Result.fail(f"render_cron failed: {exc}")
 
 
+# Pakistani QWeb report bodies, selected by spec report["template_style"].
+_REPORT_STYLE_TEMPLATES: dict[str, str] = {
+    "pk_challan": "pk_fee_challan.xml.j2",
+    "pk_transcript": "pk_transcript.xml.j2",
+    "pk_degree": "pk_degree.xml.j2",
+}
+
+
 def render_reports(
     env: "Environment",
     spec: dict[str, Any],
@@ -564,8 +572,12 @@ def render_reports(
                 module_dir / "data" / f"report_{report['xml_id']}.xml",
                 report_ctx,
             ))
+            # Pakistani report styles (challan/transcript/degree) selected via
+            # report.template_style; unknown/absent styles fall back to generic.
+            body_template = _REPORT_STYLE_TEMPLATES.get(
+                report.get("template_style", ""), "report_template.xml.j2")
             created.append(render_template(
-                env, "report_template.xml.j2",
+                env, body_template,
                 module_dir / "data" / f"report_{report['xml_id']}_template.xml",
                 report_ctx,
             ))
