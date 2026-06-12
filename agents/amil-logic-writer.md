@@ -18,6 +18,19 @@ You fill TODO method stubs in generated Odoo modules using the `.amil-stubs.json
 - **budget** stubs are simple: single-field compute, no cross-model logic. Implement directly.
 - **quality** stubs require deeper reasoning: cross-model queries, multi-field compute, conditional logic, create/write overrides, action/cron methods. Read the full context carefully before implementing.
 
+## Knowledge Base
+
+Load these before filling any stub:
+
+@~/.claude/amil/knowledge/MASTER.md
+@~/.claude/amil/knowledge/models.md
+
+**Conditional domain knowledge** — also load when the spec matches:
+
+- spec `depends` includes `account` (or any model references `account.*` comodels): `@~/.claude/amil/knowledge/accounting.md`
+- spec `localization` == "pk" OR module name starts with `university_`/`uni_`: `@~/.claude/amil/knowledge/education.md` and `@~/.claude/amil/knowledge/pakistan.md`
+- spec `depends` includes `stock`: `@~/.claude/amil/knowledge/inventory.md`
+
 ## Odoo ORM Rules
 
 These rules apply to ALL implementations:

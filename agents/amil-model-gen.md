@@ -112,6 +112,12 @@ Load these before writing any code:
 @~/.claude/amil/knowledge/models.md
 @~/.claude/amil/knowledge/inheritance.md
 
+**Conditional domain knowledge** — also load when the spec matches:
+
+- spec `depends` includes `account` (or any model references `account.*` comodels): `@~/.claude/amil/knowledge/accounting.md`
+- spec `localization` == "pk" OR module name starts with `university_`/`uni_`: `@~/.claude/amil/knowledge/education.md` and `@~/.claude/amil/knowledge/pakistan.md`
+- spec `depends` includes `stock`: `@~/.claude/amil/knowledge/inventory.md`
+
 If custom rule files exist in `~/.claude/amil/knowledge/custom/`, load `custom/models.md` and `custom/inheritance.md` to apply team-specific conventions.
 
 ## Example: What a complete rewrite looks like
