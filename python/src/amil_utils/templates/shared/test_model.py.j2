@@ -89,7 +89,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         self.assertTrue(self.test_record.id, "Record should have been created successfully")
 {% for field in required_fields %}
         self.assertEqual(
-            self.test_record.{{ field.name }},
+            self.test_record.{{ field.name }}{{ ".id" if field.type == "Many2one" else "" }},
             self.test_record_vals.get("{{ field.name }}"),
             "Field '{{ field.name }}' should match the creation value",
         )
@@ -153,7 +153,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         user = self.env["res.users"].create({
             "name": "Test Module User",
             "login": "test_user_{{ model_var }}@example.com",
-            "groups_id": [(6, 0, [self.env.ref("{{ module_name }}.group_{{ module_name }}_user").id])],
+            "groups_id": [(6, 0, [self.env.ref("{{ module_name }}.{{ security_roles[0].xml_id if (security_roles is defined and security_roles) else "group_" ~ module_name ~ "_user" }}").id])],
         })
         record = self.env["{{ model_name }}"].with_user(user).create({
 {% for field in required_fields %}
