@@ -78,12 +78,15 @@ def _security_build_roles(
             prev_role = roles_list[i - 1]
             implied_ids = f"group_{module_name}_{prev_role}"
         is_highest = i == len(roles_list) - 1
+        crud = security.get("defaults", {}).get(role_name, "")
         result.append({
             "name": role_name,
             "label": role_name.replace("_", " ").title(),
             "xml_id": f"group_{module_name}_{role_name}",
             "implied_ids": implied_ids,
             "is_highest": is_highest,
+            "crud": crud,
+            "can_create": "c" in crud,
         })
     return result
 

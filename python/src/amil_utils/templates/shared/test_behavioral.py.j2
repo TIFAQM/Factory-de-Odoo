@@ -12,10 +12,41 @@ from odoo.exceptions import AccessError
 class TestBehavioralSmoke(TransactionCase):
     """Automated behavioral probes for {{ module_name }}."""
 
+    def _required_vals(self, comodel, _depth=0):
+        """Minimal create vals satisfying required fields (without_demo DBs)."""
+        Model = self.env[comodel]
+        vals = {}
+        if _depth >= 3:
+            return vals
+        for fname, f in Model._fields.items():
+            if not f.required or f.compute or fname in vals:
+                continue
+            if f.default is not None and f.type != "many2one":
+                continue
+            if f.type in ("char", "text"):
+                vals[fname] = "Probe %s" % fname
+            elif f.type in ("integer", "float", "monetary"):
+                vals[fname] = 1
+            elif f.type == "date":
+                vals[fname] = fields.Date.today()
+            elif f.type == "datetime":
+                vals[fname] = fields.Datetime.now()
+            elif f.type == "boolean":
+                vals[fname] = True
+            elif f.type == "selection":
+                options = Model.fields_get([fname])[fname]["selection"]
+                if options:
+                    vals[fname] = options[0][0]
+            elif f.type == "many2one" and f.comodel_name != comodel:
+                existing = self.env[f.comodel_name].search([], limit=1, order="id asc")
+                vals[fname] = existing.id if existing else self.env[f.comodel_name].create(
+                    self._required_vals(f.comodel_name, _depth + 1)).id
+        return vals
+
 {% for model in models %}
     def test_{{ model.name | to_python_var }}_all_computes_run(self):
         """Verify all computed fields on {{ model.name }} execute without error."""
-        record = self.env['{{ model.name }}'].create({{ model.get("test_create_vals", "{}") }})
+        record = self.env['{{ model.name }}'].create(self._required_vals('{{ model.name }}'))
 {% for field in model.get("fields", []) %}
 {% if field.get("compute") %}
         # Trigger compute for {{ field.name }}
@@ -26,7 +57,7 @@ class TestBehavioralSmoke(TransactionCase):
 {% if model.get("workflow_states") %}
     def test_{{ model.name | to_python_var }}_workflow_transitions(self):
         """Verify declared workflow transitions are callable."""
-        record = self.env['{{ model.name }}'].create({{ model.get("test_create_vals", "{}") }})
+        record = self.env['{{ model.name }}'].create(self._required_vals('{{ model.name }}'))
 {% for state in model.get("workflow_states", []) %}
 {% if state.get("action_method") %}
         # Transition: {{ state.get("from", "any") }} -> {{ state.name }}
@@ -46,7 +77,7 @@ class TestBehavioralSmoke(TransactionCase):
         test_user = self.env['res.users'].create({
             'name': 'Test {{ role.name }}',
             'login': 'test_{{ role.name | to_python_var }}@example.com',
-            'groups_id': [(6, 0, [self.env.ref('{{ module_technical_name }}.group_{{ role.xml_id }}').id])],
+            '{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}': [(6, 0, [self.env.ref('{{ module_technical_name }}.{{ role.xml_id }}').id])],
         })
 {% for model in models %}
         # Verify read access to {{ model.name }}

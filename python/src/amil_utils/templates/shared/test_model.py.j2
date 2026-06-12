@@ -148,12 +148,14 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "Record should not exist after unlink",
         )
 
+{% set creator_role = (security_roles | selectattr("can_create", "defined") | selectattr("can_create") | list | first) if (security_roles is defined and security_roles) else None %}
+{% if creator_role is none or creator_role %}{# render unless roles exist but none can create #}
     def test_user_can_create(self):
-        """Test that a user with {{ module_name }} User group can create records."""
+        """Test that a user with a create-capable {{ module_name }} group can create records."""
         user = self.env["res.users"].create({
             "name": "Test Module User",
             "login": "test_user_{{ model_var }}@example.com",
-            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("{{ module_name }}.{{ security_roles[0].xml_id if (security_roles is defined and security_roles) else "group_" ~ module_name ~ "_user" }}").id])],
+            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("{{ module_name }}.{{ creator_role.xml_id if creator_role else "group_" ~ module_name ~ "_user" }}").id])],
         })
         record = self.env["{{ model_name }}"].with_user(user).create({
 {% for field in required_fields %}
@@ -187,6 +189,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
 {% endfor %}
         })
         self.assertTrue(record.id, "User with module group should be able to create records")
+{% endif %}
 
     def test_no_group_cannot_create(self):
         """Test that a user without any module group cannot create records."""

@@ -445,6 +445,8 @@ def _inject_security_roles(
         security_roles.append({
             "name": "viewer",
             "label": "Document Viewer",
+            "crud": "r",
+            "can_create": False,
             "xml_id": viewer_xml_id,
             "implied_ids": [],
             "is_highest": False,
@@ -454,6 +456,8 @@ def _inject_security_roles(
         security_roles.append({
             "name": "uploader",
             "label": "Document Uploader",
+            "crud": "cru",
+            "can_create": True,
             "xml_id": uploader_xml_id,
             "implied_ids": [viewer_xml_id],
             "is_highest": False,
@@ -463,6 +467,8 @@ def _inject_security_roles(
         security_roles.append({
             "name": "verifier",
             "label": "Document Verifier",
+            "crud": "ru",
+            "can_create": False,
             "xml_id": verifier_xml_id,
             "implied_ids": [viewer_xml_id],
             "is_highest": False,
