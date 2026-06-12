@@ -381,7 +381,10 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
     import_export_wizards = [
         {"name": f"{m['name']}.import.wizard"} for m in import_export_models
     ]
-    has_record_rules = any(m.get("record_rule_scopes") for m in models)
+    has_record_rules = any(
+        m.get("record_rule_scopes") or m.get("custom_record_rules")
+        for m in models
+    )
     manifest_files = _compute_manifest_data(
         spec, data_files, wiz_files,
         has_company_modules=has_company or has_record_rules,
