@@ -152,3 +152,90 @@ def test_nameless_model_imports_api(tmp_path: Path) -> None:
     if "@api.depends" in src:
         first = src.splitlines()[0]
         assert "api" in first, first
+
+
+WF_SPEC = {
+    "module_name": "uni_wf_check",
+    "module_title": "WF Check",
+    "odoo_version": "19.0",
+    "depends": ["base"],
+    "models": [{
+        "name": "uni.wf.check",
+        "description": "WF Check",
+        "fields": [
+            {"name": "name", "type": "Char", "required": True},
+            {"name": "state", "type": "Selection",
+             "selection": [["draft", "Draft"], ["review", "Review"],
+                            ["approved", "Approved"], ["cancelled", "Cancelled"]],
+             "default": "draft"},
+        ],
+        "record_rules": [],
+    }],
+    "security": {},
+    "workflow": [{
+        "model": "uni.wf.check",
+        "states": ["draft", "review", "approved", "cancelled"],
+        "transitions": [
+            {"from": "draft", "to": "review", "action": "action_submit"},
+            {"from": "review", "to": "approved", "action": "action_approve",
+             "group": "university_base.group_university_base_registrar"},
+            {"from": "draft", "to": "cancelled", "action": "action_cancel"},
+            {"from": "review", "to": "cancelled", "action": "action_cancel"},
+        ],
+    }],
+}
+
+
+def test_workflow_transition_methods_render(tmp_path: Path) -> None:
+    """Spec workflow transitions must materialize as model action methods —
+    the PRD state machines were silently dropped before this."""
+    render_module(WF_SPEC, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_wf_check" / "models" / "uni_wf_check.py").read_text()
+    assert "def action_submit(self):" in src
+    assert "def action_approve(self):" in src
+    assert "def action_cancel(self):" in src
+    # merged sources for the shared cancel action
+    assert '"draft", "review"' in src or '"review", "draft"' in src
+    # group gate on approve
+    assert 'has_group("university_base.group_university_base_registrar")' in src
+    assert "AccessError" in src.splitlines()[1] or "AccessError" in src
+    assert "from odoo.exceptions import UserError, AccessError" in src
+
+
+def test_workflow_buttons_render_in_form(tmp_path: Path) -> None:
+    render_module(WF_SPEC, get_template_dir(), tmp_path)
+    view = (tmp_path / "uni_wf_check" / "views" /
+            "uni_wf_check_views.xml").read_text()
+    assert '<button name="action_submit"' in view
+    assert '<button name="action_approve"' in view
+    assert 'groups="university_base.group_university_base_registrar"' in view
+    assert 'invisible="state not in' in view
+
+
+def test_workflow_model_executes(tmp_path: Path) -> None:
+    """Rendered model with workflow methods must import cleanly."""
+    render_module(WF_SPEC, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_wf_check" / "models" / "uni_wf_check.py").read_text()
+    stub = (
+        "class _F:\n"
+        "    def __getattr__(self, n):\n"
+        "        return lambda *a, **k: None\n"
+        "class _M:\n"
+        "    Model = object\n"
+        "    AbstractModel = object\n"
+        "    TransientModel = object\n"
+        "    def Constraint(self, *a, **k):\n"
+        "        return None\n"
+        "import sys, types\n"
+        "odoo = types.ModuleType('odoo')\n"
+        "odoo.models = _M(); odoo.fields = _F(); odoo.api = _F()\n"
+        "odoo.exceptions = types.ModuleType('odoo.exceptions')\n"
+        "odoo.exceptions.ValidationError = Exception\n"
+        "odoo.exceptions.UserError = Exception\n"
+        "odoo.exceptions.AccessError = Exception\n"
+        "sys.modules['odoo'] = odoo\n"
+        "sys.modules['odoo.exceptions'] = odoo.exceptions\n"
+    )
+    ns: dict = {}
+    exec(stub, ns)  # noqa: S102
+    exec(compile(src, "model.py", "exec"), ns)

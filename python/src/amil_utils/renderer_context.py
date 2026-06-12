@@ -45,6 +45,42 @@ _VERSION_GATES: dict[str, dict[str, str]] = {
 }
 
 
+def _build_workflow_actions(spec: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
+    """Group spec workflow transitions into renderable action methods.
+
+    Returns workflow_actions (one entry per action name, with the allowed
+    source states merged), has_workflow_actions and
+    has_workflow_group_actions for import gating.
+    """
+    mw = next(
+        (w for w in spec.get("workflow", [])
+         if isinstance(w, dict) and w.get("model") == model["name"]),
+        None,
+    )
+    by_action: dict[str, dict[str, Any]] = {}
+    for tr in (mw or {}).get("transitions", []):
+        action = tr.get("action")
+        to_state = tr.get("to_state") or tr.get("to")
+        if not action or not to_state:
+            continue
+        entry = by_action.setdefault(action, {
+            "name": action,
+            "to": to_state,
+            "froms": [],
+            "group": tr.get("group"),
+            "label": action.replace("action_", "").replace("_", " ").title(),
+        })
+        src = tr.get("from_state") or tr.get("from")
+        if src and src not in entry["froms"]:
+            entry["froms"].append(src)
+    actions = [a for a in by_action.values() if a["froms"]]
+    return {
+        "workflow_actions": actions,
+        "has_workflow_actions": bool(actions),
+        "has_workflow_group_actions": any(a["group"] for a in actions),
+    }
+
+
 def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
     """Build base context: module metadata, model identity, and basic field lists."""
     module_name = spec.get("module_name", "")
@@ -89,6 +125,7 @@ def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str
         ),
         "composite_indexes": model.get("composite_indexes", []),
         "security_roles": spec.get("security_roles", []),
+        **_build_workflow_actions(spec, model),
         "expected_examples": model.get("expected_examples", []),
         "check_company_auto": model.get("check_company_auto", False),
     }
