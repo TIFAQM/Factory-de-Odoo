@@ -12,7 +12,7 @@
                 <header>
                     <!-- Action buttons enriched by odoo-view-gen in generate.md Wave 2 -->
                     <!-- Workflow transition buttons (generated from spec workflow) -->
-{% for wa in workflow_actions | default([]) %}
+{% for wa in workflow_actions | default([]) if wa.button %}
                     <button name="{{ wa.name }}" type="object"
                             string="{{ wa.label }}"
                             invisible="state not in [{{ wa.froms | map("tojson") | join(", ") | replace('\"', "'") }}]"

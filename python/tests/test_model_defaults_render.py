@@ -239,3 +239,20 @@ def test_workflow_model_executes(tmp_path: Path) -> None:
     ns: dict = {}
     exec(stub, ns)  # noqa: S102
     exec(compile(src, "model.py", "exec"), ns)
+
+
+def test_private_workflow_actions_get_no_buttons(tmp_path: Path) -> None:
+    """Underscore actions (cron-wired transitions) must not render buttons —
+    Odoo rejects private methods on view buttons (live transport failure)."""
+    import copy
+    spec = copy.deepcopy(WF_SPEC)
+    spec["module_name"] = "uni_wf_priv"
+    spec["models"][0]["name"] = "uni.wf.priv"
+    spec["workflow"][0]["model"] = "uni.wf.priv"
+    spec["workflow"][0]["transitions"].append(
+        {"from": "approved", "to": "cancelled", "action": "_cron_expire"})
+    render_module(spec, get_template_dir(), tmp_path)
+    src = (tmp_path / "uni_wf_priv" / "models" / "uni_wf_priv.py").read_text()
+    view = (tmp_path / "uni_wf_priv" / "views" / "uni_wf_priv_views.xml").read_text()
+    assert "def _cron_expire(self):" in src          # method still generated
+    assert '<button name="_cron_expire"' not in view  # but no button

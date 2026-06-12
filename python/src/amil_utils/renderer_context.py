@@ -69,6 +69,9 @@ def _build_workflow_actions(spec: dict[str, Any], model: dict[str, Any]) -> dict
             "froms": [],
             "group": tr.get("group"),
             "label": action.replace("action_", "").replace("_", " ").title(),
+            # private (underscore) actions — e.g. cron bodies wired as
+            # transitions — get methods but no buttons
+            "button": not action.startswith("_"),
         })
         src = tr.get("from_state") or tr.get("from")
         if src and src not in entry["froms"]:
