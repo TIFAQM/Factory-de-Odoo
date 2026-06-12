@@ -417,8 +417,14 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
             if p.get("show_in_home", True):
                 portal_view_files.add("views/portal_home.xml")
             portal_view_files.add(f"views/portal_{p['id']}.xml")
-        portal_view_files.add("security/portal_rules.xml")
         manifest_files.extend(sorted(portal_view_files))
+        # Security rules must load with the other security files (house rule:
+        # security -> data -> views -> menu), not appended after the menu.
+        last_sec = max(
+            (i for i, f in enumerate(manifest_files) if f.startswith("security/")),
+            default=-1,
+        )
+        manifest_files.insert(last_sec + 1, "security/portal_rules.xml")
 
     # Build asset bundle declarations (JS/CSS loaded via web.assets_backend)
     manifest_assets: list[dict[str, str]] = []

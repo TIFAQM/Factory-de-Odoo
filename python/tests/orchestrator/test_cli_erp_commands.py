@@ -481,3 +481,24 @@ def test_registry_update_from_spec_cli(tmp_path: Path) -> None:
     assert payload["model_count"] >= 2
     registry = json.loads((tmp_path / ".planning" / "model_registry.json").read_text())
     assert "uni.fee.challan" in registry["models"]
+
+
+def test_decomposition_merge_malformed_research_emits_error(tmp_path: Path) -> None:
+    """Malformed research files must yield {"error": ...} + exit 1, not a traceback."""
+    research = tmp_path / ".planning" / "research"
+    research.mkdir(parents=True)
+    # missing base_depends/estimated_complexity -> KeyError inside the merge
+    (research / "module-boundaries.json").write_text(json.dumps({
+        "modules": [{"name": "m1", "description": "x", "models": []}]
+    }))
+    (research / "oca-analysis.json").write_text(json.dumps({"findings": []}))
+    (research / "dependency-map.json").write_text(json.dumps({"dependencies": []}))
+    (research / "computation-chains.json").write_text(json.dumps({"chains": []}))
+    runner = CliRunner()
+    result = runner.invoke(orch_group, [
+        "decomposition", "merge", "--cwd", str(tmp_path), "--raw",
+    ])
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert "error" in payload
+    assert "base_depends" in payload["error"]

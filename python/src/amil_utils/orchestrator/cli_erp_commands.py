@@ -27,7 +27,11 @@ def decomposition_merge_cmd(cwd: str, raw: bool) -> None:
     from amil_utils.orchestrator.decomposition import merge_decomposition
 
     research_dir = Path(cwd) / ".planning" / "research"
-    result = merge_decomposition(str(research_dir), cwd)
+    try:
+        result = merge_decomposition(str(research_dir), cwd)
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        _emit({"error": f"research files invalid or incomplete: {exc!r}"})
+        sys.exit(1)
     _emit({
         "module_count": len(result.get("modules", [])),
         "warnings": result.get("warnings", []),
