@@ -48,3 +48,5 @@ docker/dev/.env
 python/uni_fee/
 tools/odoo-ls/
 tools/odoo-source/
+docker/dev/docker-compose.override.yml
+docker/dev/odoo.local.conf
