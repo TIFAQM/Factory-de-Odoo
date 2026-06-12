@@ -167,7 +167,14 @@ Follow your agent instructions to generate a complete spec.json conforming to am
 ModuleSpec schema. Include all metadata fields (module_name, module_title, odoo_version, version,
 summary, author, website, license, category, application, depends) and all 11 content sections
 (models, business_rules, computation_chains, workflow, view_hints, reports, notifications,
-cron_jobs, security, portal, controllers). Do NOT include _available_models. Write to:
+cron_jobs, security, portal, controllers). Do NOT include _available_models.
+
+LOCALIZATION: if the ODOO CONFIG block has localization set (e.g. \"pk\"), copy it into the
+spec as a top-level \"localization\" key so the pakistan_hec preprocessor activates, and apply
+the localization rules from the new-erp workflow Stage C (OCA payroll never hr_payroll, l10n_pk
+for accounting modules, pk_challan/pk_transcript/pk_degree report styles, HEC grading data).
+
+Write to:
 .planning/modules/${MODULE}/spec.json",
   subagent_type="amil-spec-generator",
   description="Spec generation: ${MODULE}"

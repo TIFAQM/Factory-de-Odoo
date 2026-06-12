@@ -47,6 +47,7 @@ amil-utils orch config-set odoo.multi_company ${BOOL_VALUE} --cwd "$(pwd)"
 ```bash
 amil-utils orch config-set odoo.localization "${ANSWER}" --cwd "$(pwd)"
 ```
+- **Important:** Store this answer in a variable `LOCALIZATION` for passing to research agents in Stage B and the spec-generator in plan-module.
 
 **Q4: Existing Modules**
 - Prompt: "Are there existing Odoo modules being extended? (comma-separated list, or 'none')"
@@ -103,6 +104,7 @@ Check if `.planning/PRD.md` exists. If it does not exist:
 ```bash
 PRD_TEXT=$(cat .planning/PRD.md)
 EXISTING_MODULES=$(amil-utils orch config-get odoo.existing_modules --cwd "$(pwd)")
+LOCALIZATION=$(amil-utils orch config-get odoo.localization --cwd "$(pwd)")
 ```
 
 ### Step B.3: Create research directory
@@ -113,7 +115,7 @@ mkdir -p .planning/research
 
 ### Step B.4: Spawn 4 parallel research agents
 
-Launch all 4 agents in parallel using `Task()`. Each receives the full PRD text and existing_modules as context.
+Launch all 4 agents in parallel using `Task()`. Each receives the full PRD text, existing_modules, and localization as context.
 
 **Agent 1: Module Boundary Analyzer (dedicated agent)**
 ```
@@ -126,6 +128,7 @@ ${PRD_TEXT}
 ---
 
 Existing modules: ${EXISTING_MODULES}
+Localization: ${LOCALIZATION}  # apply localization-specific module/dependency rules (e.g. 'pk' -> see Stage C localization rules)
 
 Write your output to .planning/research/module-boundaries.json following the schema in your agent instructions.",
   subagent_type="amil-erp-decomposer",
@@ -144,6 +147,7 @@ ${PRD_TEXT}
 ---
 
 Existing modules: ${EXISTING_MODULES}
+Localization: ${LOCALIZATION}  # apply localization-specific module/dependency rules (e.g. 'pk' -> see Stage C localization rules)
 
 Write your output to .planning/research/oca-analysis.json following the schema in your agent instructions.",
   subagent_type="amil-module-researcher",
@@ -162,6 +166,7 @@ ${PRD_TEXT}
 ---
 
 Existing modules: ${EXISTING_MODULES}
+Localization: ${LOCALIZATION}  # apply localization-specific module/dependency rules (e.g. 'pk' -> see Stage C localization rules)
 
 Write your output as JSON to .planning/research/dependency-map.json with this EXACT schema:
 {
@@ -195,6 +200,7 @@ ${PRD_TEXT}
 ---
 
 Existing modules: ${EXISTING_MODULES}
+Localization: ${LOCALIZATION}  # apply localization-specific module/dependency rules (e.g. 'pk' -> see Stage C localization rules)
 
 Write your output as JSON to .planning/research/computation-chains.json with this EXACT schema:
 {
@@ -274,6 +280,32 @@ The 5-step merge process:
 5. Generate warnings (circular risks, same-tier high-dependency, unknown complexity)
 
 Result is written to `.planning/research/decomposition.json`.
+
+### Localization rules (applied when LOCALIZATION == "pk")
+
+Before presenting the decomposition, verify it honors these rules — flag and
+fix violations (edit decomposition.json) before Step C.2:
+
+- **Payroll modules MUST depend on OCA `payroll`** (repo OCA/payroll, modules
+  `payroll` + `payroll_account`) — NEVER Enterprise `hr_payroll`. This is a
+  locked architecture decision; `amil-utils check-edition` treats `hr_payroll`
+  as an error.
+- Accounting-touching modules add `l10n_pk` to depends.
+- Identity fields follow `data/pakistan/identity_formats.json` (CNIC, NTN);
+  the `pakistan_hec` preprocessor injects CNIC/phone fields and constraints
+  when the spec sets `localization: "pk"`.
+- Fee modules include bank-challan generation (report `template_style:
+  "pk_challan"`) and 1-Link/RAAST confirmation hooks (see
+  `knowledge/pakistan.md`).
+- Exam/transcript/degree modules use the HEC grading scale
+  (`data/pakistan/hec_grading.json`) and report styles `pk_transcript` /
+  `pk_degree`.
+- **University ERPs include Module 31 `university_qec`** (QEC/OBE: CLO-PLO-PEO
+  attainment, self-assessment reports, HEC IPE checklist) unless the PRD
+  explicitly excludes it — if the decomposition lacks a QEC module, add it.
+- Generation agents for these modules must load `knowledge/education.md` and
+  `knowledge/pakistan.md` (see the Domain Knowledge Files note in
+  `knowledge/MASTER.md`).
 
 ### Step C.2: Present decomposition to human
 
