@@ -12,7 +12,9 @@
 {% if odoo_version is defined and odoo_version < "18.0" %}
         <field name="numbercall">{{ cron.numbercall | default(-1) }}</field>
 {% endif %}
+{% if odoo_version is defined and odoo_version < "19.0" %}
         <field name="doall" eval="{{ cron.doall | default(False) }}"/>
+{% endif %}
         <field name="priority">{{ cron.priority | default(5) }}</field>
 {% if cron.nextcall is defined %}
         <field name="nextcall">{{ cron.nextcall }}</field>

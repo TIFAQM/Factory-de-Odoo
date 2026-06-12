@@ -46,6 +46,9 @@ All orchestrator logic lives in `amil_utils.orchestrator` (Python 3.12). Zero No
 | Templates (doc) | `amil/templates/` |
 | Auto-fix | `python/src/amil_utils/auto_fix.py` |
 | MCP server | `python/src/amil_utils/mcp/server.py` |
+| Pakistan data | `python/src/amil_utils/data/pakistan/` (HEC grading, BPS/TTS, FBR slabs, quotas, identity formats) |
+| PK report templates | `templates/shared/pk_*.xml.j2` — report `template_style`: `pk_challan` / `pk_transcript` / `pk_degree` |
+| Domain knowledge | `amil/knowledge/education.md` + `pakistan.md` (load when `localization == "pk"` or `university_*` modules) |
 
 ### Module Lifecycle
 ```
@@ -71,6 +74,8 @@ Modules progress sequentially. Only one module generates at a time.
 - Manifest load order: security → data → wizard views → model views → dashboard → menu
 - Chatter uses `{% if chatter %}` flag, not `'mail' in depends`
 - Python 3.12 (works across Odoo 17.0-19.0)
+- **Payroll: OCA `payroll` (repo OCA/payroll), never Enterprise `hr_payroll`** — locked decision for university ERPs; `amil-utils check-edition` flags it
+- University ERPs include Module 31 `university_qec` (QEC/OBE) unless the PRD excludes it
 
 ### Rules
 1. **Sequential generation only** — one module at a time through the belt

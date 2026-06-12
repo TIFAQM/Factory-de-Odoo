@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "description": "HEC Tenure Track System (TTS) lump-sum salary packages (all-inclusive, no separate allowances). Current package is the 2021 revision (35% increase over the 2015 package, effective 20-09-2021, Finance Division notification F.No.4(6)R-4/2016); TTS salaries have been frozen since (no ARA applied), per press reports as of May 2026.",
+    "source": "Finance Division notification reproduced at HEC (https://www.hec.gov.pk/english/services/universities/FP/Documents/Gov.%20Notification%202021.pdf); figures cross-checked via https://fsconline.info/govt-increased-35-tenure-track-system-tts-pay-packages-2021/ and arithmetic consistency (min + 15 stages x increment = max); freeze status per https://tribune.com.pk/story/2606600/salary-freeze-tax-surge-hit-professors",
+    "effective": "20-09-2021 (current through FY 2025-26)",
+    "last_updated": "2026-06-12",
+    "verified": true
+  },
+  "scales": [
+    {"designation": "Assistant Professor", "min_pay": 175500, "max_pay": 356475,
+     "annual_increment": 12065, "stages": 15},
+    {"designation": "Associate Professor", "min_pay": 263250, "max_pay": 493590,
+     "annual_increment": 15356, "stages": 15},
+    {"designation": "Professor",           "min_pay": 394875, "max_pay": 684450,
+     "annual_increment": 19305, "stages": 15}
+  ],
+  "notes": {
+    "lump_sum": "TTS pay is a consolidated lump sum covering all allowances; standard BPS allowances (HRA, conveyance, medical) are not separately admissible",
+    "bps_gap": "Policy intent of the 2021 notification: maintain a 35% gap between BPS and TTS faculty salaries",
+    "high_achiever": "Up to 15% of TTS faculty meeting benchmarks (h-index 25, 5000 citations) eligible for 100% increase instead of 35%"
+  }
+}

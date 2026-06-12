@@ -121,7 +121,8 @@ def _process_constraints(spec: dict[str, Any]) -> dict[str, Any]:
                     f"rec.{field}",
                     check_condition,
                 )
-            enriched["check_expr"] = f"{guards} and {check_condition}"
+            # `condition` is the VALIDITY expression; raise on its negation.
+            enriched["check_expr"] = f"{guards} and not ({check_condition})"
         elif ctype == "cross_model":
             # Generate check_body for cross-model validation
             count_domain_field = validate_identifier(

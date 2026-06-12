@@ -173,6 +173,29 @@ def registry_stats_cmd(cwd: str, raw: bool) -> None:
     _emit(stats_registry(cwd))
 
 
+@registry_grp.command("tiered-injection")
+@click.argument("module_name")
+@_common
+def registry_tiered_injection_cmd(module_name: str, cwd: str, raw: bool) -> None:
+    from amil_utils.orchestrator.registry import tiered_registry_injection
+
+    _emit(tiered_registry_injection(cwd, module_name))
+
+
+@registry_grp.command("update-from-spec")
+@click.argument("spec_path", type=click.Path(exists=True))
+@_common
+def registry_update_from_spec_cmd(spec_path: str, cwd: str, raw: bool) -> None:
+    from amil_utils.orchestrator.registry import update_from_spec
+
+    spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
+    result = update_from_spec(cwd, spec)
+    _emit({
+        "version": result["_meta"]["version"],
+        "model_count": len(result["models"]),
+    })
+
+
 # ─── Cycle-log commands ───────────────────────────────────────────
 
 

@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "description": "Federal Government Basic Pay Scales (BPS 1-22), base scales per Revision of Basic Pay Scales 2022 (Finance Division O.M. F.1(2)Imp/2022-283, 01-07-2022). Still the operative base scales: Budget 2024-25 granted Adhoc Relief Allowance-2024 (25% BPS 1-16, 20-22% BPS 17-22) and Budget 2025-26 granted ARA-2025 (10%) on top of these scales rather than revising them.",
+    "source": "Finance Division (Regulations Wing) O.M. No.F.1(5)-Reg.7/87-317 dated 31-08-2022 (https://www.finance.gov.pk/circulars/circular_31082022.pdf, GP Fund memo reproducing BPS-2022 min/max per scale); cross-checked against https://civil-engineerings.com/pay_scale.php (BPS chart 2025-2026); ARA-2024 per https://www.finance.gov.pk/circulars/circular_10072024_1.pdf",
+    "effective": "FY 2025-26 (base scales effective 01-07-2022)",
+    "last_updated": "2026-06-12",
+    "verified": true
+  },
+  "scales": [
+    {"grade": 1,  "min_pay": 13550,  "max_pay": 26450,  "annual_increment": 430,  "stages": 30},
+    {"grade": 2,  "min_pay": 13820,  "max_pay": 28520,  "annual_increment": 490,  "stages": 30},
+    {"grade": 3,  "min_pay": 14260,  "max_pay": 31660,  "annual_increment": 580,  "stages": 30},
+    {"grade": 4,  "min_pay": 14690,  "max_pay": 34490,  "annual_increment": 660,  "stages": 30},
+    {"grade": 5,  "min_pay": 15230,  "max_pay": 37730,  "annual_increment": 750,  "stages": 30},
+    {"grade": 6,  "min_pay": 15760,  "max_pay": 40960,  "annual_increment": 840,  "stages": 30},
+    {"grade": 7,  "min_pay": 16310,  "max_pay": 43610,  "annual_increment": 910,  "stages": 30},
+    {"grade": 8,  "min_pay": 16890,  "max_pay": 46890,  "annual_increment": 1000, "stages": 30},
+    {"grade": 9,  "min_pay": 17470,  "max_pay": 50170,  "annual_increment": 1090, "stages": 30},
+    {"grade": 10, "min_pay": 18050,  "max_pay": 53750,  "annual_increment": 1190, "stages": 30},
+    {"grade": 11, "min_pay": 18650,  "max_pay": 57950,  "annual_increment": 1310, "stages": 30},
+    {"grade": 12, "min_pay": 19770,  "max_pay": 62670,  "annual_increment": 1430, "stages": 30},
+    {"grade": 13, "min_pay": 21160,  "max_pay": 67960,  "annual_increment": 1560, "stages": 30},
+    {"grade": 14, "min_pay": 22530,  "max_pay": 74730,  "annual_increment": 1740, "stages": 30},
+    {"grade": 15, "min_pay": 23920,  "max_pay": 83320,  "annual_increment": 1980, "stages": 30},
+    {"grade": 16, "min_pay": 28070,  "max_pay": 95870,  "annual_increment": 2260, "stages": 30},
+    {"grade": 17, "min_pay": 45070,  "max_pay": 113470, "annual_increment": 3420, "stages": 20},
+    {"grade": 18, "min_pay": 56880,  "max_pay": 142080, "annual_increment": 4260, "stages": 20},
+    {"grade": 19, "min_pay": 87840,  "max_pay": 178440, "annual_increment": 4530, "stages": 20},
+    {"grade": 20, "min_pay": 102470, "max_pay": 196130, "annual_increment": 6690, "stages": 14},
+    {"grade": 21, "min_pay": 113790, "max_pay": 217670, "annual_increment": 7420, "stages": 14},
+    {"grade": 22, "min_pay": 122190, "max_pay": 244130, "annual_increment": 8710, "stages": 14}
+  ],
+  "allowances": {
+    "house_rent_big_city_percent": 45,
+    "house_rent_small_city_percent": 30,
+    "house_rent_note": "HRA paid at 45% (big cities) / 30% (other stations) of the initial (minimum) of the relevant Basic Pay Scale 2008, per long-standing Finance Division practice",
+    "medical_allowance_note": "Fixed monthly medical allowance for BPS 1-16 (Rs 1,500/month under successive budgets); BPS 17-22 receive 15% of basic pay (frozen at 2011 levels per Finance Division circulars). Verify current-year circular before payroll use.",
+    "conveyance_allowance_note": "Fixed monthly conveyance allowance by BPS band (approx. Rs 1,785 BPS 1-4, Rs 1,932 BPS 5-10, Rs 2,856 BPS 11-15, Rs 5,000 BPS 16-19 per 2015 revision); BPS 20-22 officers without official vehicle get a higher fixed rate. Verify current-year circular before payroll use.",
+    "annual_increment_note": "Annual increment admissible on 1 December each year"
+  }
+}

@@ -4,8 +4,8 @@ from odoo import {{ 'api, ' if needs_api }}fields, models{{ ', tools' if needs_t
 {% if has_constraints or constrained_fields %}
 from odoo.exceptions import ValidationError
 {% endif %}
-{% if has_approval or has_document_verification %}
-from odoo.exceptions import UserError
+{% if has_approval or has_document_verification or has_workflow_actions %}
+from odoo.exceptions import UserError{{ ', AccessError' if has_workflow_group_actions }}
 {% endif %}
 {# self.env._() is used directly in method bodies (W8161) — no standalone _ import needed #}
 {% if needs_logger %}
@@ -56,7 +56,7 @@ class {{ model_name | to_class }}(models.Model):
         index=True,
 {% endif %}
 {% if field.default is defined %}
-        default="{{ field.default }}",
+        default={{ field.default | pyval }},
 {% endif %}
 {% if field.help is defined %}
         help="{{ field.help }}",
@@ -102,7 +102,7 @@ class {{ model_name | to_class }}(models.Model):
     {{ field.name }} = fields.Char(
         string="{{ field.string | default(field.name | replace('_', ' ') | title) }}",
         required=True,
-        default=_default_{{ field.name }},
+        default=lambda self: self._default_{{ field.name }}(),
         readonly=True,
         copy=False,
 {% if field.groups is defined and field.groups %}
@@ -159,7 +159,7 @@ class {{ model_name | to_class }}(models.Model):
         index=True,
 {% endif %}
 {% if field.default is defined %}
-        default="{{ field.default }}",
+        default={{ field.default | pyval }},
 {% endif %}
 {% if field.help is defined %}
         help="{{ field.help }}",
@@ -270,6 +270,25 @@ class {{ model_name | to_class }}(models.Model):
             {{ constraint.check_body | indent(12) }}
 {% endif %}
 {% endfor %}
+{% if workflow_actions %}
+{% for wa in workflow_actions %}
+
+    def {{ wa.name }}(self):
+        """Transition to '{{ wa.to }}' (allowed from: {{ wa.froms | join(", ") }})."""
+{% if wa.group %}
+        if not self.env.user.has_group("{{ wa.group }}"):
+            raise AccessError(self.env._(
+                "You are not allowed to perform '{{ wa.label }}'."))
+{% endif %}
+        for rec in self:
+            if rec.{{ wa.state_field }} not in ({{ wa.froms | map("tojson") | join(", ") }},):
+                raise UserError(self.env._(
+                    "Cannot perform '{{ wa.label }}' from state '%s'.",
+                    rec.{{ wa.state_field }}))
+            rec.{{ wa.state_field }} = "{{ wa.to }}"
+        return True
+{% endfor %}
+{% endif %}
 {% if is_cacheable %}
 
     @tools.ormcache('self.env.uid'{% for ck in cache_key_fields | default([cache_lookup_field]) %}, '{{ ck }}'{% endfor %})

@@ -1,9 +1,10 @@
 {# record_rules.xml.j2 -- Multi-scope record rules with dynamic role binding #}
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-{% for model in models if model.record_rule_scopes %}
+{% for model in models if model.record_rule_scopes or model.get("custom_record_rules") %}
 {% set bindings = model.get("record_rule_bindings", {}) %}
-{% if "ownership" in model.record_rule_scopes %}
+{% set scopes = model.get("record_rule_scopes") or [] %}
+{% if "ownership" in scopes %}
 {% set own_group = bindings.get("ownership", security_roles[0].xml_id) %}
     <record id="rule_{{ model.name | to_python_var }}_own" model="ir.rule">
         <field name="name">{{ model.name }}: Own Records</field>
@@ -12,7 +13,7 @@
         <field name="domain_force">[('create_uid', '=', user.id)]</field>
     </record>
 {% endif %}
-{% if "department" in model.record_rule_scopes %}
+{% if "department" in scopes %}
 {% set dept_group = bindings.get("department", security_roles[0].xml_id) %}
     <record id="rule_{{ model.name | to_python_var }}_department" model="ir.rule">
         <field name="name">{{ model.name }}: Department</field>
@@ -21,7 +22,7 @@
         <field name="domain_force">[('department_id', '=', user.department_id.id)]</field>
     </record>
 {% endif %}
-{% if "company" in model.record_rule_scopes %}
+{% if "company" in scopes %}
     <record id="rule_{{ model.name | to_python_var }}_company" model="ir.rule">
         <field name="name">{{ model.name }}: Company</field>
         <field name="model_id" ref="{{ model.name | model_ref }}"/>
@@ -29,7 +30,7 @@
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 {% endif %}
-{% if "approval" in model.record_rule_scopes %}
+{% if "approval" in scopes %}
 {% for rule in model.get("approval_record_rules", []) %}
     <record id="{{ rule.xml_id }}" model="ir.rule">
         <field name="name">{{ rule.name }}</field>

@@ -722,7 +722,10 @@ class TestCLIResume:
 
         with patch("amil_utils.renderer.render_module", mock_render_module):
             runner = CliRunner()
-            result = runner.invoke(main, [
+            # isolate: render-module's post-render registry update writes
+            # the RELATIVE .planning/ — must not touch the repo's own dir
+            with runner.isolated_filesystem(temp_dir=tmp_path):
+                result = runner.invoke(main, [
                 "render-module",
                 "--spec-file", str(spec_file),
                 "--output-dir", str(tmp_path / "output"),
@@ -754,7 +757,10 @@ class TestCLIResume:
 
         with patch("amil_utils.renderer.render_module", mock_render_module):
             runner = CliRunner()
-            result = runner.invoke(main, [
+            # isolate: render-module's post-render registry update writes
+            # the RELATIVE .planning/ — must not touch the repo's own dir
+            with runner.isolated_filesystem(temp_dir=tmp_path):
+                result = runner.invoke(main, [
                 "render-module",
                 "--spec-file", str(spec_file),
                 "--output-dir", str(tmp_path / "output"),

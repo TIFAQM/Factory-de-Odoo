@@ -1,0 +1,29 @@
+{# kanban_state.xml.j2 -- pipeline kanban for stateful models (stock-CRM style) #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_{{ model_name | to_xml_id }}_kanban" model="ir.ui.view">
+        <field name="name">{{ model_name }}.view.kanban</field>
+        <field name="model">{{ model_name }}</field>
+        <field name="arch" type="xml">
+{% set wf_state = workflow_actions[0].state_field %}
+            <kanban default_group_by="{{ wf_state }}" class="o_kanban_small_column">
+                <field name="{{ wf_state }}"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click p-2">
+                            <strong><field name="display_name"/></strong>
+{% for f in (fields | selectattr("type", "equalto", "Many2one") | list)[:2] %}
+                            <div class="text-muted"><field name="{{ f.name }}"/></div>
+{% endfor %}
+{% for f in (fields | selectattr("type", "in", ["Float", "Monetary", "Date"]) | list)[:2] %}
+                            <div><field name="{{ f.name }}"/></div>
+{% endfor %}
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+</odoo>

@@ -108,23 +108,16 @@ Build the tiered registry injection for _available_models context:
 
 ```bash
 # Check if registry exists and has content
-REGISTRY_EXISTS=$(node -e "
-  const fs = require('fs');
-  const p = require('path').join(process.cwd(), '.planning', 'model_registry.json');
-  try {
-    const d = JSON.parse(fs.readFileSync(p, 'utf-8'));
-    console.log(Object.keys(d.models || d).length > 0 ? 'yes' : 'no');
-  } catch { console.log('no'); }
-")
+REGISTRY_MODELS=$(amil-utils orch registry stats --raw --cwd "$(pwd)" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('model_count',0))" 2>/dev/null || echo 0)
 ```
 
-- If registry exists and is non-empty:
+- If registry exists and is non-empty (`[ "$REGISTRY_MODELS" -gt 0 ]`):
   ```bash
   TIERED_REGISTRY=$(amil-utils orch registry tiered-injection "${MODULE}" --raw --cwd "$(pwd)")
   ```
 - If registry is empty or missing (first module in project): use empty tiered result:
   ```json
-  {"direct": {}, "transitive": {}, "rest": []}
+  {"models": {}}
   ```
 
 ## Step 7: Spawn Spec Generator Agent
@@ -174,7 +167,14 @@ Follow your agent instructions to generate a complete spec.json conforming to am
 ModuleSpec schema. Include all metadata fields (module_name, module_title, odoo_version, version,
 summary, author, website, license, category, application, depends) and all 11 content sections
 (models, business_rules, computation_chains, workflow, view_hints, reports, notifications,
-cron_jobs, security, portal, controllers). Do NOT include _available_models. Write to:
+cron_jobs, security, portal, controllers). Do NOT include _available_models.
+
+LOCALIZATION: if the ODOO CONFIG block has localization set (e.g. \"pk\"), copy it into the
+spec as a top-level \"localization\" key so the pakistan_hec preprocessor activates, and apply
+the localization rules from the new-erp workflow Stage C (OCA payroll never hr_payroll, l10n_pk
+for accounting modules, pk_challan/pk_transcript/pk_degree report styles, HEC grading data).
+
+Write to:
 .planning/modules/${MODULE}/spec.json",
   subagent_type="amil-spec-generator",
   description="Spec generation: ${MODULE}"
@@ -184,18 +184,10 @@ cron_jobs, security, portal, controllers). Do NOT include _available_models. Wri
 After agent completes, validate the produced spec.json:
 
 ```bash
-# Validate spec.json is valid JSON with required top-level keys
-node -e "
-  const fs = require('fs');
-  const spec = JSON.parse(fs.readFileSync('.planning/modules/${MODULE}/spec.json', 'utf-8'));
-  const required = ['module_name','module_title','odoo_version','depends','models','business_rules','computation_chains','workflow','view_hints','reports','notifications','cron_jobs','security','portal','controllers'];
-  const missing = required.filter(k => !(k in spec));
-  if (missing.length > 0) { console.error('Missing keys:', missing.join(', ')); process.exit(1); }
-  console.log('Valid spec.json with', Object.keys(spec).length, 'top-level keys');
-"
+amil-utils orch spec check-keys ".planning/modules/${MODULE}/spec.json" --raw --cwd "$(pwd)"
 ```
 
-- If validation fails: show error with details and STOP.
+- If exit code is non-zero: show the `missing` list from the JSON output and STOP.
 
 ## Step 8: Run Coherence Check
 

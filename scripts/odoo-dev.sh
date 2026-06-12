@@ -6,6 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 COMPOSE_FILE="$PROJECT_ROOT/docker/dev/docker-compose.yml"
+OVERRIDE_FILE="$PROJECT_ROOT/docker/dev/docker-compose.override.yml"
 DB_NAME="${ODOO_DEV_DB:-odoo_dev}"
 MODULES="base,mail,sale,purchase,hr,account"
 
@@ -14,7 +15,11 @@ MODULES="base,mail,sale,purchase,hr,account"
 # ---------------------------------------------------------------------------
 
 _compose() {
-    docker compose -f "$COMPOSE_FILE" "$@"
+    if [ -f "$OVERRIDE_FILE" ]; then
+        docker compose -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" "$@"
+    else
+        docker compose -f "$COMPOSE_FILE" "$@"
+    fi
 }
 
 _db_exists() {

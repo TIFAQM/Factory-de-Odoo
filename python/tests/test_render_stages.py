@@ -1916,7 +1916,7 @@ class TestRenderModelsArchival:
         files, _ = render_module(spec, None, tmp_path)
         model_py = (tmp_path / "test_module" / "models" / "academy_course.py").read_text()
         assert "active = fields.Boolean" in model_py
-        assert 'default="True"' in model_py
+        assert "default=True" in model_py  # bare literal since the pyval filter fix
         assert "index=True" in model_py
 
     def test_archival_generates_wizard_files(self, tmp_path):

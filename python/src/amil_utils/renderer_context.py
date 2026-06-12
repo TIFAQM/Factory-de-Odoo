@@ -45,6 +45,97 @@ _VERSION_GATES: dict[str, dict[str, str]] = {
 }
 
 
+_PLURAL_ES_SUFFIXES = ("s", "x", "z", "ch", "sh")
+
+
+def _humanize_model_label(model_name: str, module_name: str) -> tuple[str, str]:
+    """Human singular/plural labels from a technical model name.
+
+    "university.fee.head" (module university_finance) -> ("Fee Head",
+    "Fee Heads"). The module's leading namespace word is stripped so
+    breadcrumbs read like stock Odoo, not like model paths.
+    """
+    parts = model_name.split(".")
+    module_words = set(module_name.split("_"))
+    while len(parts) > 1 and parts[0] in module_words:
+        parts = parts[1:]
+    label = " ".join(w.capitalize() for p in parts for w in p.split("_"))
+    last = parts[-1]
+    if last.endswith("y") and not last.endswith(("ay", "ey", "oy", "uy")):
+        plural_last = last[:-1] + "ies"
+    elif last.endswith(_PLURAL_ES_SUFFIXES):
+        plural_last = last + "es"
+    else:
+        plural_last = last + "s"
+    plural_parts = parts[:-1] + [plural_last]
+    plural = " ".join(w.capitalize() for p in plural_parts for w in p.split("_"))
+    return label, plural
+
+
+def _is_config_model(spec: dict[str, Any], model: dict[str, Any]) -> bool:
+    """Configuration models: no state machine and no chatter — they belong
+    under a Configuration submenu, never as the app landing page."""
+    has_wf = any(
+        isinstance(w, dict) and w.get("model") == model["name"]
+        for w in spec.get("workflow", [])
+    )
+    return not has_wf and not model.get("chatter")
+
+
+def _build_workflow_actions(spec: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
+    """Group spec workflow transitions into renderable action methods.
+
+    Returns workflow_actions (one entry per action name, with the allowed
+    source states merged), has_workflow_actions and
+    has_workflow_group_actions for import gating.
+    """
+    mw = next(
+        (w for w in spec.get("workflow", [])
+         if isinstance(w, dict) and w.get("model") == model["name"]),
+        None,
+    )
+    by_action: dict[str, dict[str, Any]] = {}
+    for tr in (mw or {}).get("transitions", []):
+        action = tr.get("action")
+        to_state = tr.get("to_state") or tr.get("to")
+        if not action or not to_state:
+            continue
+        entry = by_action.setdefault(action, {
+            "name": action,
+            "to": to_state,
+            "froms": [],
+            "group": tr.get("group"),
+            "label": action.replace("action_", "").replace("_", " ").title(),
+            # private (underscore) actions — e.g. cron bodies wired as
+            # transitions — get methods but no buttons
+            "button": not action.startswith("_"),
+        })
+        src = tr.get("from_state") or tr.get("from")
+        if src and src not in entry["froms"]:
+            entry["froms"].append(src)
+    actions = [a for a in by_action.values() if a["froms"]]
+    # Resolve which field holds the state machine: prefer a field literally
+    # named "state"; otherwise the Selection field whose options cover the
+    # workflow's states (e.g. fee.challan uses payment_status).
+    state_field_name = "state"
+    field_names = {f.get("name") for f in model.get("fields", [])}
+    if "state" not in field_names and mw:
+        wf_states = set(mw.get("states") or [])
+        for f in model.get("fields", []):
+            if f.get("type") == "Selection":
+                options = {s[0] for s in (f.get("selection") or []) if s}
+                if wf_states and wf_states <= options:
+                    state_field_name = f["name"]
+                    break
+    for a in actions:
+        a["state_field"] = state_field_name
+    return {
+        "workflow_actions": actions,
+        "has_workflow_actions": bool(actions),
+        "has_workflow_group_actions": any(a["group"] for a in actions),
+    }
+
+
 def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
     """Build base context: module metadata, model identity, and basic field lists."""
     module_name = spec.get("module_name", "")
@@ -88,6 +179,11 @@ def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str
             None,
         ),
         "composite_indexes": model.get("composite_indexes", []),
+        "security_roles": spec.get("security_roles", []),
+        "model_label": _humanize_model_label(model["name"], spec["module_name"])[0],
+        "model_label_plural": _humanize_model_label(model["name"], spec["module_name"])[1],
+        "is_config_model": _is_config_model(spec, model),
+        **_build_workflow_actions(spec, model),
         "expected_examples": model.get("expected_examples", []),
         "check_company_auto": model.get("check_company_auto", False),
     }
@@ -140,6 +236,10 @@ def _build_model_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[st
         if auto_pattern:
             ctx["display_name_pattern"] = auto_pattern
             ctx["display_name_depends"] = auto_depends
+
+    # display_name compute emits @api.depends — the import gate must know
+    if ctx.get("display_name_pattern"):
+        ctx["needs_api"] = True
 
     return ctx
 
@@ -306,6 +406,9 @@ def _compute_manifest_data(
         model_var = _to_python_var(model["name"])
         manifest_files.append(f"views/{model_var}_views.xml")
         manifest_files.append(f"views/{model_var}_action.xml")
+        # UI parity: stateful models ship a pipeline kanban
+        if _build_workflow_actions(spec, model)["has_workflow_actions"]:
+            manifest_files.append(f"views/{model_var}_kanban.xml")
 
     # Phase 31: dashboard view files (after model views, before menu)
     dashboard_models_seen: set[str] = set()
@@ -381,7 +484,10 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
     import_export_wizards = [
         {"name": f"{m['name']}.import.wizard"} for m in import_export_models
     ]
-    has_record_rules = any(m.get("record_rule_scopes") for m in models)
+    has_record_rules = any(
+        m.get("record_rule_scopes") or m.get("custom_record_rules")
+        for m in models
+    )
     manifest_files = _compute_manifest_data(
         spec, data_files, wiz_files,
         has_company_modules=has_company or has_record_rules,
@@ -414,8 +520,14 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
             if p.get("show_in_home", True):
                 portal_view_files.add("views/portal_home.xml")
             portal_view_files.add(f"views/portal_{p['id']}.xml")
-        portal_view_files.add("security/portal_rules.xml")
         manifest_files.extend(sorted(portal_view_files))
+        # Security rules must load with the other security files (house rule:
+        # security -> data -> views -> menu), not appended after the menu.
+        last_sec = max(
+            (i for i, f in enumerate(manifest_files) if f.startswith("security/")),
+            default=-1,
+        )
+        manifest_files.insert(last_sec + 1, "security/portal_rules.xml")
 
     # Build asset bundle declarations (JS/CSS loaded via web.assets_backend)
     manifest_assets: list[dict[str, str]] = []
@@ -468,6 +580,17 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
         "has_bulk_operations": has_bulk_operations,
         # Integration keys (amil schema alignment)
         "workflows": spec.get("workflow", []),
+        # UI parity: menu grouping + shared app root
+        "app_root_ref": spec.get("app_root_ref"),
+        "provides_app_root": spec.get("provides_app_root", False),
+        "menu_models": [
+            {
+                "name": m["name"],
+                "label_plural": _humanize_model_label(m["name"], spec["module_name"])[1],
+                "is_config": _is_config_model(spec, m),
+            }
+            for m in spec.get("models", [])
+        ],
         "business_rules": spec.get("business_rules", []),
         "view_hints": spec.get("view_hints", []),
     }

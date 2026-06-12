@@ -72,6 +72,24 @@ from amil_utils.spec_schema_inner import (  # noqa: E402, F401
 # ---------------------------------------------------------------------------
 
 
+class RecordRuleSpec(BaseModel):
+    """A custom ir.rule definition on a model.
+
+    ``group`` accepts a bare local role name ("user"), or a dotted external
+    ID for cross-module roles ("university_base.group_registrar") which the
+    security preprocessor passes through unchanged. Omit ``group`` for a
+    global rule.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    name: str
+    domain_force: str
+    group: str | None = None
+    xml_id: str | None = None
+    label: str | None = None
+
+
 class ModelSpec(BaseModel):
     """Specification for a single Odoo model.
 
@@ -99,7 +117,10 @@ class ModelSpec(BaseModel):
     cacheable: bool = False
     archival: bool = False
     no_active: bool = False
-    record_rules: list[str] | None = None
+    # Either scope shorthands (["ownership", "department"]) or full custom
+    # rule dicts (RecordRuleSpec) — the security preprocessor handles both;
+    # mixing the two forms in one list is rejected by validation.
+    record_rules: list[str] | list[RecordRuleSpec] | None = None
     related_counts: list[RelatedCountSpec] = []
     server_actions: list[ServerActionSpec] = []
     display_name_pattern: str | None = None
@@ -238,6 +259,9 @@ class ModuleSpec(BaseModel):
     multi_company: bool = False
     notifications: list[dict] = []
     localization: str | None = None
+    # UI parity: shared application root across a module family
+    provides_app_root: bool = False
+    app_root_ref: str | None = None
     document_management: bool = False
     document_config: dict = {}
     academic_calendar: bool = False

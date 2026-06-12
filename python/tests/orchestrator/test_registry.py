@@ -290,6 +290,66 @@ class TestUpdateFromSpec:
         assert "new_mod.thing" in result["models"]
         assert result["_meta"]["version"] == 2
 
+    def test_security_groups_preserved_across_updates(self, tmp_path: Path) -> None:
+        """Fix 3: security_groups from spec_A must survive a subsequent spec_B update."""
+        (tmp_path / ".planning").mkdir(exist_ok=True)
+
+        spec_a = {
+            "module_name": "mod_a",
+            "models": [
+                {"name": "mod_a.thing", "fields": [{"name": "name", "type": "Char"}]},
+            ],
+            "security": {
+                "roles": [
+                    {"name": "manager", "xml_id": "mod_a.group_manager"},
+                    {"name": "user", "xml_id": "mod_a.group_user"},
+                ]
+            },
+        }
+        spec_b = {
+            "module_name": "mod_b",
+            "models": [
+                {"name": "mod_b.widget", "fields": [{"name": "name", "type": "Char"}]},
+            ],
+        }
+
+        update_from_spec(tmp_path, spec_a)
+        update_from_spec(tmp_path, spec_b)
+
+        registry = read_registry_file(tmp_path)
+        assert "security_groups" in registry, "security_groups key dropped from registry"
+        assert "mod_a" in registry["security_groups"], (
+            "mod_a security_groups lost after mod_b update"
+        )
+        assert registry["security_groups"]["mod_a"]["manager"] == "mod_a.group_manager"
+
+    def test_view_xml_ids_preserved_across_updates(self, tmp_path: Path) -> None:
+        """Fix 3: view_xml_ids from spec_A must survive a subsequent spec_B update."""
+        (tmp_path / ".planning").mkdir(exist_ok=True)
+
+        spec_a = {
+            "module_name": "mod_a",
+            "models": [
+                {"name": "mod_a.thing", "fields": [{"name": "name", "type": "Char"}]},
+            ],
+        }
+        spec_b = {
+            "module_name": "mod_b",
+            "models": [
+                {"name": "mod_b.widget", "fields": [{"name": "name", "type": "Char"}]},
+            ],
+        }
+
+        update_from_spec(tmp_path, spec_a)
+        update_from_spec(tmp_path, spec_b)
+
+        registry = read_registry_file(tmp_path)
+        assert "view_xml_ids" in registry, "view_xml_ids key dropped from registry"
+        assert "mod_a" in registry["view_xml_ids"], (
+            "mod_a view_xml_ids lost after mod_b update"
+        )
+        assert "mod_a.view_mod_a_thing_form" in registry["view_xml_ids"]["mod_a"]
+
 
 class TestTieredRegistryInjection:
     def test_returns_tiered_view(self, tmp_path: Path) -> None:

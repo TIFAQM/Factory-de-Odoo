@@ -85,6 +85,10 @@ def _process_portal(spec: dict[str, Any]) -> dict[str, Any]:
         return spec
 
     pages = portal_dict.get("pages", [])
+    if not pages:
+        # An empty portal block (or one Pydantic filled with defaults) means
+        # "no portal" — don't emit portal_rules/views over zero pages.
+        return spec
     enriched_pages = [_enrich_page(p) for p in pages]
 
     portal_auth = portal_dict.get("auth", "portal")

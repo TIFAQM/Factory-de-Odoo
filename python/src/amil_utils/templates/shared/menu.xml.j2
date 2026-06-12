@@ -1,30 +1,48 @@
-{# menu.xml.j2 -- Odoo menu items for all models in the module #}
+{# menu.xml.j2 -- stock-style menus: operational models first, config models
+   under a Configuration submenu, optional shared app root across modules #}
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-{% if application %}
-    <!-- Root Menu -->
+{% set ops = menu_models | default([]) | rejectattr("is_config") | list %}
+{% set cfg = menu_models | default([]) | selectattr("is_config") | list %}
+{% if provides_app_root | default(false) or ((application | default(true)) and not (app_root_ref | default(none))) %}
+    <!-- Application root{{ " (shared: other modules hang under this)" if provides_app_root | default(false) }} -->
     <menuitem id="menu_{{ module_name }}_root"
               name="{{ module_title }}"
               web_icon="{{ module_name }},static/description/icon.png"
               sequence="10"/>
 {% endif %}
 
-    <!-- Configuration/Category Menu -->
+    <!-- Module section -->
     <menuitem id="menu_{{ module_name }}_main"
               name="{{ module_title }}"
-{% if application %}
+{% if app_root_ref | default(none) %}
+              parent="{{ app_root_ref }}"
+{% elif (application | default(true)) or provides_app_root | default(false) %}
               parent="menu_{{ module_name }}_root"
 {% endif %}
               sequence="10"/>
 
-{% for model in models %}
-    <!-- {{ model.description | default(model.name) }} Menu Item -->
-    <menuitem id="menu_{{ model.name | to_xml_id }}"
-              name="{{ model.description | default(model.name) }}"
+{% for m in ops %}
+    <menuitem id="menu_{{ m.name | to_xml_id }}"
+              name="{{ m.label_plural }}"
               parent="menu_{{ module_name }}_main"
-              action="action_{{ model.name | to_xml_id }}"
+              action="action_{{ m.name | to_xml_id }}"
               sequence="{{ loop.index0 * 10 + 10 }}"/>
-
 {% endfor %}
+{% if cfg %}
+
+    <!-- Configuration -->
+    <menuitem id="menu_{{ module_name }}_config"
+              name="Configuration"
+              parent="menu_{{ module_name }}_main"
+              sequence="900"/>
+{% for m in cfg %}
+    <menuitem id="menu_{{ m.name | to_xml_id }}"
+              name="{{ m.label_plural }}"
+              parent="menu_{{ module_name }}_config"
+              action="action_{{ m.name | to_xml_id }}"
+              sequence="{{ loop.index0 * 10 + 10 }}"/>
+{% endfor %}
+{% endif %}
 </odoo>

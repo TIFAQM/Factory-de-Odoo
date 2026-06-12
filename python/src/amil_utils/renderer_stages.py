@@ -147,6 +147,14 @@ def render_models(
                 render_template(env, "action.xml.j2", module_dir / "views" / f"{model_var}_action.xml", model_ctx)
             )
 
+            # UI parity: stateful models get a pipeline kanban (stock-CRM style)
+            if model_ctx.get("has_workflow_actions"):
+                created.append(render_template(
+                    env, "kanban_state.xml.j2",
+                    module_dir / "views" / f"{model_var}_kanban.xml",
+                    model_ctx,
+                ))
+
         return Result.ok(created)
     except Exception as exc:
         return Result.fail(f"render_models failed: {exc}")
@@ -216,6 +224,38 @@ def render_extensions(
         return Result.ok(created)
     except Exception as exc:
         return Result.fail(f"render_extensions failed: {exc}")
+
+
+def _write_module_icon(static_dir: Path, module_name: str) -> None:
+    """Write a minimal valid 128x128 PNG icon (solid hue from the module
+    name, lighter inner square) so apps don't show the default puzzle piece.
+    Pure-python PNG encoding — no imaging dependency."""
+    import hashlib
+    import struct
+    import zlib
+
+    static_dir.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(module_name.encode()).digest()
+    base = (digest[0] % 180 + 40, digest[1] % 180 + 40, digest[2] % 180 + 40)
+    light = tuple(min(255, c + 70) for c in base)
+    size, inset = 128, 28
+    rows = []
+    for y in range(size):
+        row = bytearray(b"\x00")
+        for x in range(size):
+            inner = inset <= x < size - inset and inset <= y < size - inset
+            row += bytes(light if inner else base)
+        rows.append(bytes(row))
+    raw = zlib.compress(b"".join(rows), 9)
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (struct.pack(">I", len(data)) + tag + data
+                + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF))
+
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)
+    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr)
+           + chunk(b"IDAT", raw) + chunk(b"IEND", b""))
+    (static_dir / "icon.png").write_bytes(png)
 
 
 def render_views(
@@ -489,6 +529,9 @@ def render_static(
             created.append(render_template(env, "sequences.xml.j2", module_dir / "data" / "sequences.xml", seq_ctx))
         # demo data
         created.append(render_template(env, "demo_data.xml.j2", module_dir / "demo" / "demo_data.xml", module_context))
+        # static/description/icon.png — deterministic two-tone module icon
+        _write_module_icon(module_dir / "static" / "description", spec["module_name"])
+
         # static/description/index.html
         static_dir = module_dir / "static" / "description"
         static_dir.mkdir(parents=True, exist_ok=True)
@@ -537,6 +580,14 @@ def render_cron(
         return Result.fail(f"render_cron failed: {exc}")
 
 
+# Pakistani QWeb report bodies, selected by spec report["template_style"].
+_REPORT_STYLE_TEMPLATES: dict[str, str] = {
+    "pk_challan": "pk_fee_challan.xml.j2",
+    "pk_transcript": "pk_transcript.xml.j2",
+    "pk_degree": "pk_degree.xml.j2",
+}
+
+
 def render_reports(
     env: "Environment",
     spec: dict[str, Any],
@@ -564,8 +615,12 @@ def render_reports(
                 module_dir / "data" / f"report_{report['xml_id']}.xml",
                 report_ctx,
             ))
+            # Pakistani report styles (challan/transcript/degree) selected via
+            # report.template_style; unknown/absent styles fall back to generic.
+            body_template = _REPORT_STYLE_TEMPLATES.get(
+                report.get("template_style", ""), "report_template.xml.j2")
             created.append(render_template(
-                env, "report_template.xml.j2",
+                env, body_template,
                 module_dir / "data" / f"report_{report['xml_id']}_template.xml",
                 report_ctx,
             ))

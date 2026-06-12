@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "description": "HEC Pakistan semester-system grading scheme (4.0 CGPA scale)",
+    "source": "HEC Grading Scheme for Semester System guidelines",
+    "last_updated": "2026-06-12"
+  },
+  "cgpa_scale": 4.0,
+  "passing_cgpa": 2.0,
+  "deans_list_cgpa": 3.5,
+  "probation_cgpa": 2.0,
+  "grades": [
+    {"grade": "A",  "grade_points": 4.0,  "min_percent": 85, "max_percent": 100},
+    {"grade": "A-", "grade_points": 3.67, "min_percent": 80, "max_percent": 84},
+    {"grade": "B+", "grade_points": 3.33, "min_percent": 75, "max_percent": 79},
+    {"grade": "B",  "grade_points": 3.0,  "min_percent": 71, "max_percent": 74},
+    {"grade": "B-", "grade_points": 2.67, "min_percent": 68, "max_percent": 70},
+    {"grade": "C+", "grade_points": 2.33, "min_percent": 64, "max_percent": 67},
+    {"grade": "C",  "grade_points": 2.0,  "min_percent": 61, "max_percent": 63},
+    {"grade": "C-", "grade_points": 1.67, "min_percent": 58, "max_percent": 60},
+    {"grade": "D+", "grade_points": 1.33, "min_percent": 54, "max_percent": 57},
+    {"grade": "D",  "grade_points": 1.0,  "min_percent": 50, "max_percent": 53},
+    {"grade": "F",  "grade_points": 0.0,  "min_percent": 0,  "max_percent": 49}
+  ],
+  "academic_standing": [
+    {"status": "good_standing", "min_cgpa": 2.0},
+    {"status": "warning",       "min_cgpa": 1.5, "max_cgpa": 1.99},
+    {"status": "probation",     "max_cgpa": 1.49,
+     "note": "second consecutive probation semester -> rustication proceedings"}
+  ]
+}

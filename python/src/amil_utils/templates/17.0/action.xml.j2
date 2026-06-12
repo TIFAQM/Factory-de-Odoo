@@ -3,18 +3,18 @@
 <odoo>
 
     <record id="action_{{ model_name | to_xml_id }}" model="ir.actions.act_window">
-        <field name="name">{{ model_description }}</field>
+        <field name="name">{{ model_label_plural | default(model_description) }}</field>
         <field name="res_model">{{ model_name }}</field>
-        <field name="view_mode">tree,form{% if has_dashboard %},graph,pivot{% endif %}</field>
+        <field name="view_mode">{% if has_workflow_actions | default(false) %}kanban,tree,form{% else %}tree,form{% endif %}{% if has_dashboard %},graph,pivot{% endif %}</field>
         <field name="search_view_id" ref="view_{{ model_name | to_xml_id }}_search"/>
-        <field name="context">{}</field>
+        <field name="context">{% if has_workflow_actions | default(false) and workflow_actions %}{'default_group_by': '{{ workflow_actions[0].state_field }}'}{% else %}{}{% endif %}</field>
         <field name="domain">[]</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first {{ model_description }}
+                Create your first {{ model_label | default(model_description) }}
             </p>
             <p>
-                Click the "New" button to create a new {{ model_description | lower }} record.
+                {{ (model_description | default("")) | replace('--', '—') }}
             </p>
         </field>
     </record>

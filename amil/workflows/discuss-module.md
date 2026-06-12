@@ -38,14 +38,17 @@ ls .planning/modules/${MODULE}/CONTEXT.md 2>/dev/null
 
 Use a lookup table to detect the module type from the module name:
 
-MODULE_TYPES lookup:
-- uni_core -> core
-- uni_student -> student
-- uni_fee -> fee
-- uni_exam -> exam
-- uni_faculty -> faculty
-- uni_hr -> hr
-- uni_timetable -> timetable
+MODULE_TYPES lookup (both `uni_` and `university_` prefixes are recognized):
+- uni_core / university_base -> core
+- uni_student / university_sis / university_admissions -> student
+- uni_fee / university_finance -> fee
+- uni_exam / university_examination -> exam
+- uni_faculty / university_faculty -> faculty
+- uni_hr / university_hr -> hr
+- uni_payroll / university_payroll -> payroll_pk
+- uni_tax / university_tax -> taxation
+- uni_affiliate / university_affiliate -> affiliate
+- uni_timetable / university_timetable -> timetable
 - uni_notification -> notification
 - uni_portal -> portal
 
@@ -58,7 +61,7 @@ If type detected: use AskUserQuestion to confirm: "Detected module type: **{type
 - If "yes" or confirmed: proceed with detected type
 - If "change" or user provides different type: use user's type
 
-If type is null: use AskUserQuestion to ask user to select from: core, student, fee, exam, faculty, hr, timetable, notification, portal, generic
+If type is null: use AskUserQuestion to ask user to select from: core, student, fee, exam, faculty, hr, payroll_pk, taxation, affiliate, timetable, notification, portal, generic
 
 ## Step 4: Load Question Template
 
@@ -141,7 +144,7 @@ If file missing: report error -- agent did not write output.
 ## Batch Mode (--batch flag)
 
 When invoked with `--batch`:
-1. Score all `planned` modules using `spec-completeness.cjs:scoreAllModules()`
+1. Score all `planned` modules: `amil-utils orch spec score-all --raw --cwd "$(pwd)"` — returns `scores`, `batches` (grouped by discussion depth), and `summary`.
 2. Group by tier and discussion depth (full < 40, brief 40-69, none >= 70)
 3. Discuss 5 at a time (full) or 8 at a time (brief)
 4. Present gaps as focused questions instead of full question templates

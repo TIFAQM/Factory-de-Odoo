@@ -1,0 +1,78 @@
+{# pk_fee_challan.xml.j2 -- Pakistani bank fee challan (multi-copy, barcode)
+   Spec keys on report: challan_number_field (req), amount_field (req),
+   due_date_field (req), bank_field, roll_number_field, fee_lines_field,
+   copies (list of copy labels, default Bank/University/Student). #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_{{ report.xml_id }}">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+{% for copy in report.get('copies', ['Bank Copy', 'University Copy', 'Student Copy']) %}
+                    <div class="row border p-2 mb-1" style="page-break-inside: avoid;">
+                        <div class="col-12 text-center mb-1">
+                            <strong>{{ module_title }}</strong>
+                            <span class="float-end badge text-bg-secondary">{{ copy }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Challan #:</strong>
+                            <span t-field="doc.{{ report.challan_number_field }}"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>Due Date:</strong>
+                            <span t-field="doc.{{ report.due_date_field }}"/>
+                        </div>
+{% if report.get('roll_number_field') %}
+                        <div class="col-6">
+                            <strong>Roll No:</strong>
+                            <span t-field="doc.{{ report.roll_number_field }}"/>
+                        </div>
+{% endif %}
+{% if report.get('bank_field') %}
+                        <div class="col-6">
+                            <strong>Bank:</strong>
+                            <span t-field="doc.{{ report.bank_field }}"/>
+                        </div>
+{% endif %}
+{% if report.get('fee_lines_field') %}
+                        <div class="col-12">
+                            <table class="table table-sm table-bordered mb-1">
+                                <thead>
+                                    <tr><th>Fee Head</th><th class="text-end">Amount (PKR)</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="doc.{{ report.fee_lines_field }}" t-as="line">
+                                        <td><span t-field="line.name"/></td>
+                                        <td class="text-end"><span t-field="line.amount"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+{% endif %}
+                        <div class="col-6">
+                            <strong>Total Amount (PKR):</strong>
+                            <span t-field="doc.{{ report.amount_field }}"/>
+                        </div>
+                        <div class="col-6 text-center">
+                            <img t-att-src="'/report/barcode/?barcode_type=Code128&amp;value=%s&amp;width=300&amp;height=40' % doc.{{ report.challan_number_field }}"
+                                 alt="Challan barcode" style="max-height: 40px;"/>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">
+                                Pay before the due date at any designated bank branch
+                                or online via 1-Link / RAAST. Late payment is subject
+                                to the university fine policy.
+                            </small>
+                        </div>
+                    </div>
+{% if not loop.last %}
+                    <hr style="border-top: 1px dashed #000; margin: 4px 0;"/>
+{% endif %}
+{% endfor %}
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

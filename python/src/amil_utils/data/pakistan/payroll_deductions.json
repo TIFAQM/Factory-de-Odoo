@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "description": "Statutory payroll deductions for Pakistani university payroll: EOBI, GP Fund subscription, and FBR income tax slabs for salaried individuals.",
+    "source": "EOBI: http://www.eobi.gov.pk/introduction/Contribution.html and https://mercans.com/resources/statutory-alerts/change-in-minimum-wage-for-eobi-calculations/ (FY 2025-26 minimum wage Rs 40,000); GP Fund: Finance Division O.M. No.F.1(5)-Reg.7/87-317 dated 31-08-2022 (https://www.finance.gov.pk/circulars/circular_31082022.pdf); Income tax: Finance Act 2025 salaried slabs TY 2025-26 (https://taxwizard.pk/tax-slabs, cross-checked https://www.ict.edu.pk/blogs/income-tax-slabs-pakistan-2025-26)",
+    "effective": "FY 2025-26",
+    "last_updated": "2026-06-12",
+    "verified": true
+  },
+  "eobi": {
+    "employer_percent": 5,
+    "employee_percent": 1,
+    "wage_base_note": "Contributions are calculated on the statutory minimum wage, not actual salary. Minimum monthly wage Rs 40,000 for FY 2025-26 (Punjab, Sindh, KP, ICT; Balochistan remained at Rs 37,000) => employer Rs 2,000/month, employee Rs 400/month."
+  },
+  "gp_fund": {
+    "note": "General Provident Fund monthly subscription per Finance Division uniform rates (O.M. 31-08-2022, deductions from Sept 2022 pay onward). Amounts are fixed per BPS, derived from minimum percentage of the mean of the relevant BPS-2022 pay scale: BPS-1 3%, BPS-2 to 11 5%, BPS-12 to 22 8%. Applies to pensionable government employees; not applicable to TTS faculty.",
+    "min_percent_of_mean": [
+      {"bps_min": 1,  "bps_max": 1,  "percent": 3},
+      {"bps_min": 2,  "bps_max": 11, "percent": 5},
+      {"bps_min": 12, "bps_max": 22, "percent": 8}
+    ],
+    "bands": [
+      {"bps_min": 1,  "bps_max": 1,  "monthly_amount": 600},
+      {"bps_min": 2,  "bps_max": 2,  "monthly_amount": 1060},
+      {"bps_min": 3,  "bps_max": 3,  "monthly_amount": 1150},
+      {"bps_min": 4,  "bps_max": 4,  "monthly_amount": 1230},
+      {"bps_min": 5,  "bps_max": 5,  "monthly_amount": 1330},
+      {"bps_min": 6,  "bps_max": 6,  "monthly_amount": 1420},
+      {"bps_min": 7,  "bps_max": 7,  "monthly_amount": 1500},
+      {"bps_min": 8,  "bps_max": 8,  "monthly_amount": 1600},
+      {"bps_min": 9,  "bps_max": 9,  "monthly_amount": 1700},
+      {"bps_min": 10, "bps_max": 10, "monthly_amount": 1800},
+      {"bps_min": 11, "bps_max": 11, "monthly_amount": 1920},
+      {"bps_min": 12, "bps_max": 12, "monthly_amount": 3300},
+      {"bps_min": 13, "bps_max": 13, "monthly_amount": 3570},
+      {"bps_min": 14, "bps_max": 14, "monthly_amount": 3900},
+      {"bps_min": 15, "bps_max": 15, "monthly_amount": 4290},
+      {"bps_min": 16, "bps_max": 16, "monthly_amount": 4960},
+      {"bps_min": 17, "bps_max": 17, "monthly_amount": 6350},
+      {"bps_min": 18, "bps_max": 18, "monthly_amount": 7960},
+      {"bps_min": 19, "bps_max": 19, "monthly_amount": 10660},
+      {"bps_min": 20, "bps_max": 20, "monthly_amount": 11950},
+      {"bps_min": 21, "bps_max": 21, "monthly_amount": 13260},
+      {"bps_min": 22, "bps_max": 22, "monthly_amount": 14660}
+    ]
+  },
+  "income_tax_slabs": [
+    {"up_to": 600000,  "rate_percent": 0,  "fixed": 0},
+    {"up_to": 1200000, "rate_percent": 1,  "fixed": 0},
+    {"up_to": 2200000, "rate_percent": 11, "fixed": 6000},
+    {"up_to": 3200000, "rate_percent": 23, "fixed": 116000},
+    {"up_to": 4100000, "rate_percent": 30, "fixed": 346000},
+    {"up_to": null,    "rate_percent": 35, "fixed": 616000}
+  ],
+  "income_tax_notes": {
+    "basis": "Annual taxable salary income, TY 2025-26 (Finance Act 2025). Each slab: tax = fixed + rate_percent% of the amount exceeding the previous slab's up_to.",
+    "salaried_definition": "Salaried rates apply where salary exceeds 75% of taxable income",
+    "surcharge": "9% surcharge on computed tax where annual taxable income exceeds Rs 10,000,000"
+  }
+}

@@ -41,6 +41,10 @@ from amil_utils.orchestrator.cli_groups import (  # noqa: E402
     template_grp,
     validate_grp,
 )
+from amil_utils.orchestrator.cli_erp_commands import (  # noqa: E402
+    decomposition_grp,
+    spec_grp,
+)
 
 orch_group.add_command(state_grp)
 orch_group.add_command(phase_grp)
@@ -57,6 +61,8 @@ orch_group.add_command(module_status_grp)
 orch_group.add_command(registry_grp)
 orch_group.add_command(cycle_log_grp)
 orch_group.add_command(coherence_grp)
+orch_group.add_command(decomposition_grp)
+orch_group.add_command(spec_grp)
 
 
 # ─── Standalone commands ──────────────────────────────────────────

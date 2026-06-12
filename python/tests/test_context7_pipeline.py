@@ -184,12 +184,13 @@ class TestCliNoContext7:
         output_dir = tmp_path / "output"
 
         runner = CliRunner()
-        result = runner.invoke(main, [
-            "render-module",
-            "--spec-file", str(spec_file),
-            "--output-dir", str(output_dir),
-            "--no-context7",
-        ])
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(main, [
+                "render-module",
+                "--spec-file", str(spec_file),
+                "--output-dir", str(output_dir),
+                "--no-context7",
+            ])
 
         assert result.exit_code == 0, f"CLI failed: {result.output}"
         mock_render.assert_called_once()
@@ -211,7 +212,8 @@ class TestCliNoContext7:
         output_dir = tmp_path / "output"
 
         runner = CliRunner()
-        result = runner.invoke(main, [
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(main, [
             "render-module",
             "--spec-file", str(spec_file),
             "--output-dir", str(output_dir),
@@ -245,7 +247,8 @@ class TestCliFreshContext7:
         output_dir = tmp_path / "output"
 
         runner = CliRunner()
-        result = runner.invoke(main, [
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(main, [
             "render-module",
             "--spec-file", str(spec_file),
             "--output-dir", str(output_dir),
@@ -272,7 +275,8 @@ class TestCliFreshContext7:
         output_dir = tmp_path / "output"
 
         runner = CliRunner()
-        result = runner.invoke(main, [
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(main, [
             "render-module",
             "--spec-file", str(spec_file),
             "--output-dir", str(output_dir),

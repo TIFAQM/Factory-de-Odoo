@@ -1,0 +1,110 @@
+{# pk_transcript.xml.j2 -- HEC-format academic transcript
+   Spec keys on report: student_name_field (req), cgpa_field (req),
+   roll_number_field, program_field, father_name_field, cnic_field,
+   session_field, lines_field (one2many of semester results) with
+   line columns course/credit_hours/grade/points via lines_columns. #}
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_{{ report.xml_id }}">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="text-center mb-3">
+                            <h2>{{ module_title }}</h2>
+                            <h4>ACADEMIC TRANSCRIPT</h4>
+                            <p class="text-muted mb-0"><small>
+                                Issued under the HEC semester-system guidelines
+                                (4.00 CGPA scale)
+                            </small></p>
+                        </div>
+
+                        <table class="table table-sm table-borderless mb-3">
+                            <tr>
+                                <td style="width: 25%;"><strong>Student Name:</strong></td>
+                                <td><span t-field="doc.{{ report.student_name_field }}"/></td>
+{% if report.get('roll_number_field') %}
+                                <td style="width: 20%;"><strong>Roll No:</strong></td>
+                                <td><span t-field="doc.{{ report.roll_number_field }}"/></td>
+{% endif %}
+                            </tr>
+                            <tr>
+{% if report.get('father_name_field') %}
+                                <td><strong>Father's Name:</strong></td>
+                                <td><span t-field="doc.{{ report.father_name_field }}"/></td>
+{% endif %}
+{% if report.get('cnic_field') %}
+                                <td><strong>CNIC / B-Form:</strong></td>
+                                <td><span t-field="doc.{{ report.cnic_field }}"/></td>
+{% endif %}
+                            </tr>
+                            <tr>
+{% if report.get('program_field') %}
+                                <td><strong>Program:</strong></td>
+                                <td><span t-field="doc.{{ report.program_field }}"/></td>
+{% endif %}
+{% if report.get('session_field') %}
+                                <td><strong>Session:</strong></td>
+                                <td><span t-field="doc.{{ report.session_field }}"/></td>
+{% endif %}
+                            </tr>
+                        </table>
+
+{% if report.get('lines_field') %}
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th class="text-center">Credit Hours</th>
+                                    <th class="text-center">Grade</th>
+                                    <th class="text-center">Grade Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.{{ report.lines_field }}" t-as="line">
+                                    <td><span t-field="line.course_id"/></td>
+                                    <td class="text-center"><span t-field="line.credit_hours"/></td>
+                                    <td class="text-center"><span t-field="line.grade"/></td>
+                                    <td class="text-center"><span t-field="line.grade_points"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+{% endif %}
+
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div class="border p-2 text-center">
+                                    <strong>CGPA: </strong>
+                                    <span t-field="doc.{{ report.cgpa_field }}"/>
+                                    <span> / 4.00</span>
+                                </div>
+                            </div>
+                            <div class="col-6 text-muted">
+                                <small>
+                                    Medium of instruction: English.
+                                    This transcript is invalid without the
+                                    embossed university seal.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top: 60px;">
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #000; width: 70%; margin: 0 auto;">
+                                    Checked by
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #000; width: 70%; margin: 0 auto;">
+                                    Controller of Examinations
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

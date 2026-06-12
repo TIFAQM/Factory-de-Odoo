@@ -38,15 +38,11 @@ Read .planning/modules/${MODULE}/spec.json
 ```
 
 - If missing: show error "spec.json not found for ${MODULE}. Run /amil:plan-module ${MODULE} first." and STOP.
-- Validate it's valid JSON with `module_name` key:
+- Validate it's valid JSON with required keys:
   ```bash
-  node -e "
-    const fs = require('fs');
-    const spec = JSON.parse(fs.readFileSync('.planning/modules/${MODULE}/spec.json', 'utf-8'));
-    if (!spec.module_name) { console.error('Missing module_name'); process.exit(1); }
-    console.log('Valid spec for:', spec.module_name, '—', (spec.models || []).length, 'models');
-  "
+  amil-utils orch spec check-keys ".planning/modules/${MODULE}/spec.json" --minimal --raw --cwd "$(pwd)"
   ```
+  - If exit code is non-zero: show error and STOP. JSON output provides `module_name` and `model_count` for display.
 
 ## Step 3: Read Odoo Gen Config
 
@@ -54,14 +50,7 @@ Determine the amil project path and output directory:
 
 ```bash
 # Read gen_path from config
-GEN_PATH=$(node -e "
-  const fs = require('fs');
-  const p = require('path').join(process.cwd(), '.planning', 'config.json');
-  try {
-    const c = JSON.parse(fs.readFileSync(p, 'utf-8'));
-    console.log((c.odoo && c.odoo.gen_path) || '');
-  } catch { console.log(''); }
-")
+GEN_PATH=$(amil-utils orch config-get odoo.gen_path --raw --cwd "$(pwd)" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('value',''))" 2>/dev/null || echo "")
 
 # Fallback to environment variable
 if [ -z "$GEN_PATH" ]; then
@@ -79,17 +68,9 @@ fi
 
 ```bash
 # Read addons_path from config (defaults to ./addons)
-ADDONS_PATH=$(node -e "
-  const fs = require('fs');
-  const path = require('path');
-  const p = path.join(process.cwd(), '.planning', 'config.json');
-  try {
-    const c = JSON.parse(fs.readFileSync(p, 'utf-8'));
-    const ap = (c.odoo && c.odoo.addons_path) || './addons';
-    console.log(path.resolve(process.cwd(), ap));
-  } catch { console.log(path.resolve(process.cwd(), './addons')); }
-")
-
+ADDONS_PATH=$(amil-utils orch config-get odoo.addons_path --raw --cwd "$(pwd)" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('value',''))" 2>/dev/null || echo "")
+ADDONS_PATH="${ADDONS_PATH:-./addons}"
+ADDONS_PATH=$(python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$ADDONS_PATH")
 mkdir -p "$ADDONS_PATH"
 ```
 
@@ -170,15 +151,10 @@ If any critical file/directory is missing, show error and STOP.
 Convert spec models to registry format and merge into model_registry.json:
 
 ```bash
-node -e "
-  const path = require('path');
-  const { updateFromSpec } = require(path.join(process.env.HOME, '.claude/amil/bin/lib/registry.cjs'));
-  const fs = require('fs');
-  const spec = JSON.parse(fs.readFileSync('.planning/modules/${MODULE}/spec.json', 'utf-8'));
-  const result = updateFromSpec(process.cwd(), spec);
-  console.log('Registry updated: v' + result._meta.version + ', ' + Object.keys(result.models).length + ' models total');
-"
+amil-utils orch registry update-from-spec ".planning/modules/${MODULE}/spec.json" --raw --cwd "$(pwd)"
 ```
+
+JSON output provides `version` and `model_count` (total models now in registry).
 
 ## Step 8: Run Coherence Check (Post-Generation)
 

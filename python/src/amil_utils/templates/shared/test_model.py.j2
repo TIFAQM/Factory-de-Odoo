@@ -10,6 +10,45 @@ class Test{{ model_name | to_class }}(TransactionCase):
     """Test cases for the {{ model_description }} model."""
 
     @classmethod
+    def _m2o(cls, comodel, _depth=0):
+        """Return a usable record id for a Many2one target.
+
+        Searches for any existing record first (covers base/demo data),
+        then creates a minimal record, recursively satisfying required
+        fields (without_demo databases have no rows to find).
+        """
+        Model = cls.env[comodel]
+        existing = Model.search([], limit=1, order="id asc")
+        if existing:
+            return existing.id
+        vals = {}
+        if "name" in Model._fields:
+            vals["name"] = "Test %s" % comodel
+        if _depth < 3:
+            for fname, f in Model._fields.items():
+                if not f.required or f.compute or fname in vals:
+                    continue
+                if f.default is not None and f.type != "many2one":
+                    continue
+                if f.type == "char" or f.type == "text":
+                    vals[fname] = "Test %s" % fname
+                elif f.type in ("integer", "float", "monetary"):
+                    vals[fname] = 1
+                elif f.type == "date":
+                    vals[fname] = fields.Date.today()
+                elif f.type == "datetime":
+                    vals[fname] = fields.Datetime.now()
+                elif f.type == "boolean":
+                    vals[fname] = True
+                elif f.type == "selection":
+                    options = Model.fields_get([fname])[fname]["selection"]
+                    if options:
+                        vals[fname] = options[0][0]
+                elif f.type == "many2one" and f.comodel_name != comodel:
+                    vals[fname] = cls._m2o(f.comodel_name, _depth + 1)
+        return Model.create(vals).id
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.test_record_vals = {
@@ -35,7 +74,9 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": cls.env.ref("base.main_company").id,
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+            "{{ field.name }}": cls._m2o("{{ m2o_comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
@@ -48,7 +89,7 @@ class Test{{ model_name | to_class }}(TransactionCase):
         self.assertTrue(self.test_record.id, "Record should have been created successfully")
 {% for field in required_fields %}
         self.assertEqual(
-            self.test_record.{{ field.name }},
+            self.test_record.{{ field.name }}{{ ".id" if field.type == "Many2one" else "" }},
             self.test_record_vals.get("{{ field.name }}"),
             "Field '{{ field.name }}' should match the creation value",
         )
@@ -107,12 +148,14 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "Record should not exist after unlink",
         )
 
+{% set creator_role = (security_roles | selectattr("can_create", "defined") | selectattr("can_create") | list | first) if (security_roles is defined and security_roles) else None %}
+{% if creator_role is none or creator_role %}{# render unless roles exist but none can create #}
     def test_user_can_create(self):
-        """Test that a user with {{ module_name }} User group can create records."""
+        """Test that a user with a create-capable {{ module_name }} group can create records."""
         user = self.env["res.users"].create({
             "name": "Test Module User",
             "login": "test_user_{{ model_var }}@example.com",
-            "groups_id": [(6, 0, [self.env.ref("{{ module_name }}.group_{{ module_name }}_user").id])],
+            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("{{ module_name }}.{{ creator_role.xml_id if creator_role else "group_" ~ module_name ~ "_user" }}").id])],
         })
         record = self.env["{{ model_name }}"].with_user(user).create({
 {% for field in required_fields %}
@@ -137,20 +180,23 @@ class Test{{ model_name | to_class }}(TransactionCase):
             "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-            "{{ field.name }}": self.env.ref("base.main_company").id,
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+            "{{ field.name }}": self._m2o("{{ m2o_comodel }}"),
 {% else %}
             "{{ field.name }}": "Test value",
 {% endif %}
 {% endfor %}
         })
         self.assertTrue(record.id, "User with module group should be able to create records")
+{% endif %}
 
     def test_no_group_cannot_create(self):
         """Test that a user without any module group cannot create records."""
         user = self.env["res.users"].create({
             "name": "No Group User",
             "login": "no_group_{{ model_var }}@example.com",
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            "{{ "group_ids" if odoo_version is defined and odoo_version >= "19.0" else "groups_id" }}": [(6, 0, [self.env.ref("base.group_user").id])],
         })
         with self.assertRaises(AccessError):
             self.env["{{ model_name }}"].with_user(user).create({
@@ -176,7 +222,9 @@ class Test{{ model_name | to_class }}(TransactionCase):
                 "{{ field.name }}": "{{ field.selection[0][0] }}",
 {% endif %}
 {% elif field.type == 'Many2one' %}
-                "{{ field.name }}": self.env.ref("base.main_company").id,
+{% set m2o_comodel = field.get('comodel_name') or field.get('comodel') %}
+{% if not m2o_comodel %}{{ fail('Many2one field ' ~ field.name ~ ' is missing comodel_name in spec') }}{% endif %}
+                "{{ field.name }}": self._m2o("{{ m2o_comodel }}"),
 {% else %}
                 "{{ field.name }}": "Test value",
 {% endif %}
