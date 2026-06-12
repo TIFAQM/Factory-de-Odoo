@@ -45,6 +45,43 @@ _VERSION_GATES: dict[str, dict[str, str]] = {
 }
 
 
+_PLURAL_ES_SUFFIXES = ("s", "x", "z", "ch", "sh")
+
+
+def _humanize_model_label(model_name: str, module_name: str) -> tuple[str, str]:
+    """Human singular/plural labels from a technical model name.
+
+    "university.fee.head" (module university_finance) -> ("Fee Head",
+    "Fee Heads"). The module's leading namespace word is stripped so
+    breadcrumbs read like stock Odoo, not like model paths.
+    """
+    parts = model_name.split(".")
+    module_words = set(module_name.split("_"))
+    while len(parts) > 1 and parts[0] in module_words:
+        parts = parts[1:]
+    label = " ".join(w.capitalize() for p in parts for w in p.split("_"))
+    last = parts[-1]
+    if last.endswith("y") and not last.endswith(("ay", "ey", "oy", "uy")):
+        plural_last = last[:-1] + "ies"
+    elif last.endswith(_PLURAL_ES_SUFFIXES):
+        plural_last = last + "es"
+    else:
+        plural_last = last + "s"
+    plural_parts = parts[:-1] + [plural_last]
+    plural = " ".join(w.capitalize() for p in plural_parts for w in p.split("_"))
+    return label, plural
+
+
+def _is_config_model(spec: dict[str, Any], model: dict[str, Any]) -> bool:
+    """Configuration models: no state machine and no chatter — they belong
+    under a Configuration submenu, never as the app landing page."""
+    has_wf = any(
+        isinstance(w, dict) and w.get("model") == model["name"]
+        for w in spec.get("workflow", [])
+    )
+    return not has_wf and not model.get("chatter")
+
+
 def _build_workflow_actions(spec: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
     """Group spec workflow transitions into renderable action methods.
 
@@ -143,6 +180,9 @@ def _build_base_context(spec: dict[str, Any], model: dict[str, Any]) -> dict[str
         ),
         "composite_indexes": model.get("composite_indexes", []),
         "security_roles": spec.get("security_roles", []),
+        "model_label": _humanize_model_label(model["name"], spec["module_name"])[0],
+        "model_label_plural": _humanize_model_label(model["name"], spec["module_name"])[1],
+        "is_config_model": _is_config_model(spec, model),
         **_build_workflow_actions(spec, model),
         "expected_examples": model.get("expected_examples", []),
         "check_company_auto": model.get("check_company_auto", False),
@@ -366,6 +406,9 @@ def _compute_manifest_data(
         model_var = _to_python_var(model["name"])
         manifest_files.append(f"views/{model_var}_views.xml")
         manifest_files.append(f"views/{model_var}_action.xml")
+        # UI parity: stateful models ship a pipeline kanban
+        if _build_workflow_actions(spec, model)["has_workflow_actions"]:
+            manifest_files.append(f"views/{model_var}_kanban.xml")
 
     # Phase 31: dashboard view files (after model views, before menu)
     dashboard_models_seen: set[str] = set()
@@ -537,6 +580,17 @@ def _build_module_context(spec: dict[str, Any], module_name: str) -> dict[str, A
         "has_bulk_operations": has_bulk_operations,
         # Integration keys (amil schema alignment)
         "workflows": spec.get("workflow", []),
+        # UI parity: menu grouping + shared app root
+        "app_root_ref": spec.get("app_root_ref"),
+        "provides_app_root": spec.get("provides_app_root", False),
+        "menu_models": [
+            {
+                "name": m["name"],
+                "label_plural": _humanize_model_label(m["name"], spec["module_name"])[1],
+                "is_config": _is_config_model(spec, m),
+            }
+            for m in spec.get("models", [])
+        ],
         "business_rules": spec.get("business_rules", []),
         "view_hints": spec.get("view_hints", []),
     }

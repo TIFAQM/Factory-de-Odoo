@@ -259,6 +259,9 @@ class ModuleSpec(BaseModel):
     multi_company: bool = False
     notifications: list[dict] = []
     localization: str | None = None
+    # UI parity: shared application root across a module family
+    provides_app_root: bool = False
+    app_root_ref: str | None = None
     document_management: bool = False
     document_config: dict = {}
     academic_calendar: bool = False

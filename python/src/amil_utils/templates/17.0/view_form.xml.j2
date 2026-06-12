@@ -129,18 +129,18 @@
 {% if not is_state and field.name != 'name' and field.type not in ('One2many', 'Html') %}
 {% if loop.index0 is even or loop.index0 < 2 %}
 {% if field.name in sequence_field_names %}
-                            <field name="{{ field.name }}"{% if state_field %} readonly="{{ state_field.name }} != 'draft'"{% endif %}/>
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}{% if state_field %} readonly="{{ state_field.name }} != 'draft'"{% endif %}/>
 {% elif field.type == 'Many2one' %}
 {% if field.no_create is defined and field.no_create %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                                    options="{'no_create': True}"
                             />
 {% else %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                             />
 {% endif %}
 {% else %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                             />
 {% endif %}
 {% endif %}
@@ -153,18 +153,18 @@
 {% if not is_state and field.name != 'name' and field.type not in ('One2many', 'Html') %}
 {% if loop.index0 is odd and loop.index0 >= 2 %}
 {% if field.name in sequence_field_names %}
-                            <field name="{{ field.name }}"{% if state_field %} readonly="{{ state_field.name }} != 'draft'"{% endif %}/>
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}{% if state_field %} readonly="{{ state_field.name }} != 'draft'"{% endif %}/>
 {% elif field.type == 'Many2one' %}
 {% if field.no_create is defined and field.no_create %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                                    options="{'no_create': True}"
                             />
 {% else %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                             />
 {% endif %}
 {% else %}
-                            <field name="{{ field.name }}"
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}
                             />
 {% endif %}
 {% endif %}
@@ -186,7 +186,7 @@
 {% if field.type == 'Html' %}
                     <notebook>
                         <page string="{{ field.string | default(field.name | replace('_', ' ') | title) }}">
-                            <field name="{{ field.name }}" widget="html"/>
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %} widget="html"/>
                         </page>
                     </notebook>
 {% endif %}
@@ -195,7 +195,7 @@
 {% if field.type == 'One2many' %}
                     <notebook>
                         <page string="{{ field.string | default(field.name | replace('_', ' ') | title) }}">
-                            <field name="{{ field.name }}">
+                            <field name="{{ field.name }}"{% if field.invisible_when is defined and field.invisible_when %} invisible="{{ field.invisible_when }}"{% endif %}>
 {% if field.editable is defined and field.editable %}
                                 <tree editable="{{ field.editable }}">
 {% else %}
@@ -232,7 +232,7 @@
         <field name="name">{{ model_name }}.view.tree</field>
         <field name="model">{{ model_name }}</field>
         <field name="arch" type="xml">
-            <tree string="{{ model_description }}"
+            <tree string="{{ model_label_plural | default(model_description) }}"
 {% if state_field %}
                   decoration-info="{{ state_field.name }} == 'draft'"
                   decoration-success="{{ state_field.name }} in ('done', 'approved', 'active')"
@@ -241,7 +241,12 @@
 {% endif %}
             >
 {% for field in view_fields | default(fields) %}
-{% if field.type not in ('One2many', 'Html', 'Text') %}
+{% if state_field and field.name == state_field.name %}
+                <field name="{{ field.name }}" widget="badge"
+                       decoration-info="{{ field.name }} == 'draft'"
+                       decoration-success="{{ field.name }} in ('done', 'approved', 'active', 'paid', 'published', 'confirmed', 'open')"
+                       decoration-danger="{{ field.name }} in ('cancelled', 'rejected', 'expired', 'blocked', 'refused')"/>
+{% elif field.type not in ('One2many', 'Html', 'Text') %}
 {% if loop.index0 < 6 %}
                 <field name="{{ field.name }}"{% if loop.index0 >= 4 %} optional="hide"{% endif %}/>
 {% endif %}
